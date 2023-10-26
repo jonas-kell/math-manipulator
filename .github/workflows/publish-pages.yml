@@ -25,9 +25,8 @@ jobs:
           cache-dependency-path: ./package-lock.json
       - name: Build NPM dependencies
         run: npm run build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-pages-artifact@v1
         with:
-          name: github-pages
           path: dist/
   deploy:
     runs-on: ubuntu-latest
