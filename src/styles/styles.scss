@@ -1,0 +1,17 @@
+@import "katex/dist/katex";
+
+// Katex custom
+
+.render-katex-custom {
+    user-select: none;
+}
+
+.render-katex-custom .katex-html span.enclosing {
+    display: inline-block;
+    overflow: visible;
+    cursor: pointer;
+}
+
+.render-katex-custom span.border {
+    border: blue 1px solid;
+}

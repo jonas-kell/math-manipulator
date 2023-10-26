@@ -9,9 +9,14 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "katex": "^0.16.9",
+        "sass": "^1.69.5",
+        "uuid": "^9.0.1",
         "vue": "^3.3.4"
     },
     "devDependencies": {
+        "@types/katex": "^0.16.5",
+        "@types/uuid": "^9.0.6",
         "@vitejs/plugin-vue": "^4.2.3",
         "typescript": "^5.0.2",
         "vite": "^4.4.5",
