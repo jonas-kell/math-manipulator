@@ -1,0 +1,13 @@
+version: "3"
+services:
+    app:
+        image: node:20-buster
+        working_dir: /app
+        ports:
+            - "3000:3000"
+            - "3001:3001"
+        volumes:
+            - .:/app
+        environment:
+            - NODE_ENV=development
+        command: npm run dev
