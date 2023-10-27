@@ -63,7 +63,7 @@
 
 <template>
     <p>Try: <pre>sum(n=0 100 int(-\infty \infty (123+(A*4)/100) x))</pre></p>
-    <input type="text" name="test" id="test" v-model="text" />
+    <textarea name="test" id="test" v-model="text" style="width: 100%; min-height: 6em;" />
     <KatexRenderer
         v-if="parsedOperator"
         :katex-input="parsedOperator.getFormulaString()"
