@@ -13,6 +13,7 @@
         Operator,
         Negation,
     } from "./functions/operator";
+    import { operatorFromString } from "./functions/parser";
     import { ref, computed } from "vue";
 
     const formula = ref(
@@ -41,9 +42,35 @@
     const reImported = computed(() => {
         return Operator.generateStructure(exported.value);
     });
+
+    const text = ref("");
+    const error = ref("");
+    const parsedOperator = computed((): Operator | null => {
+        error.value = "";
+
+        let res = null;
+
+        try {
+            res = operatorFromString(text.value);
+        } catch (err) {
+            console.error(err);
+            error.value = String(err);
+        }
+
+        return res;
+    });
 </script>
 
 <template>
+    <input type="text" name="test" id="test" v-model="text" />
+    <KatexRenderer
+        v-if="parsedOperator"
+        :katex-input="parsedOperator.getFormulaString()"
+        :uuids-to-process="parsedOperator.getContainedUUIDs()"
+        @selected="(id) => console.log(id)"
+    />
+    {{ error }}
+
     <KatexRenderer
         :katex-input="formula.getFormulaString()"
         :uuids-to-process="formula.getContainedUUIDs()"

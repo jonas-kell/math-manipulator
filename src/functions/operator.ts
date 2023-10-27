@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 
 const MAX_CHILDREN = 99999999;
-enum OperatorType {
+
+export enum OperatorType {
     Fraction = "fraction",
     BracketedSum = "bracketed_sum",
     Numerical = "number",
@@ -14,7 +15,7 @@ enum OperatorType {
     Negation = "negation",
 }
 
-interface ExportOperatorContent {
+export interface ExportOperatorContent {
     type: OperatorType;
     children: ExportOperatorContent[];
     value: string;
@@ -28,8 +29,6 @@ export abstract class Operator {
     protected _endDisplayFormula: string;
     protected _children: Operator[];
     protected _value: string;
-    protected _minChildren: number;
-    protected _maxChildren: number;
     protected _uuid: string;
     protected _hasMidDisplayOverwrite: boolean = false;
     protected _midDisplayOverwrite: string[] = [];
@@ -42,15 +41,13 @@ export abstract class Operator {
         endDisplayFormula: string,
         children: Operator[],
         value: string,
-        minChildren: number,
-        maxChildren: number,
         midDisplayOverwrite: string[] = [],
         renderChildren: boolean = true
     ) {
-        if (children.length < minChildren) {
+        if (children.length < MIN_CHILDREN_SPECIFICATIONS[type]) {
             throw Error("Not enough children for Operator");
         }
-        if (children.length > maxChildren) {
+        if (children.length > MAX_CHILDREN_SPECIFICATIONS[type]) {
             throw Error("Too many children for Operator");
         }
         let hasMidDisplayOverwrite = false;
@@ -69,8 +66,6 @@ export abstract class Operator {
         this._endDisplayFormula = endDisplayFormula;
         this._children = children;
         this._value = value;
-        this._minChildren = minChildren;
-        this._maxChildren = maxChildren;
         this._uuid = uuid;
         this._hasMidDisplayOverwrite = hasMidDisplayOverwrite;
         this._midDisplayOverwrite = midDisplayOverwrite;
@@ -170,80 +165,41 @@ export abstract class Operator {
         let res = new Numerical(0);
 
         let childrenReconstructed = [] as Operator[];
-        input.children.forEach((childJson) => {
+        (input.children ?? []).forEach((childJson) => {
             childrenReconstructed.push(Operator.generateStructureRecursive(childJson, keepUUIDs));
         });
 
+        if (
+            childrenReconstructed.length < MIN_CHILDREN_SPECIFICATIONS[input.type] ||
+            childrenReconstructed.length > MAX_CHILDREN_SPECIFICATIONS[input.type]
+        ) {
+            throw Error(
+                `For ${input.type} to be reconstructed, it needs between ${MIN_CHILDREN_SPECIFICATIONS[input.type]} and ${
+                    MAX_CHILDREN_SPECIFICATIONS[input.type]
+                } children!`
+            );
+        }
+
         switch (input.type) {
             case OperatorType.BigSum:
-                if (childrenReconstructed.length < MIN_CHILDREN_BigSum || childrenReconstructed.length > MAX_CHILDREN_BigSum) {
-                    throw Error(
-                        `For BigSum to be reconstructed, it needs between ${MIN_CHILDREN_BigSum} and ${MAX_CHILDREN_BigSum} children!`
-                    );
-                }
                 res = new BigSum(childrenReconstructed[0], childrenReconstructed[1], childrenReconstructed[2]);
                 break;
             case OperatorType.Fraction:
-                if (
-                    childrenReconstructed.length < MIN_CHILDREN_Fraction ||
-                    childrenReconstructed.length > MAX_CHILDREN_Fraction
-                ) {
-                    throw Error(
-                        `For Fraction to be reconstructed, it needs between ${MIN_CHILDREN_Fraction} and ${MAX_CHILDREN_Fraction} children!`
-                    );
-                }
                 res = new Fraction(childrenReconstructed[0], childrenReconstructed[1]);
                 break;
             case OperatorType.BracketedSum:
-                if (
-                    childrenReconstructed.length < MIN_CHILDREN_BracketedSum ||
-                    childrenReconstructed.length > MAX_CHILDREN_BracketedSum
-                ) {
-                    throw Error(
-                        `For BracketedSum to be reconstructed, it needs between ${MIN_CHILDREN_BracketedSum} and ${MAX_CHILDREN_BracketedSum} children!`
-                    );
-                }
                 res = new BracketedSum(childrenReconstructed);
                 break;
             case OperatorType.Numerical:
-                if (
-                    childrenReconstructed.length < MIN_CHILDREN_Numerical ||
-                    childrenReconstructed.length > MAX_CHILDREN_Numerical
-                ) {
-                    throw Error(
-                        `For Number to be reconstructed, it needs between ${MIN_CHILDREN_Numerical} and ${MAX_CHILDREN_Numerical} children!`
-                    );
-                }
                 res = new Numerical(Number(input.value));
                 break;
             case OperatorType.Variable:
-                if (
-                    childrenReconstructed.length < MIN_CHILDREN_Variable ||
-                    childrenReconstructed.length > MAX_CHILDREN_Variable
-                ) {
-                    throw Error(
-                        `For Variable to be reconstructed, it needs between ${MIN_CHILDREN_Variable} and ${MAX_CHILDREN_Variable} children!`
-                    );
-                }
                 res = new Variable(input.value);
                 break;
             case OperatorType.StructuralVariable:
-                if (
-                    childrenReconstructed.length < MIN_CHILDREN_StructuralVariable ||
-                    childrenReconstructed.length > MAX_CHILDREN_StructuralVariable
-                ) {
-                    throw Error(
-                        `For StructuralVariable to be reconstructed, it needs between ${MIN_CHILDREN_StructuralVariable} and ${MAX_CHILDREN_StructuralVariable} children!`
-                    );
-                }
                 res = new StructuralVariable(input.value, childrenReconstructed[0]);
                 break;
             case OperatorType.BigInt:
-                if (childrenReconstructed.length < MIN_CHILDREN_BigInt || childrenReconstructed.length > MAX_CHILDREN_BigInt) {
-                    throw Error(
-                        `For BigInt to be reconstructed, it needs between ${MIN_CHILDREN_BigInt} and ${MAX_CHILDREN_BigInt} children!`
-                    );
-                }
                 res = new BigInt(
                     childrenReconstructed[0],
                     childrenReconstructed[1],
@@ -252,36 +208,11 @@ export abstract class Operator {
                 );
                 break;
             case OperatorType.RawLatex:
-                if (
-                    childrenReconstructed.length < MIN_CHILDREN_RawLatex ||
-                    childrenReconstructed.length > MAX_CHILDREN_RawLatex
-                ) {
-                    throw Error(
-                        `For RawLatex to be reconstructed, it needs between ${MIN_CHILDREN_RawLatex} and ${MAX_CHILDREN_RawLatex} children!`
-                    );
-                }
                 res = new RawLatex(input.value);
                 break;
             case OperatorType.BracketedMultiplication:
-                if (
-                    childrenReconstructed.length < MIN_CHILDREN_BracketedMultiplication ||
-                    childrenReconstructed.length > MAX_CHILDREN_BracketedMultiplication
-                ) {
-                    throw Error(
-                        `For BracketedMultiplication to be reconstructed, it needs between ${MIN_CHILDREN_BracketedMultiplication} and ${MAX_CHILDREN_BracketedMultiplication} children!`
-                    );
-                }
-                res = new BracketedMultiplication(childrenReconstructed);
                 break;
             case OperatorType.Negation:
-                if (
-                    childrenReconstructed.length < MIN_CHILDREN_Negation ||
-                    childrenReconstructed.length > MAX_CHILDREN_Negation
-                ) {
-                    throw Error(
-                        `For Negation to be reconstructed, it needs between ${MIN_CHILDREN_Negation} and ${MAX_CHILDREN_Negation} children!`
-                    );
-                }
                 res = new Negation(childrenReconstructed[0]);
                 break;
             default:
@@ -296,131 +227,92 @@ export abstract class Operator {
     }
 }
 
-const MIN_CHILDREN_Numerical = 0;
-const MAX_CHILDREN_Numerical = 0;
+export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
+    [OperatorType.Numerical]: 0,
+    [OperatorType.BracketedSum]: MAX_CHILDREN,
+    [OperatorType.BracketedMultiplication]: MAX_CHILDREN,
+    [OperatorType.Fraction]: 2,
+    [OperatorType.BigSum]: 3,
+    [OperatorType.BigInt]: 4,
+    [OperatorType.Variable]: 0,
+    [OperatorType.RawLatex]: 0,
+    [OperatorType.StructuralVariable]: 1,
+    [OperatorType.Negation]: 1,
+};
+
+export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
+    [OperatorType.Numerical]: 0,
+    [OperatorType.BracketedSum]: 2,
+    [OperatorType.BracketedMultiplication]: 2,
+    [OperatorType.Fraction]: 2,
+    [OperatorType.BigSum]: 3,
+    [OperatorType.BigInt]: 4,
+    [OperatorType.Variable]: 0,
+    [OperatorType.RawLatex]: 0,
+    [OperatorType.StructuralVariable]: 1,
+    [OperatorType.Negation]: 1,
+};
+
 export class Numerical extends Operator {
     constructor(value: number) {
-        super(OperatorType.Numerical, "", "", "", [], String(value), MIN_CHILDREN_Numerical, MAX_CHILDREN_Numerical);
+        super(OperatorType.Numerical, "", "", "", [], String(value));
     }
 }
 
-const MIN_CHILDREN_BracketedSum = 2;
-const MAX_CHILDREN_BracketedSum = MAX_CHILDREN;
 export class BracketedSum extends Operator {
     constructor(summands: Operator[]) {
-        super(
-            OperatorType.BracketedSum,
-            "\\left(",
-            "+",
-            "\\right)",
-            summands,
-            "",
-            MIN_CHILDREN_BracketedSum,
-            MAX_CHILDREN_BracketedSum
-        );
+        super(OperatorType.BracketedSum, "\\left(", "+", "\\right)", summands, "");
     }
 }
 
-const MIN_CHILDREN_BracketedMultiplication = 2;
-const MAX_CHILDREN_BracketedMultiplication = MAX_CHILDREN;
 export class BracketedMultiplication extends Operator {
     constructor(multiplicators: Operator[]) {
-        super(
-            OperatorType.BracketedMultiplication,
-            "\\left(",
-            " \\cdot ",
-            "\\right)",
-            multiplicators,
-            "",
-            MIN_CHILDREN_BracketedMultiplication,
-            MAX_CHILDREN_BracketedMultiplication
-        );
+        super(OperatorType.BracketedMultiplication, "\\left(", " \\cdot ", "\\right)", multiplicators, "");
     }
 }
 
-const MIN_CHILDREN_Fraction = 2;
-const MAX_CHILDREN_Fraction = 2;
 export class Fraction extends Operator {
     constructor(dividend: Operator, divisor: Operator) {
-        super(OperatorType.Fraction, "\\frac{", "}{", "}", [dividend, divisor], "", MIN_CHILDREN_Fraction, MAX_CHILDREN_Fraction);
+        super(OperatorType.Fraction, "\\frac{", "}{", "}", [dividend, divisor], "");
     }
 }
 
-const MIN_CHILDREN_BigSum = 3;
-const MAX_CHILDREN_BigSum = 3;
 export class BigSum extends Operator {
     constructor(lower: Operator, upper: Operator, content: Operator) {
-        super(
-            OperatorType.BigSum,
-            "\\sum\\limits_{",
-            "",
-            "",
-            [lower, upper, content],
-            "",
-            MIN_CHILDREN_BigSum,
-            MAX_CHILDREN_BigSum,
-            [" }^{ ", "}"]
-        );
+        super(OperatorType.BigSum, "\\sum\\limits_{", "", "", [lower, upper, content], "", [" }^{ ", "}"]);
     }
 }
 
-const MIN_CHILDREN_BigInt = 4;
-const MAX_CHILDREN_BigInt = 4;
 export class BigInt extends Operator {
     constructor(lower: Operator, upper: Operator, content: Operator, differentialVariable: Operator) {
-        super(
-            OperatorType.BigInt,
-            "\\int\\limits_{",
-            "",
-            "",
-            [lower, upper, content, differentialVariable],
-            "",
-            MIN_CHILDREN_BigInt,
-            MAX_CHILDREN_BigInt,
-            ["}^{", "}", "\\mathrm{d}"]
-        );
+        super(OperatorType.BigInt, "\\int\\limits_{", "", "", [lower, upper, content, differentialVariable], "", [
+            "}^{",
+            "}",
+            "\\mathrm{d}",
+        ]);
     }
 }
 
-const MIN_CHILDREN_Variable = 0;
-const MAX_CHILDREN_Variable = 0;
 export class Variable extends Operator {
     constructor(name: string) {
-        super(OperatorType.Variable, "{", "", "}", [], name, MIN_CHILDREN_Variable, MAX_CHILDREN_Variable);
+        super(OperatorType.Variable, "{", "", "}", [], name);
     }
 }
 
-const MIN_CHILDREN_RawLatex = 0;
-const MAX_CHILDREN_RawLatex = 0;
 export class RawLatex extends Operator {
     constructor(formula: string) {
-        super(OperatorType.RawLatex, "{", "", "}", [], formula, MIN_CHILDREN_RawLatex, MAX_CHILDREN_RawLatex);
+        super(OperatorType.RawLatex, "{", "", "}", [], formula);
     }
 }
 
-const MIN_CHILDREN_StructuralVariable = 1;
-const MAX_CHILDREN_StructuralVariable = 1;
 export class StructuralVariable extends Operator {
     constructor(name: string, content: Operator) {
-        super(
-            OperatorType.StructuralVariable,
-            "{",
-            "",
-            "}",
-            [content],
-            name,
-            MIN_CHILDREN_StructuralVariable,
-            MAX_CHILDREN_StructuralVariable,
-            [],
-            false
-        );
+        super(OperatorType.StructuralVariable, "{", "", "}", [content], name, [], false);
     }
 }
 
-const MIN_CHILDREN_Negation = 1;
-const MAX_CHILDREN_Negation = 1;
 export class Negation extends Operator {
     constructor(content: Operator) {
-        super(OperatorType.Negation, "-", "", "", [content], "", MIN_CHILDREN_Negation, MAX_CHILDREN_Negation);
+        super(OperatorType.Negation, "-", "", "", [content], "");
     }
 }
