@@ -2,7 +2,7 @@
     import KatexRenderer from "./components/KatexRenderer.vue";
     import {
         BracketedSum,
-        Number,
+        Numerical,
         Fraction,
         BigInt,
         RawLatex,
@@ -10,36 +10,61 @@
         StructuralVariable,
         BracketedMultiplication,
         BigSum,
+        Operator,
     } from "./functions/operator";
+    import { ref, computed } from "vue";
 
-    const outer = new BigSum(
-        new RawLatex("n=0"),
-        new RawLatex("100"),
-        new BigInt(
-            new RawLatex("-\\infty"),
-            new RawLatex("\\infty"),
-            new BracketedSum([
-                new Number(123),
-                new Fraction(
-                    new BracketedMultiplication([new StructuralVariable("A", new Number(1)), new Number(4)]),
-                    new Number(100)
-                ),
-            ]),
-            new Variable("x")
+    const formula = ref(
+        new BigSum(
+            new RawLatex("n=0"),
+            new RawLatex("100"),
+            new BigInt(
+                new RawLatex("-\\infty"),
+                new RawLatex("\\infty"),
+                new BracketedSum([
+                    new Numerical(123),
+                    new Fraction(
+                        new BracketedMultiplication([new StructuralVariable("A", new Numerical(1)), new Numerical(4)]),
+                        new Numerical(100)
+                    ),
+                ]),
+                new Variable("x")
+            )
         )
     );
+
+    const exported = computed(() => {
+        return formula.value.serializeStructure();
+    });
+
+    const reImported = computed(() => {
+        return Operator.generateStructure(exported.value);
+    });
 </script>
 
 <template>
     <KatexRenderer
-        :katex-input="outer.getFormulaString()"
-        :uuids-to-process="outer.getContainedUUIDs()"
+        :katex-input="formula.getFormulaString()"
+        :uuids-to-process="formula.getContainedUUIDs()"
         @selected="(id) => console.log(id)"
     />
-    {{ outer.getFormulaString() }}
+    {{ formula.getFormulaString() }}
     <br />
     <br />
-    {{ outer.exportFormulaString() }}
+    {{ formula.exportFormulaString() }}
+    <br />
+    <br />
+    {{ exported }}
+
+    <KatexRenderer
+        :katex-input="reImported.getFormulaString()"
+        :uuids-to-process="reImported.getContainedUUIDs()"
+        @selected="(id) => console.log(id)"
+    />
+    {{ reImported.getFormulaString() }}
+    <br />
+    <br />
+    {{ reImported.exportFormulaString() }}
 </template>
 
 <style scoped></style>
