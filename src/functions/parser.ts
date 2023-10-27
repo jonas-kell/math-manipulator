@@ -351,6 +351,7 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
     },
 };
 const tokenTypesWithOperatorCharacter = Object.keys(tokenTypesWithOperatorCharacterDefinitions);
+const repeatableTokenTypesWithOperatorCharacter = [TokenType.Plus, TokenType.Multiplicate];
 
 class TokenGroupKnotInfix extends TokenGroup {
     constructor(private operator: TokenGroupLeaf, private children: TokenGroup[]) {
@@ -413,8 +414,14 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                     );
                 }
 
+                const canTakeRepeated = repeatableTokenTypesWithOperatorCharacter.includes(type);
+                const takeMax = canTakeRepeated
+                    ? controlStruct.takesNrArgumentsAfter + (controlStruct.takesNrArgumentsAfter + 1) * 99999
+                    : controlStruct.takesNrArgumentsAfter;
                 let afterBuffer = [] as TokenGroup[];
-                for (let j = i + 1; j < children.length && j - (i + 1) < controlStruct.takesNrArgumentsAfter; j++) {
+                let skipped = 0;
+                let stillNeeded = controlStruct.takesNrArgumentsAfter;
+                for (let j = i + 1; j < children.length && j - (i + 1) < takeMax; j++) {
                     const afterElement = children[j];
 
                     // can take the next tokens if:
@@ -425,26 +432,49 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                         (afterElement instanceof TokenGroupLeaf &&
                             !tokenTypesWithOperatorCharacter.includes(afterElement.getToken().type))
                     ) {
+                        skipped += 1;
+                        stillNeeded -= 1;
                         afterBuffer.push(afterElement);
+                    }
+                    // can try to continue to take the next tokens if:
+                    //        - We are in repeatable mode
+                    //        - AND this operator is the same as the one currently processed
+                    else if (afterElement instanceof TokenGroupLeaf && canTakeRepeated && afterElement.getToken().type == type) {
+                        if (stillNeeded != 0) {
+                            throw Error(
+                                `Repeat of Operator-Character ${type}:${oldChild.getToken().content} takes ${
+                                    controlStruct.takesNrArgumentsAfter
+                                } afterwards but only ${
+                                    controlStruct.takesNrArgumentsAfter - stillNeeded
+                                } have been processed until the end`
+                            );
+                        }
+
+                        // only skip, do not want to push operator into infix-children
+                        skipped += 1;
+                        // set repeated tracking
+                        stillNeeded = controlStruct.takesNrArgumentsAfter;
                     } else {
                         break;
                     }
                 }
 
-                // # must be takesNrArgumentsAfter
-                if (afterBuffer.length != controlStruct.takesNrArgumentsAfter) {
+                if (stillNeeded != 0) {
                     throw Error(
                         `Operator-Character ${type}:${oldChild.getToken().content} takes ${
                             controlStruct.takesNrArgumentsAfter
-                        } arguments after it, but ${afterBuffer.length} were supplied`
+                        } afterwards but only ${
+                            controlStruct.takesNrArgumentsAfter - stillNeeded
+                        } have been processed until the end`
                     );
                 }
 
                 // advance pointer by how many elements were taken for the afterBuffer
-                i += afterBuffer.length;
+                i += skipped;
 
                 // group into new element and insert yourself into the before buffer (for the next operator to take you)
                 const newExtraGroup = new TokenGroupKnotInfix(oldChild, [...beforeBuffer, ...afterBuffer]);
+                console.log(newExtraGroup);
                 beforeBuffer = [];
                 beforeBuffer.push(newExtraGroup);
             } else {
@@ -476,7 +506,7 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
                 } as ExportOperatorContent;
             case TokenType.Other:
                 return {
-                    type: OperatorType.Variable,
+                    type: OperatorType.RawLatex,
                     value: token.content,
                     children: [],
                     uuid: "",
@@ -532,7 +562,7 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
                                 MIN_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
                             } and ${
                                 MAX_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
-                            } many arguments in its arguments, but ${childrenForFunctionOperator.length} many were provided`
+                            } arguments in its arguments, but ${childrenForFunctionOperator.length} were provided`
                         );
                     }
 
@@ -545,6 +575,18 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
                                     childrenForFunctionOperator[0],
                                     childrenForFunctionOperator[1],
                                     childrenForFunctionOperator[2],
+                                ],
+                                uuid: "",
+                            } as ExportOperatorContent;
+                        case OperatorType.BigInt:
+                            return {
+                                type: OperatorType.BigInt,
+                                value: "",
+                                children: [
+                                    childrenForFunctionOperator[0],
+                                    childrenForFunctionOperator[1],
+                                    childrenForFunctionOperator[2],
+                                    childrenForFunctionOperator[3],
                                 ],
                                 uuid: "",
                             } as ExportOperatorContent;
