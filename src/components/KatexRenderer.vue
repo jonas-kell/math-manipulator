@@ -52,7 +52,7 @@
                 throwOnError: false,
                 displayMode: true,
                 trust: true,
-                strict: "warn",
+                strict: false,
                 output: "html",
             });
         }
