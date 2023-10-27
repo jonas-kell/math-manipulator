@@ -472,6 +472,12 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                         (elementToTakeFromAfter instanceof TokenGroupLeaf &&
                             !tokenTypesWithOperatorCharacter.includes(elementToTakeFromAfter.getToken().type))
                     ) {
+                        if (stillNeeded == 0) {
+                            throw Error(
+                                `Operator-Character ${type}:${content} takes ${controlStruct.takesNrArgumentsAfter} afterwards but they have already been found and there are still some left`
+                            );
+                        }
+
                         skippedAfter += 1;
                         stillNeeded -= 1;
                         afterBuffer.push(elementToTakeFromAfter);
@@ -486,7 +492,7 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                     ) {
                         if (stillNeeded != 0) {
                             throw Error(
-                                `Repeat of Operator-Character ${type}:${currentOperator.getToken().content} takes ${
+                                `Repeat of Operator-Character ${type}:${content} takes ${
                                     controlStruct.takesNrArgumentsAfter
                                 } afterwards but only ${
                                     controlStruct.takesNrArgumentsAfter - stillNeeded
