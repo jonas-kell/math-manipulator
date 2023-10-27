@@ -391,9 +391,7 @@ class TokenGroupKnotInfix extends TokenGroup {
 function fixOperatorPrecedenceGrouping(tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupLeaf && tokenTypesWithOperatorCharacter.includes(tokenGroup.getToken().type)) {
         throw Error(
-            `Operator-Character ${tokenGroup.getToken().type}:${
-                tokenGroup.getToken().content
-            } alone on top level, which is not possible`
+            `Operator ${tokenGroup.getToken().type}:${tokenGroup.getToken().content} alone on top level, which is not possible`
         );
     }
 
@@ -458,7 +456,7 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                 }
                 if (beforeBuffer.length != controlStruct.takesNrArgumentsBefore) {
                     throw Error(
-                        `Operator-Character ${type}:${content} takes ${controlStruct.takesNrArgumentsBefore} arguments before it, but ${beforeBuffer.length} were supplied`
+                        `Operator ${type}:${content} takes ${controlStruct.takesNrArgumentsBefore} arguments before it, but ${beforeBuffer.length} were supplied`
                     );
                 }
 
@@ -483,7 +481,7 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                     ) {
                         if (stillNeeded == 0) {
                             throw Error(
-                                `Operator-Character ${type}:${content} takes ${controlStruct.takesNrArgumentsAfter} afterwards but they have already been found and there are still some left`
+                                `Operator ${type}:${content} takes ${controlStruct.takesNrArgumentsAfter} afterwards but they have already been found and there are still some left`
                             );
                         }
 
@@ -501,7 +499,7 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                     ) {
                         if (stillNeeded != 0) {
                             throw Error(
-                                `Repeat of Operator-Character ${type}:${content} takes ${
+                                `Repeat of Operator ${type}:${content} takes ${
                                     controlStruct.takesNrArgumentsAfter
                                 } afterwards but only ${
                                     controlStruct.takesNrArgumentsAfter - stillNeeded
@@ -519,7 +517,7 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                 }
                 if (stillNeeded != 0) {
                     throw Error(
-                        `Operator-Character ${type}:${content} takes ${controlStruct.takesNrArgumentsAfter} afterwards but only ${
+                        `Operator ${type}:${content} takes ${controlStruct.takesNrArgumentsAfter} afterwards but only ${
                             controlStruct.takesNrArgumentsAfter - stillNeeded
                         } have been processed until the end`
                     );
