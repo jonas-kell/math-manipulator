@@ -11,6 +11,7 @@
         BracketedMultiplication,
         BigSum,
         Operator,
+        Negation,
     } from "./functions/operator";
     import { ref, computed } from "vue";
 
@@ -19,7 +20,7 @@
             new RawLatex("n=0"),
             new RawLatex("100"),
             new BigInt(
-                new RawLatex("-\\infty"),
+                new Negation(new RawLatex("\\infty")),
                 new RawLatex("\\infty"),
                 new BracketedSum([
                     new Numerical(123),
@@ -64,7 +65,7 @@
     {{ reImported.getFormulaString() }}
     <br />
     <br />
-    {{ reImported.exportFormulaString() }}
+    {{ formula.exportFormulaString() == reImported.exportFormulaString() ? "exports match" : "exports do not match" }}
 </template>
 
 <style scoped></style>

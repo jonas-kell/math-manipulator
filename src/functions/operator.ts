@@ -11,6 +11,7 @@ enum OperatorType {
     BigInt = "big_int",
     RawLatex = "raw_latex",
     BracketedMultiplication = "bracketed_multiplication",
+    Negation = "negation",
 }
 
 interface ExportOperatorContent {
@@ -159,18 +160,18 @@ export abstract class Operator {
         return res;
     }
 
-    static generateStructure(input: string): Operator {
+    static generateStructure(input: string, keepUUIDs: boolean = false): Operator {
         const json: ExportOperatorContent = JSON.parse(input); // unsure if this is possible type-safe (this is too complicated https://dev.to/codeprototype/safely-parsing-json-to-a-typescript-interface-3lkj)
 
-        return Operator.generateStructureRecursive(json);
+        return Operator.generateStructureRecursive(json, keepUUIDs);
     }
 
-    private static generateStructureRecursive(input: ExportOperatorContent): Operator {
+    private static generateStructureRecursive(input: ExportOperatorContent, keepUUIDs: boolean): Operator {
         let res = new Numerical(0);
 
         let childrenReconstructed = [] as Operator[];
         input.children.forEach((childJson) => {
-            childrenReconstructed.push(Operator.generateStructureRecursive(childJson));
+            childrenReconstructed.push(Operator.generateStructureRecursive(childJson, keepUUIDs));
         });
 
         switch (input.type) {
@@ -272,8 +273,23 @@ export abstract class Operator {
                 }
                 res = new BracketedMultiplication(childrenReconstructed);
                 break;
+            case OperatorType.Negation:
+                if (
+                    childrenReconstructed.length < MIN_CHILDREN_Negation ||
+                    childrenReconstructed.length > MAX_CHILDREN_Negation
+                ) {
+                    throw Error(
+                        `For Negation to be reconstructed, it needs between ${MIN_CHILDREN_Negation} and ${MAX_CHILDREN_Negation} children!`
+                    );
+                }
+                res = new Negation(childrenReconstructed[0]);
+                break;
             default:
                 throw Error(`type ${input.type} could not be parsed to an implemented Operator`);
+        }
+
+        if (keepUUIDs) {
+            res.manuallySetUUID(input.uuid);
         }
 
         return res;
@@ -398,5 +414,13 @@ export class StructuralVariable extends Operator {
             [],
             false
         );
+    }
+}
+
+const MIN_CHILDREN_Negation = 1;
+const MAX_CHILDREN_Negation = 1;
+export class Negation extends Operator {
+    constructor(content: Operator) {
+        super(OperatorType.Negation, "-", "", "", [content], "", MIN_CHILDREN_Negation, MAX_CHILDREN_Negation);
     }
 }
