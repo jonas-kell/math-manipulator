@@ -10,7 +10,10 @@ import {
  * @throws Error on failing to tokenize/parse
  */
 export function operatorFromString(input: string): Operator {
-    return Operator.generateStructure(JSON.stringify(parseStringToExportOperatorContent(input)), false);
+    const parsedExport = parseStringToExportOperatorContent(input);
+    const generatedStructure = Operator.generateStructure(JSON.stringify(parsedExport), false);
+
+    return generatedStructure;
 }
 
 function parseStringToExportOperatorContent(input: string): ExportOperatorContent {
@@ -24,7 +27,10 @@ function parseStringToExportOperatorContent(input: string): ExportOperatorConten
     }
 
     const tokens = tokenize(input);
-    return infixTokenGroupTreeToExportOperatorTreeRecursive(groupTokenStream(tokens));
+    const grouped = groupTokenStream(tokens);
+    const exportOperators = infixTokenGroupTreeToExportOperatorTreeRecursive(grouped);
+
+    return exportOperators;
 }
 
 enum TokenType {
@@ -73,8 +79,6 @@ function tokenize(input: string): Token[] {
     const length = whitespaceSanitized.length;
 
     let tokens = [] as Token[];
-
-    console.log("Input", whitespaceSanitized);
 
     // cut into typed token stream
     let currentBuf = "";
@@ -349,7 +353,7 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
 const tokenTypesWithOperatorCharacter = Object.keys(tokenTypesWithOperatorCharacterDefinitions);
 
 class TokenGroupKnotInfix extends TokenGroup {
-    constructor(private operator: TokenGroupLeaf, private childrenBefore: TokenGroup[], private childrenAfter: TokenGroup[]) {
+    constructor(private operator: TokenGroupLeaf, private children: TokenGroup[]) {
         super();
     }
 
@@ -357,17 +361,22 @@ class TokenGroupKnotInfix extends TokenGroup {
         return this.operator;
     }
 
-    getChildrenBefore() {
-        return this.childrenBefore;
-    }
-
-    getChildrenAfter() {
-        return this.childrenAfter;
+    getChildren() {
+        return this.children;
     }
 }
 
 /**
+ * Previously flat operation groupings proper depth via priority
+ *
  * Converts all TokenGroupKnot into TokenGroupKnotInfix!!
+ *
+ * e.g. 1+2*3 => fixOperatorPrecedenceGroupingRecursive => {+;1;{*;2;3}}
+ *
+ * caution: expects for functions that they are followed by one group only. The group was translated typically to be interweaved with * by insertMultiplicationsIntoForbiddenFollowingsRecursive
+ * sum 1 2 3 => insertMultiplicationsIntoForbiddenFollowingsRecursive => sum 1 * 2 * 3 => fixOperatorPrecedenceGroupingRecursive => {sum; 1; {*; 2; 3}}
+ * If multiple arguments are needed for a function, grouping beforehand is needed. This however makes the syntax quite neat actually
+ * sum(1 2 3) => insertMultiplicationsIntoForbiddenFollowingsRecursive => sum(1 * 2 * 3) => fixOperatorPrecedenceGroupingRecursive => {sum; 1; {*; 2; 3}}
  */
 function fixOperatorPrecedenceGrouping(tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupLeaf && tokenTypesWithOperatorCharacter.includes(tokenGroup.getToken().type)) {
@@ -382,14 +391,7 @@ function fixOperatorPrecedenceGrouping(tokenGroup: TokenGroup): TokenGroup {
 }
 
 /**
- * flat operation groupings get their depth
- *
- * e.g. 1+2*3 => fixOperatorPrecedenceGroupingRecursive => (1+(2*3))
- *
- * caution: expects for functions that they are followed by one group only. The group was translated typically to be interweaved with * by insertMultiplicationsIntoForbiddenFollowingsRecursive
- * sum 1 2 => insertMultiplicationsIntoForbiddenFollowingsRecursive => sum 1 * 2 => fixOperatorPrecedenceGroupingRecursive => (sum 1) * 2
- * If multiple arguments are needed for a function, grouping beforehand is needed. This however makes the syntax quite neat actually
- * sum(1 2) => insertMultiplicationsIntoForbiddenFollowingsRecursive => sum(1 * 2) => fixOperatorPrecedenceGroupingRecursive => (sum (1 * 2))
+ * Documentation @see fixOperatorPrecedenceGrouping
  */
 function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupKnot) {
@@ -419,7 +421,7 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                     //        - they are a group,
                     //        - they are a "logical" Leaf (here == not included in OperatorType leaves)
                     if (
-                        afterElement instanceof TokenGroupKnot ||
+                        afterElement instanceof TokenGroupKnotInfix ||
                         (afterElement instanceof TokenGroupLeaf &&
                             !tokenTypesWithOperatorCharacter.includes(afterElement.getToken().type))
                     ) {
@@ -442,7 +444,7 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                 i += afterBuffer.length;
 
                 // group into new element and insert yourself into the before buffer (for the next operator to take you)
-                const newExtraGroup = new TokenGroupKnotInfix(oldChild, beforeBuffer, afterBuffer);
+                const newExtraGroup = new TokenGroupKnotInfix(oldChild, [...beforeBuffer, ...afterBuffer]);
                 beforeBuffer = [];
                 beforeBuffer.push(newExtraGroup);
             } else {
@@ -484,49 +486,42 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
         }
     } else if (tokenGroup instanceof TokenGroupKnotInfix) {
         const operatorToken = tokenGroup.getOperator().getToken();
-        const childrenBefore = tokenGroup
-            .getChildrenBefore()
-            .map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(child));
-        const childrenAfter = tokenGroup
-            .getChildrenAfter()
-            .map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(child));
+        const children = tokenGroup.getChildren().map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(child));
 
         switch (operatorToken.type) {
             case TokenType.Plus:
                 return {
                     type: OperatorType.BracketedSum,
                     value: "",
-                    children: [...childrenBefore, ...childrenAfter],
+                    children: children,
                     uuid: "",
                 } as ExportOperatorContent;
             case TokenType.Multiplicate:
                 return {
                     type: OperatorType.BracketedMultiplication,
                     value: "",
-                    children: [...childrenBefore, ...childrenAfter],
+                    children: children,
                     uuid: "",
                 } as ExportOperatorContent;
             case TokenType.Minus:
                 return {
                     type: OperatorType.Negation,
                     value: "",
-                    children: [childrenAfter[0]],
+                    children: [children[0]],
                     uuid: "",
                 } as ExportOperatorContent;
             case TokenType.Divide:
                 return {
                     type: OperatorType.Fraction,
                     value: "",
-                    children: [childrenBefore[0], childrenAfter[0]],
+                    children: [children[0], children[1]],
                     uuid: "",
                 } as ExportOperatorContent;
             case TokenType.Function:
-                const afterGroup = tokenGroup.getChildrenAfter()[0];
+                const afterGroup = tokenGroup.getChildren()[0];
 
                 if (afterGroup instanceof TokenGroupKnotInfix) {
-                    const childrenForFunctionOperator = afterGroup
-                        .getChildrenAfter()
-                        .map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(child));
+                    const childrenForFunctionOperator = children[0].children; // because has already been processed above
 
                     if (
                         childrenForFunctionOperator.length < MIN_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType] ||

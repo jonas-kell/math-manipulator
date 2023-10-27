@@ -211,6 +211,7 @@ export abstract class Operator {
                 res = new RawLatex(input.value);
                 break;
             case OperatorType.BracketedMultiplication:
+                res = new BracketedMultiplication(childrenReconstructed);
                 break;
             case OperatorType.Negation:
                 res = new Negation(childrenReconstructed[0]);
