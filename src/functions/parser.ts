@@ -205,9 +205,7 @@ function groupTokenStream(tokens: Token[]): TokenGroup {
     }
     const trimmed = trimTokenGroupRecursive(res[0]);
     const implicitMultiplyInserted = insertMultiplicationsIntoForbiddenFollowingsRecursive(trimmed);
-    console.log(implicitMultiplyInserted);
     const precedenceFixed = fixOperatorPrecedenceGrouping(implicitMultiplyInserted);
-    console.log(precedenceFixed);
 
     return precedenceFixed;
 }
@@ -266,28 +264,42 @@ function trimTokenGroupRecursive(tokenGroup: TokenGroup): TokenGroup {
     return tokenGroup;
 }
 
-const logicalLeaves = [TokenType.Other, TokenType.Number]; // basically the contrary of operators
+const implyMultiplicationInFront = [TokenType.Other, TokenType.Number, TokenType.Function]; // Plus groups aka most of the time brackets
+const implyMultiplicationBehind = [TokenType.Other, TokenType.Number]; // Plus groups aka most of the time brackets
 
 function insertMultiplicationsIntoForbiddenFollowingsRecursive(tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupKnot) {
         let children = tokenGroup.getChildren().map((child) => insertMultiplicationsIntoForbiddenFollowingsRecursive(child));
 
         let newChildren = [] as TokenGroup[];
-        let prev = "none" as "logical" | "operator" | "none";
-        let curr = "none" as "logical" | "operator" | "none";
-        children.forEach((oldChild) => {
+        let firstState = "none" as "needAddition" | "doNotNeed" | "none";
+        let secondState = "none" as "needAddition" | "doNotNeed" | "none";
+        for (let i = 0; i < children.length; i++) {
+            const first = children[i - 1];
+            const second = children[i];
+
             // update type
             if (
-                oldChild instanceof TokenGroupKnot ||
-                (oldChild instanceof TokenGroupLeaf && logicalLeaves.includes(oldChild.getToken().type))
+                first &&
+                first != undefined &&
+                (first instanceof TokenGroupKnot ||
+                    (first instanceof TokenGroupLeaf && implyMultiplicationBehind.includes(first.getToken().type)))
             ) {
-                curr = "logical";
+                firstState = "needAddition";
             } else {
-                curr = "operator";
+                firstState = "doNotNeed";
+            }
+            if (
+                second instanceof TokenGroupKnot ||
+                (second instanceof TokenGroupLeaf && implyMultiplicationInFront.includes(second.getToken().type))
+            ) {
+                secondState = "needAddition";
+            } else {
+                secondState = "doNotNeed";
             }
 
             // check if need insert multiplication
-            if (curr == "logical" && prev == "logical") {
+            if (firstState == "needAddition" && secondState == "needAddition") {
                 newChildren.push(
                     // insert implicit multiplication
                     new TokenGroupLeaf({
@@ -297,11 +309,8 @@ function insertMultiplicationsIntoForbiddenFollowingsRecursive(tokenGroup: Token
                 );
             }
             // insert self
-            newChildren.push(oldChild);
-
-            // cache prev type
-            prev = curr;
-        });
+            newChildren.push(second);
+        }
 
         return new TokenGroupKnot(newChildren);
     }
