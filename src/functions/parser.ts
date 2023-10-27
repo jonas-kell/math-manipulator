@@ -397,52 +397,96 @@ function fixOperatorPrecedenceGrouping(tokenGroup: TokenGroup): TokenGroup {
 function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupKnot) {
         let children = tokenGroup.getChildren().map((child) => fixOperatorPrecedenceGroupingRecursive(child));
-        let beforeBuffer = [] as TokenGroup[];
-        for (let i = 0; i < children.length; i++) {
-            const oldChild = children[i];
 
-            if (oldChild instanceof TokenGroupLeaf && tokenTypesWithOperatorCharacter.includes(oldChild.getToken().type)) {
-                const type = oldChild.getToken().type;
+        while (true) {
+            // find operator with highest precedence
+            let highestIndex = -1;
+            let currentPrecedence = -1;
+            children.forEach((child, index) => {
+                if (child instanceof TokenGroupLeaf && tokenTypesWithOperatorCharacter.includes(child.getToken().type)) {
+                    const comparePrecedence =
+                        tokenTypesWithOperatorCharacterDefinitions[child.getToken().type as tokenTypesWithOperatorCharacterType]
+                            .precedence;
+                    if (currentPrecedence < comparePrecedence) {
+                        highestIndex = index;
+                        currentPrecedence = comparePrecedence;
+                    }
+                }
+            });
 
+            // no more operator to process
+            if (highestIndex == -1) {
+                break;
+            }
+
+            // process the operator with highest precedence
+            const beginningPortion = children.slice(0, highestIndex);
+            const currentOperator = children[highestIndex];
+            const afterPortion = children.slice(highestIndex + 1);
+
+            if (currentOperator instanceof TokenGroupLeaf) {
+                const type = currentOperator.getToken().type;
+                const content = currentOperator.getToken().content;
                 const controlStruct = tokenTypesWithOperatorCharacterDefinitions[type as tokenTypesWithOperatorCharacterType];
 
+                // extract elements from before the operator
+                let beforeBuffer = [] as TokenGroup[];
+                let skippedBefore = 0;
+                for (let i = beginningPortion.length - controlStruct.takesNrArgumentsBefore; i < beginningPortion.length; i++) {
+                    const elementToTakeFromBefore = beginningPortion[i];
+
+                    // can take the next tokens if:
+                    //        - they are a knot,
+                    //        - they are a "logical" Leaf (here == not included in OperatorType leaves)
+                    if (
+                        elementToTakeFromBefore instanceof TokenGroupKnotInfix ||
+                        (elementToTakeFromBefore instanceof TokenGroupLeaf &&
+                            !tokenTypesWithOperatorCharacter.includes(elementToTakeFromBefore.getToken().type))
+                    ) {
+                        skippedBefore += 1;
+                        beforeBuffer.push(elementToTakeFromBefore);
+                    }
+                }
                 if (beforeBuffer.length != controlStruct.takesNrArgumentsBefore) {
                     throw Error(
-                        `Operator-Character ${type}:${oldChild.getToken().content} takes ${
-                            controlStruct.takesNrArgumentsBefore
-                        } arguments before it, but ${beforeBuffer.length} were supplied`
+                        `Operator-Character ${type}:${content} takes ${controlStruct.takesNrArgumentsBefore} arguments before it, but ${beforeBuffer.length} were supplied`
                     );
                 }
 
+                // extract elements from after the operator
                 const canTakeRepeated = repeatableTokenTypesWithOperatorCharacter.includes(type);
                 const takeMax = canTakeRepeated
                     ? controlStruct.takesNrArgumentsAfter + (controlStruct.takesNrArgumentsAfter + 1) * 99999
                     : controlStruct.takesNrArgumentsAfter;
                 let afterBuffer = [] as TokenGroup[];
-                let skipped = 0;
+                let skippedAfter = 0;
                 let stillNeeded = controlStruct.takesNrArgumentsAfter;
-                for (let j = i + 1; j < children.length && j - (i + 1) < takeMax; j++) {
-                    const afterElement = children[j];
+                for (let j = 0; j < afterPortion.length && j < takeMax; j++) {
+                    const elementToTakeFromAfter = afterPortion[j];
 
                     // can take the next tokens if:
-                    //        - they are a group,
+                    //        - they are a knot,
                     //        - they are a "logical" Leaf (here == not included in OperatorType leaves)
                     if (
-                        afterElement instanceof TokenGroupKnotInfix ||
-                        (afterElement instanceof TokenGroupLeaf &&
-                            !tokenTypesWithOperatorCharacter.includes(afterElement.getToken().type))
+                        elementToTakeFromAfter instanceof TokenGroupKnotInfix ||
+                        (elementToTakeFromAfter instanceof TokenGroupLeaf &&
+                            !tokenTypesWithOperatorCharacter.includes(elementToTakeFromAfter.getToken().type))
                     ) {
-                        skipped += 1;
+                        skippedAfter += 1;
                         stillNeeded -= 1;
-                        afterBuffer.push(afterElement);
+                        afterBuffer.push(elementToTakeFromAfter);
                     }
                     // can try to continue to take the next tokens if:
                     //        - We are in repeatable mode
                     //        - AND this operator is the same as the one currently processed
-                    else if (afterElement instanceof TokenGroupLeaf && canTakeRepeated && afterElement.getToken().type == type) {
+                    else if (
+                        canTakeRepeated &&
+                        elementToTakeFromAfter instanceof TokenGroupLeaf &&
+                        elementToTakeFromAfter.getToken().type == type
+                    ) {
                         if (stillNeeded != 0) {
                             throw Error(
-                                `Repeat of Operator-Character ${type}:${oldChild.getToken().content} takes ${
+                                `Repeat of Operator-Character ${type}:${currentOperator.getToken().content} takes ${
                                     controlStruct.takesNrArgumentsAfter
                                 } afterwards but only ${
                                     controlStruct.takesNrArgumentsAfter - stillNeeded
@@ -451,41 +495,38 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                         }
 
                         // only skip, do not want to push operator into infix-children
-                        skipped += 1;
+                        skippedAfter += 1;
                         // set repeated tracking
                         stillNeeded = controlStruct.takesNrArgumentsAfter;
                     } else {
                         break;
                     }
                 }
-
                 if (stillNeeded != 0) {
                     throw Error(
-                        `Operator-Character ${type}:${oldChild.getToken().content} takes ${
-                            controlStruct.takesNrArgumentsAfter
-                        } afterwards but only ${
+                        `Operator-Character ${type}:${content} takes ${controlStruct.takesNrArgumentsAfter} afterwards but only ${
                             controlStruct.takesNrArgumentsAfter - stillNeeded
                         } have been processed until the end`
                     );
                 }
 
-                // advance pointer by how many elements were taken for the afterBuffer
-                i += skipped;
+                // group into new element and update-remove the used stuff for the next iteration
+                const newExtraGroup = new TokenGroupKnotInfix(currentOperator, [...beforeBuffer, ...afterBuffer]);
 
-                // group into new element and insert yourself into the before buffer (for the next operator to take you)
-                const newExtraGroup = new TokenGroupKnotInfix(oldChild, [...beforeBuffer, ...afterBuffer]);
-                console.log(newExtraGroup);
-                beforeBuffer = [];
-                beforeBuffer.push(newExtraGroup);
+                children = [
+                    ...beginningPortion.splice(0, beginningPortion.length - skippedBefore),
+                    newExtraGroup,
+                    ...afterPortion.splice(skippedAfter),
+                ];
             } else {
-                beforeBuffer.push(oldChild);
+                throw Error("Unreachable, or else the highest precedence search failed");
             }
         }
 
-        if (beforeBuffer.length == 1) {
-            return beforeBuffer[0]; // avoid adding a unnecessary group for one element
+        if (children.length == 1) {
+            return children[0]; // do not add an unnecessary group for one element
         } else {
-            throw Error("Only one element should be in beforeBuffer");
+            throw Error("Only one element should be left after processing in descending precedence");
         }
     }
     // leaf
