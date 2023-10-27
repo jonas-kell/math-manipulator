@@ -62,6 +62,7 @@
 </script>
 
 <template>
+    <p>Try: <pre>sum(n=0 100 int(-\infty \infty (123+(A*4)/100) x))</pre></p>
     <input type="text" name="test" id="test" v-model="text" />
     <KatexRenderer
         v-if="parsedOperator"
