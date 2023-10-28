@@ -114,6 +114,17 @@ export abstract class Operator {
         if (this._renderChildren) {
             this._children.forEach((child, index) => {
                 formula += child.assembleFormulaString(renderHtmlIds);
+
+                // Special Cases: skipping middle display stuff
+                const nextChild = this._children[index + 1];
+                if (nextChild && nextChild != undefined) {
+                    // 4 + -(1) ==> 4-1
+                    if (this._type == OperatorType.BracketedSum && nextChild._type == OperatorType.Negation) {
+                        return;
+                    }
+                }
+
+                // Insert the middle stuff normally
                 if (this._children.length > index + 1) {
                     if (this._hasMidDisplayOverwrite) {
                         formula += this._midDisplayOverwrite[index];
