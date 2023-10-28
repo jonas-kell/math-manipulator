@@ -4,9 +4,10 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "npm install && vue-tsc --noEmit && vite",
-        "build": "npm install && vue-tsc --noEmit && vite build",
-        "test": "jest",
+        "dev": "npm run install-test && vite",
+        "build": "npm install && vite build",
+        "test": "vue-tsc --noEmit && jest",
+        "install-test": "npm install && npm test",
         "open-coverage": "open-cli coverage/lcov-report/index.html"
     },
     "dependencies": {
