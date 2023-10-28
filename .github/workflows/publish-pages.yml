@@ -24,11 +24,26 @@ jobs:
                   cache: "npm"
                   cache-dependency-path: ./package-lock.json
             - name: Run NPM tests
+              continue-on-error: true
               run: npm run install-test
-            - uses: 5monkeys/cobertura-action@master
+            - name: Process coverage
+              uses: 5monkeys/cobertura-action@master
+              if: always()
               with:
                   path: coverage/cobertura-coverage.xml
                   minimum_coverage: 90
+            - name: Process jest results
+              id: process-jest
+              if: always()
+              uses: im-open/process-jest-test-results@v2.1
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  results-file: "coverage/jest-results.json"
+            - name: Fail if there were errors in the jest tests
+              if: steps.process-jest.outputs.test-outcome == 'Failed'
+              run: |
+                  echo "There were test failures."
+                  exit 1
     build:
         runs-on: ubuntu-latest
         needs: test

@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "npm run install-test && vite",
         "build": "npm install && vite build",
-        "test": "vue-tsc --noEmit && jest",
+        "test": "vue-tsc --noEmit && jest --json --outputFile=coverage/jest-results.json",
         "install-test": "npm install && npm test",
         "open-coverage": "open-cli coverage/lcov-report/index.html"
     },
