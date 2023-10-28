@@ -31,6 +31,13 @@ export enum OperatorType {
     Sin = "sin",
     Cos = "cos",
 }
+const FERMIONIC_BOSONIC_OPERATORS = [
+    OperatorType.BosonicAnnihilationOperator,
+    OperatorType.FermionicAnnihilationOperator,
+    OperatorType.BosonicCreationOperator,
+    OperatorType.FermionicCreationOperator,
+];
+const BRA_C_KET_OPERATORS = [OperatorType.Bra, OperatorType.Ket, OperatorType.Braket, OperatorType.Bracket];
 
 export interface ExportOperatorContent {
     type: OperatorType;
@@ -101,41 +108,77 @@ export abstract class Operator {
         this._uuid = uuid;
     }
 
-    private assembleFormulaString(renderHtmlIds: boolean) {
+    private assembleFormulaString(renderHtmlIds: boolean, renderImpliedSymbols: boolean) {
         let formula = "";
 
         if (renderHtmlIds) {
             formula += `\\htmlId{${this.getUUIDString()}}{`;
         }
 
-        formula += this._startDisplayFormula;
-        formula += this._value;
-
+        let anyMiddleDisplayRendered = false;
+        let middleFormula = "";
         if (this._renderChildren) {
             this._children.forEach((child, index) => {
-                formula += child.assembleFormulaString(renderHtmlIds);
+                middleFormula += child.assembleFormulaString(renderHtmlIds, renderImpliedSymbols);
 
                 // Special Cases: skipping middle display stuff
-                const nextChild = this._children[index + 1];
-                if (nextChild && nextChild != undefined) {
-                    // 4 + -(1) ==> 4-1
-                    if (this._type == OperatorType.BracketedSum && nextChild._type == OperatorType.Negation) {
-                        return;
+                if (!renderImpliedSymbols) {
+                    const nextChild = this._children[index + 1];
+                    if (nextChild && nextChild != undefined) {
+                        // 4 + -(1) ==> 4-1
+                        if (this._type == OperatorType.BracketedSum && nextChild._type == OperatorType.Negation) {
+                            return;
+                        }
+                        // Hide multiplication
+                        if (this._type == OperatorType.BracketedMultiplication) {
+                            // between fermionic/bosonic operators
+                            if (
+                                FERMIONIC_BOSONIC_OPERATORS.includes(child._type) &&
+                                FERMIONIC_BOSONIC_OPERATORS.includes(nextChild._type)
+                            ) {
+                                return;
+                            }
+                            // next to bra/ket
+                            if (BRA_C_KET_OPERATORS.includes(child._type) || BRA_C_KET_OPERATORS.includes(nextChild._type)) {
+                                return;
+                            }
+                        }
                     }
                 }
 
                 // Insert the middle stuff normally
                 if (this._children.length > index + 1) {
                     if (this._hasMidDisplayOverwrite) {
-                        formula += this._midDisplayOverwrite[index];
+                        middleFormula += this._midDisplayOverwrite[index];
                     } else {
-                        formula += this._midDisplayFormula;
+                        middleFormula += this._midDisplayFormula;
                     }
+                    anyMiddleDisplayRendered = true;
                 }
             });
         }
 
-        formula += this._endDisplayFormula;
+        if (!renderImpliedSymbols) {
+            // skip parts of the equation depending on types/middle content, as they are extraneous
+            if (this._type == OperatorType.BracketedMultiplication && !anyMiddleDisplayRendered) {
+                // ( * * * ) if all * have been skipped, also omit the brackets
+                // I wanted to do this for ( + + + ) too, ( a "+" gets skipped before a "-"), to make (n+-1) => n-1 but his transforms {1 - {2 - 3}} into 1-2-3, which differs from 1-(2-3)
+                formula += this._value;
+                formula += middleFormula;
+            } else {
+                // do not render stuff that can be implied, however no suitable implication-situation was met, so render everything
+                formula += this._startDisplayFormula;
+                formula += this._value;
+                formula += middleFormula;
+                formula += this._endDisplayFormula;
+            }
+        } else {
+            // default situation, render all parts of the equation
+            formula += this._startDisplayFormula;
+            formula += this._value;
+            formula += middleFormula;
+            formula += this._endDisplayFormula;
+        }
 
         if (renderHtmlIds) {
             formula += "}"; //closing the second htmlID bracket
@@ -144,12 +187,12 @@ export abstract class Operator {
         return formula;
     }
 
-    getFormulaString() {
-        return this.assembleFormulaString(true);
+    getFormulaString(renderImpliedSymbols: boolean = false) {
+        return this.assembleFormulaString(true, renderImpliedSymbols);
     }
 
-    exportFormulaString() {
-        return this.assembleFormulaString(false);
+    exportFormulaString(renderImpliedSymbols: boolean = false) {
+        return this.assembleFormulaString(false, renderImpliedSymbols);
     }
 
     getContainedUUIDs() {
