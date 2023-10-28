@@ -1,11 +1,11 @@
 # Math Manipulator
 
-### Build
+## Build
 
 The project is automatically built with Github Actions.
 Online Deployment can be found on Github Pages: https://jonas-kell.github.io/math-manipulator/
 
-### Development
+## Development
 
 Requires only a working installation of Docker Compose.
 
@@ -13,7 +13,13 @@ Requires only a working installation of Docker Compose.
 docker compose up
 ```
 
-### Contributing
+### Testing
+
+```sh
+docker compose run --rm app npm test
+```
+
+## Contributing
 
 This currently is only a research project for my personal/academic use.
 Feel free to submit bugfixes and raise general issues about the system behaving wrong/unexpected in general.

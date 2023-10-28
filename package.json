@@ -5,19 +5,21 @@
     "type": "module",
     "scripts": {
         "dev": "npm install && vue-tsc --noEmit && vite",
-        "build": "npm install && vue-tsc --noEmit && vite build",
-        "preview": "vite preview"
+        "build": "npm install && npm test && vue-tsc --noEmit && vite build",
+        "test": "jest"
     },
     "dependencies": {
         "katex": "^0.16.9",
-        "sass": "^1.69.5",
         "uuid": "^9.0.1",
         "vue": "^3.3.4"
     },
     "devDependencies": {
+        "@jest/globals": "^29.7.0",
         "@types/katex": "^0.16.5",
         "@types/uuid": "^9.0.6",
         "@vitejs/plugin-vue": "^4.2.3",
+        "sass": "^1.69.5",
+        "ts-jest": "^29.1.1",
         "typescript": "^5.0.2",
         "vite": "^4.4.5",
         "vue-tsc": "^1.8.5"
