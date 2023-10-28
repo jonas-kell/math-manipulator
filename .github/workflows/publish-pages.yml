@@ -28,7 +28,7 @@ jobs:
             - uses: 5monkeys/cobertura-action@master
               with:
                   path: coverage/cobertura-coverage.xml
-                  minimum_coverage: 20
+                  minimum_coverage: 90
     build:
         runs-on: ubuntu-latest
         needs: test
