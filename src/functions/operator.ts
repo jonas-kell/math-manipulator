@@ -21,6 +21,7 @@ export enum OperatorType {
     Bra = "singular_bra",
     Ket = "singular_ket",
     Braket = "double_braket",
+    Bracket = "triple_bra_c_ket",
     FermionicCreationOperator = "fermionic_creation",
     FermionicAnnihilationOperator = "fermionic_annihilation",
     BosonicCreationOperator = "bosonic_creation",
@@ -256,6 +257,9 @@ export abstract class Operator {
             case OperatorType.Braket:
                 res = new Braket(childrenReconstructed[0], childrenReconstructed[1]);
                 break;
+            case OperatorType.Bracket:
+                res = new Bracket(childrenReconstructed[0], childrenReconstructed[1], childrenReconstructed[2]);
+                break;
             case OperatorType.FermionicCreationOperator:
                 res = new FermionicCreationOperator(childrenReconstructed[0]);
                 break;
@@ -311,6 +315,7 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Bra]: 1,
     [OperatorType.Ket]: 1,
     [OperatorType.Braket]: 2,
+    [OperatorType.Bracket]: 3,
     [OperatorType.FermionicCreationOperator]: 1,
     [OperatorType.FermionicAnnihilationOperator]: 1,
     [OperatorType.BosonicCreationOperator]: 1,
@@ -340,6 +345,7 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Bra]: 1,
     [OperatorType.Ket]: 1,
     [OperatorType.Braket]: 2,
+    [OperatorType.Bracket]: 3,
     [OperatorType.FermionicCreationOperator]: 1,
     [OperatorType.FermionicAnnihilationOperator]: 1,
     [OperatorType.BosonicCreationOperator]: 1,
@@ -459,6 +465,12 @@ export class Ket extends Operator {
 export class Braket extends Operator {
     constructor(bra: Operator, ket: Operator) {
         super(OperatorType.Braket, "\\left\\lang", "\\middle\\vert", "\\right\\rang", [bra, ket], "");
+    }
+}
+
+export class Bracket extends Operator {
+    constructor(bra: Operator, operator: Operator, ket: Operator) {
+        super(OperatorType.Bracket, "\\left\\lang", "\\middle\\vert", "\\right\\rang", [bra, operator, ket], "");
     }
 }
 

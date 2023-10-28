@@ -63,6 +63,7 @@ const AllowedFunctionKeywordMapping = {
     bra: OperatorType.Bra,
     ket: OperatorType.Ket,
     braket: OperatorType.Braket,
+    bracket: OperatorType.Bracket,
     "c#": OperatorType.FermionicCreationOperator,
     c: OperatorType.FermionicAnnihilationOperator,
     "b#": OperatorType.BosonicCreationOperator,
