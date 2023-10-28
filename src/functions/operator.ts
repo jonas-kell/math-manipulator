@@ -13,6 +13,22 @@ export enum OperatorType {
     RawLatex = "raw_latex",
     BracketedMultiplication = "bracketed_multiplication",
     Negation = "negation",
+    Pi = "constant_pi",
+    Infinity = "infinity",
+    Psi = "constant_psi",
+    Phi = "constant_phi",
+    Exp = "exp_function",
+    Bra = "singular_bra",
+    Ket = "singular_ket",
+    Braket = "double_braket",
+    FermionicCreationOperator = "fermionic_creation",
+    FermionicAnnihilationOperator = "fermionic_annihilation",
+    BosonicCreationOperator = "bosonic_creation",
+    BosonicAnnihilationOperator = "bosonic_annihilation",
+    FunctionMathMode = "general_function_math_mode",
+    FunctionMathRm = "general_function_math_rm",
+    Sin = "sin",
+    Cos = "cos",
 }
 
 export interface ExportOperatorContent {
@@ -216,6 +232,54 @@ export abstract class Operator {
             case OperatorType.Negation:
                 res = new Negation(childrenReconstructed[0]);
                 break;
+            case OperatorType.Pi:
+                res = new Pi();
+                break;
+            case OperatorType.Phi:
+                res = new Phi();
+                break;
+            case OperatorType.Psi:
+                res = new Psi();
+                break;
+            case OperatorType.Infinity:
+                res = new Infinity();
+                break;
+            case OperatorType.Exp:
+                res = new Exp(childrenReconstructed[0]);
+                break;
+            case OperatorType.Bra:
+                res = new Bra(childrenReconstructed[0]);
+                break;
+            case OperatorType.Ket:
+                res = new Ket(childrenReconstructed[0]);
+                break;
+            case OperatorType.Braket:
+                res = new Braket(childrenReconstructed[0], childrenReconstructed[1]);
+                break;
+            case OperatorType.FermionicCreationOperator:
+                res = new FermionicCreationOperator(childrenReconstructed[0]);
+                break;
+            case OperatorType.FermionicAnnihilationOperator:
+                res = new FermionicAnnihilationOperator(childrenReconstructed[0]);
+                break;
+            case OperatorType.BosonicCreationOperator:
+                res = new BosonicCreationOperator(childrenReconstructed[0]);
+                break;
+            case OperatorType.BosonicAnnihilationOperator:
+                res = new BosonicAnnihilationOperator(childrenReconstructed[0]);
+                break;
+            case OperatorType.FunctionMathMode:
+                res = new FunctionMathMode(childrenReconstructed[0], childrenReconstructed[1]);
+                break;
+            case OperatorType.FunctionMathRm:
+                res = new FunctionMathRm(childrenReconstructed[0], childrenReconstructed[1]);
+                break;
+            case OperatorType.Sin:
+                res = new Sin(childrenReconstructed[0]);
+                break;
+            case OperatorType.Cos:
+                res = new Cos(childrenReconstructed[0]);
+                break;
             default:
                 throw Error(`type ${input.type} could not be parsed to an implemented Operator`);
         }
@@ -239,6 +303,22 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.RawLatex]: 0,
     [OperatorType.StructuralVariable]: 1,
     [OperatorType.Negation]: 1,
+    [OperatorType.Pi]: 0,
+    [OperatorType.Infinity]: 0,
+    [OperatorType.Exp]: 1,
+    [OperatorType.Psi]: 0,
+    [OperatorType.Phi]: 0,
+    [OperatorType.Bra]: 1,
+    [OperatorType.Ket]: 1,
+    [OperatorType.Braket]: 2,
+    [OperatorType.FermionicCreationOperator]: 1,
+    [OperatorType.FermionicAnnihilationOperator]: 1,
+    [OperatorType.BosonicCreationOperator]: 1,
+    [OperatorType.BosonicAnnihilationOperator]: 1,
+    [OperatorType.FunctionMathMode]: 2,
+    [OperatorType.FunctionMathRm]: 2,
+    [OperatorType.Sin]: 1,
+    [OperatorType.Cos]: 1,
 };
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
@@ -252,6 +332,22 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.RawLatex]: 0,
     [OperatorType.StructuralVariable]: 1,
     [OperatorType.Negation]: 1,
+    [OperatorType.Pi]: 0,
+    [OperatorType.Infinity]: 0,
+    [OperatorType.Exp]: 1,
+    [OperatorType.Psi]: 0,
+    [OperatorType.Phi]: 0,
+    [OperatorType.Bra]: 1,
+    [OperatorType.Ket]: 1,
+    [OperatorType.Braket]: 2,
+    [OperatorType.FermionicCreationOperator]: 1,
+    [OperatorType.FermionicAnnihilationOperator]: 1,
+    [OperatorType.BosonicCreationOperator]: 1,
+    [OperatorType.BosonicAnnihilationOperator]: 1,
+    [OperatorType.FunctionMathMode]: 2,
+    [OperatorType.FunctionMathRm]: 2,
+    [OperatorType.Sin]: 1,
+    [OperatorType.Cos]: 1,
 };
 
 export class Numerical extends Operator {
@@ -315,5 +411,101 @@ export class StructuralVariable extends Operator {
 export class Negation extends Operator {
     constructor(content: Operator) {
         super(OperatorType.Negation, "-", "", "", [content], "");
+    }
+}
+
+export class Pi extends Operator {
+    constructor() {
+        super(OperatorType.Pi, "\\pi", "", "", [], "");
+    }
+}
+
+export class Infinity extends Operator {
+    constructor() {
+        super(OperatorType.Infinity, "\\infty", "", "", [], "");
+    }
+}
+
+export class Exp extends Operator {
+    constructor(exponent: Operator) {
+        super(OperatorType.Exp, "\\mathrm{e}^{", "", "}", [exponent], "");
+    }
+}
+
+export class Psi extends Operator {
+    constructor() {
+        super(OperatorType.Psi, "\\Psi", "", "", [], "");
+    }
+}
+
+export class Phi extends Operator {
+    constructor() {
+        super(OperatorType.Phi, "\\Phi", "", "", [], "");
+    }
+}
+
+export class Bra extends Operator {
+    constructor(content: Operator) {
+        super(OperatorType.Bra, "\\left\\lang", "", "\\right\\vert", [content], "");
+    }
+}
+
+export class Ket extends Operator {
+    constructor(content: Operator) {
+        super(OperatorType.Ket, "\\left\\vert", "", "\\right\\rang", [content], "");
+    }
+}
+
+export class Braket extends Operator {
+    constructor(bra: Operator, ket: Operator) {
+        super(OperatorType.Braket, "\\left\\lang", "\\middle\\vert", "\\right\\rang", [bra, ket], "");
+    }
+}
+
+export class FermionicCreationOperator extends Operator {
+    constructor(index: Operator) {
+        super(OperatorType.FermionicCreationOperator, "\\mathrm{c}^\\dagger_{", "", "}", [index], "");
+    }
+}
+
+export class FermionicAnnihilationOperator extends Operator {
+    constructor(index: Operator) {
+        super(OperatorType.FermionicAnnihilationOperator, "\\mathrm{c}_{", "", "}", [index], "");
+    }
+}
+
+export class BosonicCreationOperator extends Operator {
+    constructor(index: Operator) {
+        super(OperatorType.BosonicCreationOperator, "\\mathrm{b}^\\dagger_{", "", "}", [index], "");
+    }
+}
+
+export class BosonicAnnihilationOperator extends Operator {
+    constructor(index: Operator) {
+        super(OperatorType.BosonicAnnihilationOperator, "\\mathrm{b}_{", "", "}", [index], "");
+    }
+}
+
+export class FunctionMathMode extends Operator {
+    constructor(name: Operator, content: Operator) {
+        super(OperatorType.FunctionMathMode, "{", "}\\left(", "\\right)", [name, content], "");
+    }
+}
+
+export class FunctionMathRm extends Operator {
+    constructor(name: Operator, content: Operator) {
+        super(OperatorType.FunctionMathRm, "\\mathrm{", "}\\left(", "\\right)", [name, content], "");
+    }
+}
+
+export class Sin extends Operator {
+    constructor(content: Operator) {
+        super(OperatorType.Sin, "\\mathrm{sin}\\left(", "", "\\right)", [content], "");
+    }
+}
+
+export class Cos extends Operator {
+    constructor(content: Operator) {
+        super(OperatorType.Cos, "\\mathrm{cos}\\left(", "", "\\right)", [content], "");
     }
 }

@@ -41,6 +41,7 @@ enum TokenType {
     Multiplicate = "Multiplicate",
     Divide = "Divide",
     Function = "Function",
+    Constant = "Constant",
     Number = "Number",
     Other = "Other",
 }
@@ -58,8 +59,27 @@ enum ReservedWord {
 const AllowedFunctionKeywordMapping = {
     sum: OperatorType.BigSum,
     int: OperatorType.BigInt,
+    exp: OperatorType.Exp,
+    bra: OperatorType.Bra,
+    ket: OperatorType.Ket,
+    braket: OperatorType.Braket,
+    "c#": OperatorType.FermionicCreationOperator,
+    c: OperatorType.FermionicAnnihilationOperator,
+    "b#": OperatorType.BosonicCreationOperator,
+    b: OperatorType.BosonicAnnihilationOperator,
+    func: OperatorType.FunctionMathMode,
+    funcrm: OperatorType.FunctionMathRm,
+    sin: OperatorType.Sin,
+    cos: OperatorType.Cos,
 } as { [key: string]: OperatorType };
 const AllowedFunctionKeywords = Object.keys(AllowedFunctionKeywordMapping);
+const AllowedConstantKeywordMapping = {
+    pi: OperatorType.Pi,
+    inf: OperatorType.Infinity,
+    psi: OperatorType.Psi,
+    phi: OperatorType.Phi,
+} as { [key: string]: OperatorType };
+const AllowedConstantKeywords = Object.keys(AllowedConstantKeywordMapping);
 
 interface Token {
     type: TokenType;
@@ -127,6 +147,16 @@ function tokenize(input: string): Token[] {
                     tokens.push({
                         type: TokenType.Function,
                         content: AllowedFunctionKeywordMapping[AllowedFunctionKeywords[i]],
+                    });
+                    wordFound = true;
+                    break;
+                }
+            }
+            for (let i = 0; i < AllowedConstantKeywords.length; i++) {
+                if (currentBufWord == AllowedConstantKeywords[i]) {
+                    tokens.push({
+                        type: TokenType.Constant,
+                        content: AllowedConstantKeywordMapping[AllowedConstantKeywords[i]],
                     });
                     wordFound = true;
                     break;
@@ -267,16 +297,16 @@ function trimTokenGroupRecursive(tokenGroup: TokenGroup): TokenGroup {
     return tokenGroup;
 }
 
-const implyMultiplicationInFront = [TokenType.Other, TokenType.Number, TokenType.Function]; // Plus groups aka most of the time brackets
-const implyMultiplicationBehind = [TokenType.Other, TokenType.Number]; // Plus groups aka most of the time brackets
+const implyMultiplicationInFront = [TokenType.Other, TokenType.Number, TokenType.Function, TokenType.Constant]; // Plus groups aka most of the time brackets
+const implyMultiplicationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant]; // Plus groups aka most of the time brackets
 
 function insertMultiplicationsIntoForbiddenFollowingsRecursive(tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupKnot) {
         let children = tokenGroup.getChildren().map((child) => insertMultiplicationsIntoForbiddenFollowingsRecursive(child));
 
         let newChildren = [] as TokenGroup[];
-        let firstState = "none" as "needAddition" | "doNotNeed" | "none";
-        let secondState = "none" as "needAddition" | "doNotNeed" | "none";
+        let firstState = "none" as "needMultiplication" | "doNotNeed" | "none";
+        let secondState = "none" as "needMultiplication" | "doNotNeed" | "none";
         for (let i = 0; i < children.length; i++) {
             const first = children[i - 1];
             const second = children[i];
@@ -288,7 +318,7 @@ function insertMultiplicationsIntoForbiddenFollowingsRecursive(tokenGroup: Token
                 (first instanceof TokenGroupKnot ||
                     (first instanceof TokenGroupLeaf && implyMultiplicationBehind.includes(first.getToken().type)))
             ) {
-                firstState = "needAddition";
+                firstState = "needMultiplication";
             } else {
                 firstState = "doNotNeed";
             }
@@ -296,13 +326,13 @@ function insertMultiplicationsIntoForbiddenFollowingsRecursive(tokenGroup: Token
                 second instanceof TokenGroupKnot ||
                 (second instanceof TokenGroupLeaf && implyMultiplicationInFront.includes(second.getToken().type))
             ) {
-                secondState = "needAddition";
+                secondState = "needMultiplication";
             } else {
                 secondState = "doNotNeed";
             }
 
             // check if need insert multiplication
-            if (firstState == "needAddition" && secondState == "needAddition") {
+            if (firstState == "needMultiplication" && secondState == "needMultiplication") {
                 newChildren.push(
                     // insert implicit multiplication
                     new TokenGroupLeaf({
@@ -393,9 +423,15 @@ class TokenGroupKnotInfix extends TokenGroup {
  */
 function fixOperatorPrecedenceGrouping(tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupLeaf && tokenTypesWithOperatorCharacter.includes(tokenGroup.getToken().type)) {
-        throw Error(
-            `Operator ${tokenGroup.getToken().type}:${tokenGroup.getToken().content} alone on top level, which is not possible`
-        );
+        const type = tokenGroup.getToken().type;
+        // Constants do not take any arguments!
+        if (!(type == TokenType.Constant)) {
+            throw Error(
+                `Operator ${tokenGroup.getToken().type}:${
+                    tokenGroup.getToken().content
+                } alone on top level, which is not possible`
+            );
+        }
     }
 
     return fixOperatorPrecedenceGroupingRecursive(tokenGroup);
@@ -568,6 +604,15 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
                     children: [],
                     uuid: "",
                 } as ExportOperatorContent;
+            case TokenType.Constant:
+                const operatorToken = tokenGroup.getToken();
+                return {
+                    type: operatorToken.content,
+                    value: "",
+                    children: [],
+                    uuid: "",
+                } as ExportOperatorContent;
+
             default:
                 throw Error(`Singular token without implemented Export target type ${token.type} `);
         }
@@ -605,55 +650,34 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
                     uuid: "",
                 } as ExportOperatorContent;
             case TokenType.Function:
-                const afterGroup = tokenGroup.getChildren()[0];
+                let childrenForFunctionOperator = [children[0]];
 
-                if (afterGroup instanceof TokenGroupKnotInfix) {
-                    const childrenForFunctionOperator = children[0].children; // because has already been processed above
-
-                    if (
-                        childrenForFunctionOperator.length < MIN_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType] ||
-                        childrenForFunctionOperator.length > MAX_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
-                    ) {
-                        throw Error(
-                            `Function of subtype ${operatorToken.content} requires between ${
-                                MIN_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
-                            } and ${
-                                MAX_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
-                            } arguments in its arguments, but ${childrenForFunctionOperator.length} were provided`
-                        );
-                    }
-
-                    switch (operatorToken.content) {
-                        case OperatorType.BigSum:
-                            return {
-                                type: OperatorType.BigSum,
-                                value: "",
-                                children: [
-                                    childrenForFunctionOperator[0],
-                                    childrenForFunctionOperator[1],
-                                    childrenForFunctionOperator[2],
-                                ],
-                                uuid: "",
-                            } as ExportOperatorContent;
-                        case OperatorType.BigInt:
-                            return {
-                                type: OperatorType.BigInt,
-                                value: "",
-                                children: [
-                                    childrenForFunctionOperator[0],
-                                    childrenForFunctionOperator[1],
-                                    childrenForFunctionOperator[2],
-                                    childrenForFunctionOperator[3],
-                                ],
-                                uuid: "",
-                            } as ExportOperatorContent;
-                        default:
-                            throw Error(`Function of subtype ${operatorToken.content} has no translation implemented`);
-                    }
+                // extract if arguments are from group
+                if (tokenGroup.getChildren()[0] instanceof TokenGroupKnotInfix) {
+                    childrenForFunctionOperator = children[0].children; // because has already been processed above
                 }
-                throw Error(
-                    `Function of subtype ${operatorToken.content} needs to have its arguments as a group without operators. e.g. sum(n=1 \\infty n)`
-                );
+
+                if (
+                    childrenForFunctionOperator.length < MIN_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType] ||
+                    childrenForFunctionOperator.length > MAX_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
+                ) {
+                    throw Error(
+                        `Function of subtype ${operatorToken.content} requires between ${
+                            MIN_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
+                        } and ${
+                            MAX_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
+                        } arguments in its arguments, but ${
+                            childrenForFunctionOperator.length
+                        } were provided. Arguments need to be supplied as a group without operators. e.g. sum(n=1 \\infty n)`
+                    );
+                }
+
+                return {
+                    type: operatorToken.content,
+                    value: "",
+                    children: childrenForFunctionOperator,
+                    uuid: "",
+                } as ExportOperatorContent;
 
             default:
                 throw Error(`Group translation not implemented for operator ${operatorToken.type}`);
