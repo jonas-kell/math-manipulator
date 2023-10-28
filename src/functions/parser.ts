@@ -601,7 +601,8 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                     if (
                         elementToTakeFromAfter instanceof TokenGroupKnotInfix ||
                         (elementToTakeFromAfter instanceof TokenGroupLeaf &&
-                            !tokenTypesWithOperatorCharacter.includes(elementToTakeFromAfter.getToken().type))
+                            !tokenTypesWithOperatorCharacter.includes(elementToTakeFromAfter.getToken().type) &&
+                            elementToTakeFromAfter.getToken().type != TokenType.Structural)
                     ) {
                         if (stillNeeded == 0) {
                             throw Error(
