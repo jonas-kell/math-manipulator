@@ -17,6 +17,7 @@ docker compose up
 
 ```sh
 docker compose run --rm app npm test
+npm run open-coverage # Only works if npm is installed. Just open `./coverage/lcov-report/index.html` manually instead
 ```
 
 ## Contributing

@@ -5,8 +5,9 @@
     "type": "module",
     "scripts": {
         "dev": "npm install && vue-tsc --noEmit && vite",
-        "build": "npm install && npm test && vue-tsc --noEmit && vite build",
-        "test": "jest"
+        "build": "npm install && vue-tsc --noEmit && vite build",
+        "test": "jest",
+        "open-coverage": "open-cli coverage/lcov-report/index.html"
     },
     "dependencies": {
         "katex": "^0.16.9",
@@ -18,6 +19,8 @@
         "@types/katex": "^0.16.5",
         "@types/uuid": "^9.0.6",
         "@vitejs/plugin-vue": "^4.2.3",
+        "jest-junit": "^16.0.0",
+        "open-cli": "^7.2.0",
         "sass": "^1.69.5",
         "ts-jest": "^29.1.1",
         "typescript": "^5.0.2",
