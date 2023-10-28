@@ -26,6 +26,14 @@ function parseStringToExportOperatorContent(input: string): ExportOperatorConten
         };
     }
 
+    const countOpen = (input.match(/{/g) || []).length - (input.match(/\\{/g) || []).length;
+    const countClose = (input.match(/}/g) || []).length - (input.match(/\\}/g) || []).length;
+    if (countOpen != countClose) {
+        throw Error(
+            `Imbalance of unescaped { (${countOpen}) characters and } (${countClose}) characters. Will not be possible to compile.`
+        );
+    }
+
     const tokens = tokenize(input);
     const grouped = groupTokenStream(tokens);
     const exportOperators = infixTokenGroupTreeToExportOperatorTreeRecursive(grouped);
@@ -34,6 +42,7 @@ function parseStringToExportOperatorContent(input: string): ExportOperatorConten
 }
 
 enum TokenType {
+    Structural = "Structural",
     Plus = "Plus",
     Minus = "Minus",
     OpenParen = "OpenParen",
@@ -81,6 +90,14 @@ const AllowedConstantKeywordMapping = {
     phi: OperatorType.Phi,
 } as { [key: string]: OperatorType };
 const AllowedConstantKeywords = Object.keys(AllowedConstantKeywordMapping);
+const AllowedStructuralKeywordMapping = {
+    "{}": OperatorType.EmptyArgument,
+    "=": OperatorType.Equals,
+    "!=": OperatorType.NotEquals,
+    "<=>": OperatorType.Iff,
+    iff: OperatorType.Iff,
+} as { [key: string]: OperatorType };
+const AllowedStructuralKeywords = Object.keys(AllowedStructuralKeywordMapping);
 
 interface Token {
     type: TokenType;
@@ -163,6 +180,16 @@ function tokenize(input: string): Token[] {
                     break;
                 }
             }
+            for (let i = 0; i < AllowedStructuralKeywords.length; i++) {
+                if (currentBufWord == AllowedStructuralKeywords[i]) {
+                    tokens.push({
+                        type: TokenType.Structural,
+                        content: currentBufWord,
+                    });
+                    wordFound = true;
+                    break;
+                }
+            }
 
             // try parsing as number
             if (!wordFound) {
@@ -175,7 +202,13 @@ function tokenize(input: string): Token[] {
 
             // rest
             if (!wordFound) {
-                tokens.push({ type: TokenType.Other, content: currentBufWord });
+                const likelyLatex =
+                    currentBufWord.includes("\\") ||
+                    currentBufWord.includes("^") ||
+                    currentBufWord.includes("_") ||
+                    currentBufWord.includes("{") ||
+                    currentBufWord.includes("}");
+                tokens.push({ type: likelyLatex ? TokenType.Structural : TokenType.Other, content: currentBufWord });
                 wordFound = true;
             }
         }
@@ -238,8 +271,8 @@ function groupTokenStream(tokens: Token[]): TokenGroup {
         throw Error("Not all tokens have been processed in the grouping stage");
     }
     const trimmed = trimTokenGroupRecursive(res[0]);
-    const implicitMultiplyInserted = insertImpliedOperationsRecursive(trimmed);
-    const precedenceFixed = fixOperatorPrecedenceGrouping(implicitMultiplyInserted);
+    const implicitOperationsInserted = insertImpliedOperationsRecursive(trimmed);
+    const precedenceFixed = fixOperatorPrecedenceGrouping(implicitOperationsInserted);
 
     return precedenceFixed;
 }
@@ -438,6 +471,12 @@ class TokenGroupKnotInfix extends TokenGroup {
     }
 }
 
+class TokenGroupKnotInfixStructural extends TokenGroupKnotInfix {
+    constructor(children: TokenGroup[]) {
+        super(new TokenGroupLeaf({ type: TokenType.Structural, content: "" }), children);
+    }
+}
+
 /**
  * Previously flat operation groupings proper depth via priority
  *
@@ -611,7 +650,8 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
         if (children.length == 1) {
             return children[0]; // do not add an unnecessary group for one element
         } else {
-            throw Error("Only one element should be left after processing in descending precedence");
+            // multiple elements left: must have something to do with structural elements (=, !=, \iff) or raw Latex
+            return new TokenGroupKnotInfixStructural(children);
         }
     }
     // leaf
@@ -632,6 +672,25 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
                 } as ExportOperatorContent;
             case TokenType.Other:
                 return {
+                    type: OperatorType.Variable,
+                    value: token.content,
+                    children: [],
+                    uuid: "",
+                } as ExportOperatorContent;
+            case TokenType.Structural:
+                // structural if not in predefined list, render as raw latex
+                for (let i = 0; i < AllowedStructuralKeywords.length; i++) {
+                    if (token.content == AllowedStructuralKeywords[i]) {
+                        return {
+                            type: AllowedStructuralKeywordMapping[AllowedStructuralKeywords[i]],
+                            value: "",
+                            children: [],
+                            uuid: "",
+                        } as ExportOperatorContent;
+                    }
+                }
+
+                return {
                     type: OperatorType.RawLatex,
                     value: token.content,
                     children: [],
@@ -649,6 +708,16 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
             default:
                 throw Error(`Singular token without implemented Export target type ${token.type} `);
         }
+    } else if (tokenGroup instanceof TokenGroupKnotInfixStructural) {
+        // catch this before the next switch, because all TokenGroupKnotInfixStructural are also TokenGroupKnotInfix
+        const children = tokenGroup.getChildren().map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(child));
+
+        return {
+            type: OperatorType.StructuralContainer,
+            value: "",
+            children: children,
+            uuid: "",
+        } as ExportOperatorContent;
     } else if (tokenGroup instanceof TokenGroupKnotInfix) {
         const operatorToken = tokenGroup.getOperator().getToken();
         const children = tokenGroup.getChildren().map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(child));
@@ -726,7 +795,7 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
         }
     } else {
         throw Error(
-            `Only the types TokenGroupKnotInfix and TokenGroupLeaf should exist... TokenGroupKnot should have been converted to TokenGroupKnotInfix`
+            `Only the types TokenGroupKnotInfix, TokenGroupKnotInfixStructural and TokenGroupLeaf should exist... TokenGroupKnot should have been converted to TokenGroupKnotInfix`
         );
     }
 }

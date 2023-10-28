@@ -30,6 +30,11 @@ export enum OperatorType {
     FunctionMathRm = "general_function_math_rm",
     Sin = "sin",
     Cos = "cos",
+    StructuralContainer = "structural_container",
+    EmptyArgument = "empty_argument",
+    Equals = "equals",
+    NotEquals = "not_equals",
+    Iff = "iff",
 }
 const FERMIONIC_BOSONIC_OPERATORS = [
     OperatorType.BosonicAnnihilationOperator,
@@ -338,6 +343,21 @@ export abstract class Operator {
             case OperatorType.Cos:
                 res = new Cos(childrenReconstructed[0]);
                 break;
+            case OperatorType.StructuralContainer:
+                res = new StructuralContainer(childrenReconstructed);
+                break;
+            case OperatorType.EmptyArgument:
+                res = new EmptyArgument();
+                break;
+            case OperatorType.Equals:
+                res = new Equals();
+                break;
+            case OperatorType.NotEquals:
+                res = new NotEquals();
+                break;
+            case OperatorType.Iff:
+                res = new Iff();
+                break;
             default:
                 throw Error(`type ${input.type} could not be parsed to an implemented Operator`);
         }
@@ -378,6 +398,11 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.FunctionMathRm]: 2,
     [OperatorType.Sin]: 1,
     [OperatorType.Cos]: 1,
+    [OperatorType.StructuralContainer]: MAX_CHILDREN,
+    [OperatorType.EmptyArgument]: 0,
+    [OperatorType.Equals]: 0,
+    [OperatorType.NotEquals]: 0,
+    [OperatorType.Iff]: 0,
 };
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
@@ -408,6 +433,11 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.FunctionMathRm]: 2,
     [OperatorType.Sin]: 1,
     [OperatorType.Cos]: 1,
+    [OperatorType.StructuralContainer]: 2, // makes no sense keeping extraneous containers if they don't contain anything
+    [OperatorType.EmptyArgument]: 0,
+    [OperatorType.Equals]: 0,
+    [OperatorType.NotEquals]: 0,
+    [OperatorType.Iff]: 0,
 };
 
 export class Numerical extends Operator {
@@ -573,5 +603,35 @@ export class Sin extends Operator {
 export class Cos extends Operator {
     constructor(content: Operator) {
         super(OperatorType.Cos, "\\mathrm{cos}\\left(", "", "\\right)", [content], "");
+    }
+}
+
+export class StructuralContainer extends Operator {
+    constructor(children: Operator[]) {
+        super(OperatorType.StructuralContainer, "", "\\,\\,", "", children, "");
+    }
+}
+
+export class EmptyArgument extends Operator {
+    constructor() {
+        super(OperatorType.EmptyArgument, "{", "", "}", [], "");
+    }
+}
+
+export class Equals extends Operator {
+    constructor() {
+        super(OperatorType.Equals, "\\eq", "", "", [], ""); // custom macro check
+    }
+}
+
+export class NotEquals extends Operator {
+    constructor() {
+        super(OperatorType.NotEquals, "\\neq", "", "", [], "");
+    }
+}
+
+export class Iff extends Operator {
+    constructor() {
+        super(OperatorType.Iff, "\\iff", "", "", [], "");
     }
 }

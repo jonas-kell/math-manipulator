@@ -63,7 +63,7 @@
 
 <template>
     <p>Try:</p>
-    <pre>sum(n=0 100 int(-\infty \infty (123+(A*4)/100) x))</pre>
+    <pre>sum((n = 0) 100 int(-inf inf (123+(A*4)/100) x))</pre>
     <textarea name="test" id="test" v-model="text" style="width: 100%; min-height: 6em"></textarea>
     <KatexRenderer
         v-if="parsedOperator"
@@ -72,6 +72,11 @@
         @selected="(id) => console.log(id)"
     />
     {{ error }}
+    <br />
+    <br />
+    <template v-if="parsedOperator">
+        <pre>{{ JSON.parse(parsedOperator.serializeStructure()) }}</pre>
+    </template>
 
     <KatexRenderer
         :katex-input="formula.getFormulaString()"

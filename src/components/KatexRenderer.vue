@@ -49,6 +49,9 @@
 
         if (element) {
             katex.render(props.katexInput, element, {
+                macros: {
+                    "\\eq": "=",
+                },
                 throwOnError: false,
                 displayMode: true,
                 trust: true,
