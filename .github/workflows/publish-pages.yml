@@ -1,6 +1,6 @@
 # Deploy to github pages
 
-name: Publish Pages
+name: Main Workflow
 
 # Controls when the workflow will run
 on:
