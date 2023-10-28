@@ -450,12 +450,16 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
             let currentPrecedence = -1;
             children.forEach((child, index) => {
                 if (child instanceof TokenGroupLeaf && tokenTypesWithOperatorCharacter.includes(child.getToken().type)) {
-                    const comparePrecedence =
-                        tokenTypesWithOperatorCharacterDefinitions[child.getToken().type as tokenTypesWithOperatorCharacterType]
-                            .precedence;
-                    if (currentPrecedence < comparePrecedence) {
+                    const controlStruct =
+                        tokenTypesWithOperatorCharacterDefinitions[child.getToken().type as tokenTypesWithOperatorCharacterType];
+                    // either the precedence is higher, or the function only takes to the right and it is the same
+                    // this is important, because reading direction is left to right, if it doesn't take before it, it is important, that the rightmost one is taken
+                    if (
+                        currentPrecedence < controlStruct.precedence ||
+                        (controlStruct.takesNrArgumentsBefore == 0 && currentPrecedence <= controlStruct.precedence)
+                    ) {
                         highestIndex = index;
-                        currentPrecedence = comparePrecedence;
+                        currentPrecedence = controlStruct.precedence;
                     }
                 }
             });
@@ -653,7 +657,16 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
                 let childrenForFunctionOperator = [children[0]];
 
                 // extract if arguments are from group
-                if (tokenGroup.getChildren()[0] instanceof TokenGroupKnotInfix) {
+                if (
+                    tokenGroup.getChildren()[0] instanceof TokenGroupKnotInfix &&
+                    // Convenience feature: keep the group for functions that only take one argument (= the group)
+                    // With this exp(1 2 3) works, even though exp doesn't take 3 arguments
+                    // also kind of required, because manual exp((1 2 3)) would remove unnecessary brackets beforehand, so the exception would need to be implemented there
+                    !(
+                        MIN_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType] == 1 &&
+                        MAX_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType] == 1
+                    )
+                ) {
                     childrenForFunctionOperator = children[0].children; // because has already been processed above
                 }
 
