@@ -68,6 +68,7 @@ interface Token {
 
 function tokenize(input: string): Token[] {
     // make sure, that before all reserved words is at least one space
+    // ! Functions are exempt from this. To not split longer words/latex commands by mistake
     let spacesIntroduced = input;
     Object.values(ReservedWord).forEach((word) => {
         spacesIntroduced = spacesIntroduced.replaceAll(word, " " + word + " ");
@@ -89,59 +90,61 @@ function tokenize(input: string): Token[] {
 
         // test if is reserved word
         let wordFound = false;
-        switch (currentBuf) {
-            case ReservedWord.PlusSign:
-                tokens.push({ type: TokenType.Plus, content: "" });
-                wordFound = true;
-                break;
-            case ReservedWord.MinusSign:
-                tokens.push({ type: TokenType.Minus, content: "" });
-                wordFound = true;
-                break;
-            case ReservedWord.MultiplicationSign:
-                tokens.push({ type: TokenType.Multiplicate, content: "" });
-                wordFound = true;
-                break;
-            case ReservedWord.DivisionSign1:
-            case ReservedWord.DivisionSign2:
-                tokens.push({ type: TokenType.Divide, content: "" });
-                wordFound = true;
-                break;
-            case ReservedWord.OpenParenSign:
-                tokens.push({ type: TokenType.OpenParen, content: "" });
-                wordFound = true;
-                break;
-            case ReservedWord.CloseParenSign:
-                tokens.push({ type: TokenType.CloseParen, content: "" });
-                wordFound = true;
-                break;
-        }
-        for (let i = 0; i < AllowedFunctionKeywords.length; i++) {
-            if (currentBuf == AllowedFunctionKeywords[i]) {
-                tokens.push({
-                    type: TokenType.Function,
-                    content: AllowedFunctionKeywordMapping[AllowedFunctionKeywords[i]],
-                });
-                wordFound = true;
-                break;
-            }
-        }
 
         // only attempt to parse if substring is finished
         if (currentBuf.endsWith(" ")) {
+            const currentBufWord = currentBuf.substring(0, currentBuf.length - 1); // remove space at the end
+
+            switch (currentBufWord) {
+                case ReservedWord.PlusSign:
+                    tokens.push({ type: TokenType.Plus, content: "" });
+                    wordFound = true;
+                    break;
+                case ReservedWord.MinusSign:
+                    tokens.push({ type: TokenType.Minus, content: "" });
+                    wordFound = true;
+                    break;
+                case ReservedWord.MultiplicationSign:
+                    tokens.push({ type: TokenType.Multiplicate, content: "" });
+                    wordFound = true;
+                    break;
+                case ReservedWord.DivisionSign1:
+                case ReservedWord.DivisionSign2:
+                    tokens.push({ type: TokenType.Divide, content: "" });
+                    wordFound = true;
+                    break;
+                case ReservedWord.OpenParenSign:
+                    tokens.push({ type: TokenType.OpenParen, content: "" });
+                    wordFound = true;
+                    break;
+                case ReservedWord.CloseParenSign:
+                    tokens.push({ type: TokenType.CloseParen, content: "" });
+                    wordFound = true;
+                    break;
+            }
+            for (let i = 0; i < AllowedFunctionKeywords.length; i++) {
+                if (currentBufWord == AllowedFunctionKeywords[i]) {
+                    tokens.push({
+                        type: TokenType.Function,
+                        content: AllowedFunctionKeywordMapping[AllowedFunctionKeywords[i]],
+                    });
+                    wordFound = true;
+                    break;
+                }
+            }
+
             // try parsing as number
             if (!wordFound) {
                 // only if can be parsed as number
-                if (!isNaN(Number(currentBuf))) {
-                    tokens.push({ type: TokenType.Number, content: String(Number(currentBuf)) });
+                if (!isNaN(Number(currentBufWord))) {
+                    tokens.push({ type: TokenType.Number, content: String(Number(currentBufWord)) });
                     wordFound = true;
                 }
             }
 
             // rest
             if (!wordFound) {
-                const w = currentBuf.substring(0, currentBuf.length - 1); // remove space at the end
-                tokens.push({ type: TokenType.Other, content: w });
+                tokens.push({ type: TokenType.Other, content: currentBufWord });
                 wordFound = true;
             }
         }
