@@ -18,6 +18,7 @@ export enum OperatorType {
     Psi = "constant_psi",
     Phi = "constant_phi",
     Exp = "exp_function",
+    Power = "power",
     Bra = "singular_bra",
     Ket = "singular_ket",
     Braket = "double_braket",
@@ -307,6 +308,9 @@ export abstract class Operator {
             case OperatorType.Exp:
                 res = new Exp(childrenReconstructed[0]);
                 break;
+            case OperatorType.Power:
+                res = new Power(childrenReconstructed[0], childrenReconstructed[1]);
+                break;
             case OperatorType.Bra:
                 res = new Bra(childrenReconstructed[0]);
                 break;
@@ -384,6 +388,7 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Pi]: 0,
     [OperatorType.Infinity]: 0,
     [OperatorType.Exp]: 1,
+    [OperatorType.Power]: 2,
     [OperatorType.Psi]: 0,
     [OperatorType.Phi]: 0,
     [OperatorType.Bra]: 1,
@@ -419,6 +424,7 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Pi]: 0,
     [OperatorType.Infinity]: 0,
     [OperatorType.Exp]: 1,
+    [OperatorType.Power]: 2,
     [OperatorType.Psi]: 0,
     [OperatorType.Phi]: 0,
     [OperatorType.Bra]: 1,
@@ -519,6 +525,12 @@ export class Infinity extends Operator {
 export class Exp extends Operator {
     constructor(exponent: Operator) {
         super(OperatorType.Exp, "\\mathrm{e}^{", "", "}", [exponent], "");
+    }
+}
+
+export class Power extends Operator {
+    constructor(base: Operator, exponent: Operator) {
+        super(OperatorType.Power, "{", "}^{", "}", [base, exponent], "");
     }
 }
 

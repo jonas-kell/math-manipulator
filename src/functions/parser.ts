@@ -48,6 +48,7 @@ enum TokenType {
     OpenParen = "OpenParen",
     CloseParen = "CloseParen",
     Multiplicate = "Multiplicate",
+    Power = "Power",
     Divide = "Divide",
     Function = "Function",
     Constant = "Constant",
@@ -59,6 +60,7 @@ enum ReservedWord {
     PlusSign = "+",
     MinusSign = "-",
     MultiplicationSign = "*",
+    PowerSign = "$POWER$", // actually ** is used, but this doesn't work, because * is already a reserved word. Therefore special pre-processing in @see tokenize
     DivisionSign1 = "/",
     DivisionSign2 = ":",
     OpenParenSign = "(",
@@ -108,6 +110,7 @@ function tokenize(input: string): Token[] {
     // make sure, that before all reserved words is at least one space
     // ! Functions are exempt from this. To not split longer words/latex commands by mistake
     let spacesIntroduced = input;
+    spacesIntroduced = spacesIntroduced.replaceAll("**", ReservedWord.PowerSign); // special pre-processing, because * is already a reserved word, which disallows **
     Object.values(ReservedWord).forEach((word) => {
         spacesIntroduced = spacesIntroduced.replaceAll(word, " " + word + " ");
     });
@@ -149,6 +152,10 @@ function tokenize(input: string): Token[] {
                 case ReservedWord.DivisionSign1:
                 case ReservedWord.DivisionSign2:
                     tokens.push({ type: TokenType.Divide, content: "" });
+                    wordFound = true;
+                    break;
+                case ReservedWord.PowerSign:
+                    tokens.push({ type: TokenType.Power, content: "" });
                     wordFound = true;
                     break;
                 case ReservedWord.OpenParenSign:
@@ -424,6 +431,7 @@ type tokenTypesWithOperatorCharacterType =
     | TokenType.Minus
     | TokenType.Multiplicate
     | TokenType.Divide
+    | TokenType.Power
     | TokenType.Function;
 
 const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperatorCharacterType]: OperatorCharacter } = {
@@ -433,12 +441,17 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
         takesNrArgumentsAfter: 1,
     },
     [TokenType.Multiplicate]: {
+        precedence: 90,
+        takesNrArgumentsAfter: 1,
+        takesNrArgumentsBefore: 1,
+    },
+    [TokenType.Power]: {
         precedence: 100,
         takesNrArgumentsAfter: 1,
         takesNrArgumentsBefore: 1,
     },
     [TokenType.Divide]: {
-        precedence: 101,
+        precedence: 110,
         takesNrArgumentsAfter: 1,
         takesNrArgumentsBefore: 1,
     },
@@ -747,6 +760,13 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
             case TokenType.Divide:
                 return {
                     type: OperatorType.Fraction,
+                    value: "",
+                    children: [children[0], children[1]],
+                    uuid: "",
+                } as ExportOperatorContent;
+            case TokenType.Power:
+                return {
+                    type: OperatorType.Power,
                     value: "",
                     children: [children[0], children[1]],
                     uuid: "",
