@@ -12,6 +12,7 @@
         BigSum,
         Operator,
         Negation,
+        Bra,
     } from "./functions/operator";
     import { operatorFromString } from "./functions/parser";
     import { ref, computed } from "vue";
@@ -22,7 +23,7 @@
             new RawLatex("100"),
             new BigInt(
                 new Negation(new RawLatex("\\infty")),
-                new RawLatex("\\infty"),
+                new Bra(new Numerical(1.2)),
                 new BracketedSum([
                     new Numerical(123),
                     new Fraction(
@@ -72,6 +73,11 @@
         @selected="(id) => console.log(id)"
     />
     {{ error }}
+    <br />
+    <br />
+    <template v-if="parsedOperator">
+        <pre>{{ { output: parsedOperator.exportFormulaString(), latextext: parsedOperator.getFormulaString() } }}</pre>
+    </template>
     <br />
     <br />
     <template v-if="parsedOperator">

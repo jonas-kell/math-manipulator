@@ -275,7 +275,7 @@ function groupTokenStream(tokens: Token[]): TokenGroup {
     let res = groupTokenStreamRecursive(tokens, 0);
 
     if (res[1] < tokens.length) {
-        throw Error("Not all tokens have been processed in the grouping stage");
+        throw Error("Should not be possible, not all tokens have been processed in the grouping stage");
     }
     const trimmed = trimTokenGroupRecursive(res[0]);
     const implicitOperationsInserted = insertImpliedOperationsRecursive(trimmed);
@@ -623,6 +623,7 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                         elementToTakeFromAfter.getToken().type == type
                     ) {
                         if (stillNeeded != 0) {
+                            // Currently impossible to trigger, because all repeatable operations only take one argument afterwards
                             throw Error(
                                 `Repeat of Operator ${type}:${content} takes ${
                                     controlStruct.takesNrArgumentsAfter
