@@ -569,8 +569,11 @@ describe("parser module end-to-end", () => {
         });
     });
 
-    // test("No multiplication insertion into function-argument-groups", () => {
-    //     expect(() => operatorFromString("sum({} a s)")).not.toThrow();
-    //     expect(() => operatorFromString("sum({} a a {})")).toThrow();
-    // });
+    test("No multiplication insertion into function-argument-groups", () => {
+        expect(() => operatorFromString("sum({} a s)")).not.toThrow();
+        expect(() => operatorFromString("sum(a {} s)")).not.toThrow();
+        expect(() => operatorFromString("sum({} a {})")).not.toThrow();
+        expect(() => operatorFromString("sum(a a {})")).not.toThrow();
+        expect(() => operatorFromString("sum({} a a {})")).toThrow();
+    });
 });

@@ -345,7 +345,7 @@ const implyAdditionInFront = [TokenType.Minus]; // ! here NOT groups
 
 function insertImpliedOperationsRecursive(tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupKnot) {
-        let children = tokenGroup.getChildren().map((child) => insertImpliedOperationsRecursive(child));
+        let children = tokenGroup.getChildren();
 
         let newChildren = [] as TokenGroup[];
 
@@ -389,29 +389,54 @@ function insertImpliedOperationsRecursive(tokenGroup: TokenGroup): TokenGroup {
                 secondNeedsAddition = true;
             }
 
-            // check if need insert multiplication
-            if (firstNeedsMultiplication && secondNeedsMultiplication) {
-                newChildren.push(
-                    // insert implicit multiplication
-                    new TokenGroupLeaf({
-                        type: TokenType.Multiplicate,
-                        content: "",
-                    })
-                );
+            if (
+                first &&
+                first != undefined &&
+                first instanceof TokenGroupLeaf &&
+                first.getToken().type == TokenType.Function &&
+                MAX_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1 &&
+                MIN_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1
+            ) {
+                // Special case: the element after a function is the argument (bracket)
+                // NEVER insert operations before
+                // ONLY insert operations in between, when the function takes more than one argument
+                let functionArguments = [] as TokenGroup[];
+                if (second instanceof TokenGroupLeaf) {
+                    functionArguments = [second];
+                } else {
+                    if (second instanceof TokenGroupKnot) {
+                        functionArguments = second.getChildren().map((child) => insertImpliedOperationsRecursive(child));
+                    } else {
+                        throw Error("Unreachable. At this point there should only exist TokenGroupLeaves and TokenGroupKnots.");
+                    }
+                }
+                // insert arguments group
+                newChildren.push(new TokenGroupKnot(functionArguments));
             } else {
-                // check if need insert addition
-                if (firstNeedsAddition && secondNeedsAddition) {
+                // check if need insert multiplication
+                if (firstNeedsMultiplication && secondNeedsMultiplication) {
                     newChildren.push(
-                        // insert implicit addition
+                        // insert implicit multiplication
                         new TokenGroupLeaf({
-                            type: TokenType.Plus,
+                            type: TokenType.Multiplicate,
                             content: "",
                         })
                     );
+                } else {
+                    // check if need insert addition
+                    if (firstNeedsAddition && secondNeedsAddition) {
+                        newChildren.push(
+                            // insert implicit addition
+                            new TokenGroupLeaf({
+                                type: TokenType.Plus,
+                                content: "",
+                            })
+                        );
+                    }
                 }
+                // insert self
+                newChildren.push(insertImpliedOperationsRecursive(second));
             }
-            // insert self
-            newChildren.push(second);
         }
 
         return new TokenGroupKnot(newChildren);
