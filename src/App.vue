@@ -1,48 +1,8 @@
 <script setup lang="ts">
-    import KatexRenderer from "./components/KatexRenderer.vue";
-    import {
-        BracketedSum,
-        Numerical,
-        Fraction,
-        BigInt,
-        RawLatex,
-        Variable,
-        StructuralVariable,
-        BracketedMultiplication,
-        BigSum,
-        Operator,
-        Negation,
-        Bra,
-    } from "./functions/operator";
+    import EquationLine from "./components/EquationLine.vue";
     import { operatorFromString } from "./functions/parser";
+    import { Operator } from "./functions/operator";
     import { ref, computed } from "vue";
-
-    const formula = ref(
-        new BigSum(
-            new RawLatex("n=0"),
-            new RawLatex("100"),
-            new BigInt(
-                new Negation(new RawLatex("\\infty")),
-                new Bra(new Numerical(1.2)),
-                new BracketedSum([
-                    new Numerical(123),
-                    new Fraction(
-                        new BracketedMultiplication([new StructuralVariable("A", new Numerical(1)), new Numerical(4)]),
-                        new Numerical(100)
-                    ),
-                ]),
-                new Variable("x")
-            )
-        )
-    );
-
-    const exported = computed(() => {
-        return formula.value.serializeStructure();
-    });
-
-    const reImported = computed(() => {
-        return Operator.generateStructure(exported.value);
-    });
 
     const text = ref("");
     const error = ref("");
@@ -66,46 +26,8 @@
     <p>Try:</p>
     <pre>sum((n = 0) 100 int(-inf inf (123+(A*4)/100) x))</pre>
     <textarea name="test" id="test" v-model="text" style="width: 100%; min-height: 6em"></textarea>
-    <KatexRenderer
-        v-if="parsedOperator"
-        :katex-input="parsedOperator.getFormulaString()"
-        :uuids-to-process="parsedOperator.getContainedUUIDs()"
-        @selected="(id) => console.log(id)"
-    />
+    <EquationLine v-if="parsedOperator" :operator="parsedOperator" />
     {{ error }}
-    <br />
-    <br />
-    <template v-if="parsedOperator">
-        <pre>{{ { output: parsedOperator.exportFormulaString(), latextext: parsedOperator.getFormulaString() } }}</pre>
-    </template>
-    <br />
-    <br />
-    <template v-if="parsedOperator">
-        <pre>{{ JSON.parse(parsedOperator.serializeStructure()) }}</pre>
-    </template>
-
-    <KatexRenderer
-        :katex-input="formula.getFormulaString()"
-        :uuids-to-process="formula.getContainedUUIDs()"
-        @selected="(id) => console.log(id)"
-    />
-    {{ formula.getFormulaString() }}
-    <br />
-    <br />
-    {{ formula.exportFormulaString() }}
-    <br />
-    <br />
-    {{ exported }}
-
-    <KatexRenderer
-        :katex-input="reImported.getFormulaString()"
-        :uuids-to-process="reImported.getContainedUUIDs()"
-        @selected="(id) => console.log(id)"
-    />
-    {{ reImported.getFormulaString() }}
-    <br />
-    <br />
-    {{ formula.exportFormulaString() == reImported.exportFormulaString() ? "exports match" : "exports do not match" }}
 </template>
 
 <style scoped></style>

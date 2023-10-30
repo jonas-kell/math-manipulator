@@ -106,8 +106,12 @@ export abstract class Operator {
         return this._type;
     }
 
-    getUUIDString() {
+    getUUIDRef() {
         return "ref_" + this._uuid;
+    }
+
+    static uuidFromUUIDRef(UUIDRef: string) {
+        return UUIDRef.substring(4);
     }
 
     manuallySetUUID(uuid: string) {
@@ -118,7 +122,7 @@ export abstract class Operator {
         let formula = "";
 
         if (renderHtmlIds) {
-            formula += `\\htmlId{${this.getUUIDString()}}{`;
+            formula += `\\htmlId{${this.getUUIDRef()}}{`;
         }
 
         let anyMiddleDisplayRendered = false;
@@ -201,12 +205,12 @@ export abstract class Operator {
         return this.assembleFormulaString(false, renderImpliedSymbols);
     }
 
-    getContainedUUIDs() {
+    getContainedUUIDRefs() {
         let out = [] as string[];
 
-        out.push(this.getUUIDString());
+        out.push(this.getUUIDRef());
         this._children.forEach((child) => {
-            out.push(...child.getContainedUUIDs());
+            out.push(...child.getContainedUUIDRefs());
         });
 
         return out;
@@ -371,6 +375,33 @@ export abstract class Operator {
         }
 
         return res;
+    }
+
+    copyWithReplaced(uuid: string) {
+        let copy = this.serializeStructureRecursive();
+        copy = Operator.replaceRecursive(copy, uuid);
+
+        return Operator.generateStructure(JSON.stringify(copy), false);
+    }
+
+    private static replaceRecursive(structure: ExportOperatorContent, uuid: string): ExportOperatorContent {
+        if (structure.uuid == uuid) {
+            return {
+                children: [],
+                type: OperatorType.Pi,
+                uuid: uuidv4(),
+                value: "",
+            } as ExportOperatorContent;
+        } else {
+            let newChildren = [] as ExportOperatorContent[];
+
+            structure.children.forEach((child) => {
+                newChildren.push(Operator.replaceRecursive(child, uuid));
+            });
+
+            structure.children = newChildren;
+            return structure;
+        }
     }
 }
 

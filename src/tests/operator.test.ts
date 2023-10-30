@@ -90,7 +90,7 @@ describe("operator module", () => {
 
     test("All uuids exported", () => {
         const op = operatorFromString("23*4+1 sum(pi inf/1 a)");
-        const uuids = op.getContainedUUIDs();
+        const uuids = op.getContainedUUIDRefs();
         const latexText = op.getFormulaString();
 
         uuids.forEach((uuid) => {
