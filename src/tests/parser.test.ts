@@ -568,4 +568,6 @@ describe("parser module end-to-end", () => {
             ],
         });
     });
+
+    // TODO sum({} a a {}) should fail -> no multiply bullshit in function arguments
 });
