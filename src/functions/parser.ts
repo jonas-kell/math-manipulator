@@ -523,7 +523,7 @@ function fixOperatorPrecedenceGrouping(tokenGroup: TokenGroup): TokenGroup {
  */
 function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupKnot) {
-        let children = tokenGroup.getChildren().map((child) => fixOperatorPrecedenceGroupingRecursive(child));
+        let children = tokenGroup.getChildren();
 
         while (true) {
             // find operator with highest precedence
@@ -570,6 +570,7 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                     //        - they are a knot,
                     //        - they are a "logical" Leaf (here == not included in OperatorType leaves)
                     if (
+                        elementToTakeFromBefore instanceof TokenGroupKnot ||
                         elementToTakeFromBefore instanceof TokenGroupKnotInfix ||
                         (elementToTakeFromBefore instanceof TokenGroupLeaf &&
                             !tokenTypesWithOperatorCharacter.includes(elementToTakeFromBefore.getToken().type))
@@ -599,6 +600,7 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                     //        - they are a knot,
                     //        - they are a "logical" Leaf (here == not included in OperatorType leaves)
                     if (
+                        elementToTakeFromAfter instanceof TokenGroupKnot ||
                         elementToTakeFromAfter instanceof TokenGroupKnotInfix ||
                         (elementToTakeFromAfter instanceof TokenGroupLeaf &&
                             !tokenTypesWithOperatorCharacter.includes(elementToTakeFromAfter.getToken().type) &&
@@ -649,8 +651,11 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                     );
                 }
 
+                const recBeforeBuffer = beforeBuffer.map((child) => fixOperatorPrecedenceGroupingRecursive(child));
+                let recAfterBuffer = [];
+                recAfterBuffer = afterBuffer.map((child) => fixOperatorPrecedenceGroupingRecursive(child));
                 // group into new element and update-remove the used stuff for the next iteration
-                const newExtraGroup = new TokenGroupKnotInfix(currentOperator, [...beforeBuffer, ...afterBuffer]);
+                const newExtraGroup = new TokenGroupKnotInfix(currentOperator, [...recBeforeBuffer, ...recAfterBuffer]);
 
                 children = [
                     ...beginningPortion.splice(0, beginningPortion.length - skippedBefore),
@@ -666,7 +671,8 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
             return children[0]; // do not add an unnecessary group for one element
         } else {
             // multiple elements left: must have something to do with structural elements (=, !=, \iff) or raw Latex
-            return new TokenGroupKnotInfixStructural(children);
+            // as the children here lay flat, they will not have been processed yet when being integrated into a group like above
+            return new TokenGroupKnotInfixStructural(children.map((child) => fixOperatorPrecedenceGroupingRecursive(child)));
         }
     }
     // leaf
