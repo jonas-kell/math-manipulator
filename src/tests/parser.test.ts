@@ -569,5 +569,8 @@ describe("parser module end-to-end", () => {
         });
     });
 
-    // TODO sum({} a a {}) should fail -> no multiply bullshit in function arguments
+    // test("No multiplication insertion into function-argument-groups", () => {
+    //     expect(() => operatorFromString("sum({} a s)")).not.toThrow();
+    //     expect(() => operatorFromString("sum({} a a {})")).toThrow();
+    // });
 });
