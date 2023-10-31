@@ -413,25 +413,41 @@ export abstract class Operator {
         return null;
     }
 
-    getCopyWithNumbersFolded(): Operator {
+    protected numberFoldingInternalImplementation(
+        dropElementsThatAreNotNull: boolean,
+        insertExtraAtStart: number | null
+    ): Operator {
+        let newChildren = [] as ExportOperatorContent[];
+        // for folding of parts of the structure (custom implementations only)
+        if (insertExtraAtStart != null) {
+            newChildren.push({
+                children: [],
+                type: OperatorType.Numerical,
+                uuid: uuidv4(),
+                value: String(insertExtraAtStart),
+            } as ExportOperatorContent);
+        }
+
         const ownNumericalValueOrNull = this.getNumericalValue();
         if (ownNumericalValueOrNull == null) {
             // create a copy and fold the contained children one for one if possible without changing the amount or position
-            let newChildren = [] as ExportOperatorContent[];
             this._children.forEach((child) => {
                 const childNumericalOrNullValue = child.getNumericalValue();
 
                 if (childNumericalOrNullValue == null) {
                     // no defined numerical value, just put the child
-                    newChildren.push(child.getSerializedStructureRecursive());
+                    newChildren.push(child.getCopyWithNumbersFolded().getSerializedStructureRecursive());
                 } else {
-                    // child has a pure number value
-                    newChildren.push({
-                        children: [],
-                        type: OperatorType.Numerical,
-                        uuid: uuidv4(),
-                        value: String(childNumericalOrNullValue),
-                    } as ExportOperatorContent);
+                    // Omit if only parts of the structure should be folded
+                    if (!dropElementsThatAreNotNull) {
+                        // child has a pure number value
+                        newChildren.push({
+                            children: [],
+                            type: OperatorType.Numerical,
+                            uuid: uuidv4(),
+                            value: String(childNumericalOrNullValue),
+                        } as ExportOperatorContent);
+                    }
                 }
             });
             let copy = Operator.generateStructureRecursive(
@@ -447,6 +463,10 @@ export abstract class Operator {
         } else {
             return new Numerical(ownNumericalValueOrNull);
         }
+    }
+
+    getCopyWithNumbersFolded(): Operator {
+        return this.numberFoldingInternalImplementation(false, null);
     }
 
     getCopyWithReplaced(uuid: string, replacement: Operator) {
@@ -574,6 +594,22 @@ export class BracketedSum extends Operator {
             return null;
         }
     }
+
+    // special implementation to allow for partial folding
+    getCopyWithNumbersFolded(): Operator {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
+
+        if (allNotNull) {
+            return super.getCopyWithNumbersFolded();
+        } else {
+            const partialSum = childrenValues
+                .filter((elem) => elem != null)
+                .reduce((acc, current) => (acc as number) + (current as number), 0);
+            return super.numberFoldingInternalImplementation(true, partialSum);
+        }
+    }
 }
 
 export class BracketedMultiplication extends Operator {
@@ -590,6 +626,22 @@ export class BracketedMultiplication extends Operator {
             return childrenValues.reduce((acc, current) => (acc as number) * (current as number), 1);
         } else {
             return null;
+        }
+    }
+
+    // special implementation to allow for partial folding
+    getCopyWithNumbersFolded(): Operator {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
+
+        if (allNotNull) {
+            return super.getCopyWithNumbersFolded();
+        } else {
+            const partialProduct = childrenValues
+                .filter((elem) => elem != null)
+                .reduce((acc, current) => (acc as number) * (current as number), 1);
+            return super.numberFoldingInternalImplementation(true, partialProduct);
         }
     }
 }
