@@ -14,7 +14,7 @@ export enum OperatorType {
     BracketedMultiplication = "bracketed_multiplication",
     Negation = "negation",
     Pi = "constant_pi",
-    Infinity = "infinity",
+    InfinityConstant = "infinity",
     Psi = "constant_psi",
     Phi = "constant_phi",
     Exp = "exp_function",
@@ -306,8 +306,8 @@ export abstract class Operator {
             case OperatorType.Psi:
                 res = new Psi();
                 break;
-            case OperatorType.Infinity:
-                res = new Infinity();
+            case OperatorType.InfinityConstant:
+                res = new InfinityConstant();
                 break;
             case OperatorType.Exp:
                 res = new Exp(childrenReconstructed[0]);
@@ -488,7 +488,7 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.StructuralVariable]: 1,
     [OperatorType.Negation]: 1,
     [OperatorType.Pi]: 0,
-    [OperatorType.Infinity]: 0,
+    [OperatorType.InfinityConstant]: 0,
     [OperatorType.Exp]: 1,
     [OperatorType.Power]: 2,
     [OperatorType.Psi]: 0,
@@ -524,7 +524,7 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.StructuralVariable]: 1,
     [OperatorType.Negation]: 1,
     [OperatorType.Pi]: 0,
-    [OperatorType.Infinity]: 0,
+    [OperatorType.InfinityConstant]: 0,
     [OperatorType.Exp]: 1,
     [OperatorType.Power]: 2,
     [OperatorType.Psi]: 0,
@@ -580,11 +580,37 @@ export class BracketedMultiplication extends Operator {
     constructor(multiplicators: Operator[]) {
         super(OperatorType.BracketedMultiplication, "\\left(", " \\cdot ", "\\right)", multiplicators, "");
     }
+
+    protected getNumericalValue(): number | null {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
+
+        if (allNotNull) {
+            return childrenValues.reduce((acc, current) => (acc as number) * (current as number), 1);
+        } else {
+            return null;
+        }
+    }
 }
 
 export class Fraction extends Operator {
     constructor(dividend: Operator, divisor: Operator) {
         super(OperatorType.Fraction, "\\frac{", "}{", "}", [dividend, divisor], "");
+    }
+
+    protected getNumericalValue(): number | null {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
+        const enumerator = childrenValues[0] as number;
+        const denominator = childrenValues[1] as number;
+
+        if (allNotNull) {
+            return enumerator / denominator;
+        } else {
+            return null;
+        }
     }
 }
 
@@ -620,6 +646,18 @@ export class StructuralVariable extends Operator {
     constructor(name: string, content: Operator) {
         super(OperatorType.StructuralVariable, "{", "", "}", [content], name, [], false);
     }
+
+    protected getNumericalValue(): number | null {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
+
+        if (allNotNull) {
+            return childrenValues[0]; // no more content needed, if it can be folded into number
+        } else {
+            return null;
+        }
+    }
 }
 
 export class Negation extends Operator {
@@ -644,11 +682,19 @@ export class Pi extends Operator {
     constructor() {
         super(OperatorType.Pi, "\\pi", "", "", [], "");
     }
+
+    protected getNumericalValue(): number | null {
+        return Math.PI;
+    }
 }
 
-export class Infinity extends Operator {
+export class InfinityConstant extends Operator {
     constructor() {
-        super(OperatorType.Infinity, "\\infty", "", "", [], "");
+        super(OperatorType.InfinityConstant, "\\infty", "", "", [], "");
+    }
+
+    protected getNumericalValue(): number | null {
+        return Infinity;
     }
 }
 
@@ -656,11 +702,37 @@ export class Exp extends Operator {
     constructor(exponent: Operator) {
         super(OperatorType.Exp, "\\mathrm{e}^{", "", "}", [exponent], "");
     }
+
+    protected getNumericalValue(): number | null {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
+
+        if (allNotNull) {
+            return Math.exp(childrenValues[0] as number);
+        } else {
+            return null;
+        }
+    }
 }
 
 export class Power extends Operator {
     constructor(base: Operator, exponent: Operator) {
         super(OperatorType.Power, "{", "}^{", "}", [base, exponent], "");
+    }
+
+    protected getNumericalValue(): number | null {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
+        const base = childrenValues[0] as number;
+        const exponent = childrenValues[1] as number;
+
+        if (allNotNull) {
+            return Math.pow(base, exponent);
+        } else {
+            return null;
+        }
     }
 }
 
@@ -740,11 +812,35 @@ export class Sin extends Operator {
     constructor(content: Operator) {
         super(OperatorType.Sin, "\\mathrm{sin}\\left(", "", "\\right)", [content], "");
     }
+
+    protected getNumericalValue(): number | null {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
+
+        if (allNotNull) {
+            return Math.sin(childrenValues[0] as number);
+        } else {
+            return null;
+        }
+    }
 }
 
 export class Cos extends Operator {
     constructor(content: Operator) {
         super(OperatorType.Cos, "\\mathrm{cos}\\left(", "", "\\right)", [content], "");
+    }
+
+    protected getNumericalValue(): number | null {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
+
+        if (allNotNull) {
+            return Math.cos(childrenValues[0] as number);
+        } else {
+            return null;
+        }
     }
 }
 

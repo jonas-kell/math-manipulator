@@ -87,7 +87,7 @@ const AllowedFunctionKeywordMapping = {
 const AllowedFunctionKeywords = Object.keys(AllowedFunctionKeywordMapping);
 const AllowedConstantKeywordMapping = {
     pi: OperatorType.Pi,
-    inf: OperatorType.Infinity,
+    inf: OperatorType.InfinityConstant,
     psi: OperatorType.Psi,
     phi: OperatorType.Phi,
 } as { [key: string]: OperatorType };
