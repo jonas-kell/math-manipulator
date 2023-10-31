@@ -243,7 +243,7 @@ export abstract class Operator {
     }
 
     private static generateStructureRecursive(input: ExportOperatorContent, keepUUIDs: boolean): Operator {
-        let res = new Numerical(0);
+        let res = new Numerical(0) as Operator;
 
         let childrenReconstructed = [] as Operator[];
         (input.children ?? []).forEach((childJson) => {
@@ -377,6 +377,35 @@ export abstract class Operator {
         return res;
     }
 
+    getOperatorByUUID(uuid: string): Operator | null {
+        if (this._uuid == uuid) {
+            return this;
+        }
+
+        for (const child of this._children) {
+            const res = child.getOperatorByUUID(uuid);
+            if (res && res != null) {
+                return res;
+            }
+        }
+
+        return null;
+    }
+
+    allChildrenAreNumbers(): [boolean, number[]] {
+        let allChildrenAreNumbers = true;
+        let numbers = [] as number[];
+        this._children.forEach((child) => {
+            if (Object.getOwnPropertyNames(Object.getPrototypeOf(child)).includes("getNumericalValue")) {
+                numbers.push((child as any).getNumericalValue());
+            } else {
+                allChildrenAreNumbers = false;
+            }
+        });
+
+        return [allChildrenAreNumbers, numbers];
+    }
+
     copyWithReplaced(uuid: string, replacement: Operator) {
         let copy = this.serializeStructureRecursive();
         copy = Operator.replaceRecursive(copy, uuid, replacement.serializeStructureRecursive());
@@ -478,13 +507,34 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
 
 export class Numerical extends Operator {
     constructor(value: number) {
-        super(OperatorType.Numerical, "", "", "", [], String(value));
+        super(OperatorType.Numerical, "", "", "", [], String(parseFloat(value.toFixed(4))));
+    }
+
+    getNumericalValue(): number | null {
+        return Number(this._value);
     }
 }
 
 export class BracketedSum extends Operator {
     constructor(summands: Operator[]) {
         super(OperatorType.BracketedSum, "\\left(", "+", "\\right)", summands, "");
+    }
+
+    getNumericalValue(): number | null {
+        let res = this.allChildrenAreNumbers();
+        if (res[0]) {
+            return res[1].reduce((acc, current) => acc + current, 0);
+        }
+        return null;
+    }
+
+    foldNumbersMODIFICATION(): Operator {
+        let res = this.getNumericalValue();
+        if (res == null) {
+            return this;
+        } else {
+            return new Numerical(res);
+        }
     }
 }
 
@@ -537,6 +587,23 @@ export class StructuralVariable extends Operator {
 export class Negation extends Operator {
     constructor(content: Operator) {
         super(OperatorType.Negation, "-", "", "", [content], "");
+    }
+
+    getNumericalValue(): number | null {
+        let res = this.allChildrenAreNumbers();
+        if (res[0]) {
+            return -res[1][0];
+        }
+        return null;
+    }
+
+    foldNumbersMODIFICATION(): Operator {
+        let res = this.getNumericalValue();
+        if (res == null) {
+            return this;
+        } else {
+            return new Numerical(res);
+        }
     }
 }
 

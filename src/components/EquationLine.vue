@@ -8,15 +8,38 @@
         operator: Operator;
     }>();
 
-    const selection = ref("");
+    const selectionUUID = ref("");
+    const selectedOperator = ref(null as Operator | null);
     const selectOperator = (id: string) => {
         console.log("selection", id);
-        selection.value = id;
+        selectionUUID.value = id;
+        selectedOperator.value = props.operator.getOperatorByUUID(selectionUUID.value);
     };
+
+    const availableModifications = computed((): string[] => {
+        if (selectedOperator.value == null) {
+            return [];
+        }
+
+        return Object.getOwnPropertyNames(Object.getPrototypeOf(selectedOperator.value)).filter((name) =>
+            name.includes("MODIFICATION")
+        );
+    });
 
     const replaceWithOperator = ref(new Numerical(-2) as Operator);
     const replaceButtonAction = () => {
-        outputOperator.value = props.operator.copyWithReplaced(selection.value, replaceWithOperator.value as Operator);
+        outputOperator.value = props.operator.copyWithReplaced(selectionUUID.value, replaceWithOperator.value as Operator);
+    };
+    const modificationAction = (action: string) => {
+        if (selectedOperator.value != null) {
+            outputOperator.value = props.operator.copyWithReplaced(
+                // as the `action` was extracted from filtered `getOwnPropertyNames` this is should always be successful
+                selectionUUID.value,
+                (selectedOperator.value as any)[action]() as Operator
+            );
+        } else {
+            console.error("Should not be possible. Operator is null");
+        }
     };
 
     const katexInput = computed(() => {
@@ -28,7 +51,8 @@
 
     watch(props, () => {
         outputOperator.value = null;
-        selection.value = "";
+        selectionUUID.value = "";
+        selectedOperator.value = null;
     });
     const outputOperator = ref(null as null | Operator);
 </script>
@@ -36,8 +60,11 @@
 <template>
     <KatexRenderer :katex-input="katexInput" :uuid-refs-to-process="uuidRefsToProcess" @selected="selectOperator" />
 
-    <template v-if="selection != ''">
+    <template v-if="selectionUUID != '' && selectedOperator != null">
         <button @click="replaceButtonAction">Replace</button>
+        <button @click="modificationAction(mod)" v-for="mod in availableModifications">
+            {{ mod.replace("MODIFICATION", "") }}
+        </button>
         <InputToOperatorParser @parsed="(a: Operator) => {replaceWithOperator = a}" />
     </template>
 
