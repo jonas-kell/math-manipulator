@@ -80,4 +80,7 @@
     </template>
 
     <EquationLine v-if="outputOperator != null" :operator="(outputOperator as Operator)" />
+    <!-- <template v-if="outputOperator != null">
+        <pre>{{ JSON.parse(outputOperator.getSerializedStructure()) }}</pre>
+    </template> -->
 </template>

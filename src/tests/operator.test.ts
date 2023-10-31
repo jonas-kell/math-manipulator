@@ -119,6 +119,4 @@ describe("operator module", () => {
             )
         ).toThrow();
     });
-
-    //TODO folding tests
 });
