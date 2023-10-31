@@ -377,26 +377,25 @@ export abstract class Operator {
         return res;
     }
 
-    copyWithReplaced(uuid: string) {
+    copyWithReplaced(uuid: string, replacement: Operator) {
         let copy = this.serializeStructureRecursive();
-        copy = Operator.replaceRecursive(copy, uuid);
+        copy = Operator.replaceRecursive(copy, uuid, replacement.serializeStructureRecursive());
 
         return Operator.generateStructure(JSON.stringify(copy), false);
     }
 
-    private static replaceRecursive(structure: ExportOperatorContent, uuid: string): ExportOperatorContent {
+    private static replaceRecursive(
+        structure: ExportOperatorContent,
+        uuid: string,
+        replacement: ExportOperatorContent
+    ): ExportOperatorContent {
         if (structure.uuid == uuid) {
-            return {
-                children: [],
-                type: OperatorType.Pi,
-                uuid: uuidv4(),
-                value: "",
-            } as ExportOperatorContent;
+            return replacement;
         } else {
             let newChildren = [] as ExportOperatorContent[];
 
             structure.children.forEach((child) => {
-                newChildren.push(Operator.replaceRecursive(child, uuid));
+                newChildren.push(Operator.replaceRecursive(child, uuid, replacement));
             });
 
             structure.children = newChildren;

@@ -1,33 +1,17 @@
 <script setup lang="ts">
     import EquationLine from "./components/EquationLine.vue";
-    import { operatorFromString } from "./functions/parser";
+    import InputToOperatorParser from "./components/InputToOperatorParser.vue";
     import { Operator } from "./functions/operator";
-    import { ref, computed } from "vue";
+    import { ref } from "vue";
 
-    const text = ref("");
-    const error = ref("");
-    const parsedOperator = computed((): Operator | null => {
-        error.value = "";
-
-        let res = null;
-
-        try {
-            res = operatorFromString(text.value);
-        } catch (err) {
-            console.error(err);
-            error.value = String(err);
-        }
-
-        return res;
-    });
+    const parsedOperator = ref(null as Operator | null);
 </script>
 
 <template>
     <p>Try:</p>
     <pre>sum((n = 0) 100 int(-inf inf (123+(A*4)/100) x))</pre>
-    <textarea name="test" id="test" v-model="text" style="width: 100%; min-height: 6em"></textarea>
-    <EquationLine v-if="parsedOperator" :operator="parsedOperator" />
-    {{ error }}
+    <InputToOperatorParser @parsed="(a: Operator) => {parsedOperator = a}" />
+    <EquationLine v-if="parsedOperator" :operator="(parsedOperator as Operator)" />
 </template>
 
 <style scoped></style>

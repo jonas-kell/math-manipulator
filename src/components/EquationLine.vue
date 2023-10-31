@@ -2,6 +2,7 @@
     import { computed, ref, watch } from "vue";
     import { Numerical, Operator } from "../functions/operator";
     import KatexRenderer from "./KatexRenderer.vue";
+    import InputToOperatorParser from "./InputToOperatorParser.vue";
 
     const props = defineProps<{
         operator: Operator;
@@ -13,8 +14,9 @@
         selection.value = id;
     };
 
+    const replaceWithOperator = ref(new Numerical(-2) as Operator);
     const replaceButtonAction = () => {
-        outputOperator.value = props.operator.copyWithReplaced(selection.value);
+        outputOperator.value = props.operator.copyWithReplaced(selection.value, replaceWithOperator.value as Operator);
     };
 
     const katexInput = computed(() => {
@@ -29,14 +31,6 @@
         selection.value = "";
     });
     const outputOperator = ref(null as null | Operator);
-    // typescript is unhappy getting the Operator directly from the ref above...
-    const computedRecursiveOperator = computed((): Operator => {
-        if (outputOperator.value == null) {
-            return new Numerical(-1);
-        } else {
-            return outputOperator.value as Operator;
-        }
-    });
 </script>
 
 <template>
@@ -44,7 +38,8 @@
 
     <template v-if="selection != ''">
         <button @click="replaceButtonAction">Replace</button>
+        <InputToOperatorParser @parsed="(a: Operator) => {replaceWithOperator = a}" />
     </template>
 
-    <EquationLine v-if="outputOperator != null" :operator="computedRecursiveOperator" />
+    <EquationLine v-if="outputOperator != null" :operator="(outputOperator as Operator)" />
 </template>
