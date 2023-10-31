@@ -5,8 +5,8 @@ describe("parser module end-to-end", () => {
     test("Empty string default", () => {
         const input = "";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe("0");
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(operatorFromString(input).getExportFormulaString()).toBe("0");
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "number",
             value: "0",
             children: [],
@@ -24,8 +24,8 @@ describe("parser module end-to-end", () => {
     test("Default Variable parsing", () => {
         const input = "asd";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe("{asd}");
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(operatorFromString(input).getExportFormulaString()).toBe("{asd}");
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             children: [],
             type: "variable",
             value: "asd",
@@ -35,8 +35,8 @@ describe("parser module end-to-end", () => {
     test("Raw Latex parsing", () => {
         const input = "\\mathcal{H}";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe("{\\mathcal{H}}");
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(operatorFromString(input).getExportFormulaString()).toBe("{\\mathcal{H}}");
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "raw_latex",
             value: "\\mathcal{H}",
             children: [],
@@ -46,8 +46,8 @@ describe("parser module end-to-end", () => {
     test("Structural Elements parsing", () => {
         const input = "{} = != <=>";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe("{}\\,\\,\\eq\\,\\,\\neq\\,\\,\\iff");
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(operatorFromString(input).getExportFormulaString()).toBe("{}\\,\\,\\eq\\,\\,\\neq\\,\\,\\iff");
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "structural_container",
             value: "",
             children: [
@@ -78,10 +78,10 @@ describe("parser module end-to-end", () => {
     test("Constants parsing", () => {
         const input = "pi inf psi phi";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe(
+        expect(operatorFromString(input).getExportFormulaString()).toBe(
             "\\left(\\pi \\cdot \\infty \\cdot \\Psi \\cdot \\Phi\\right)"
         );
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "bracketed_multiplication",
             value: "",
             children: [
@@ -112,8 +112,8 @@ describe("parser module end-to-end", () => {
     test("Exponent special case parsing", () => {
         const input = "2**2**3";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe("{{2}^{2}}^{3}");
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(operatorFromString(input).getExportFormulaString()).toBe("{{2}^{2}}^{3}");
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "power",
             value: "",
             children: [
@@ -145,10 +145,10 @@ describe("parser module end-to-end", () => {
     test("Discern number, variable and raw (multiplication insertion only happens on non-structural)", () => {
         const input = "asd 23.3 23e2 \\frac{2}{1}";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe(
+        expect(operatorFromString(input).getExportFormulaString()).toBe(
             "\\left({asd} \\cdot 23.3 \\cdot 2300\\right)\\,\\,{\\frac{2}{1}}"
         );
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "structural_container",
             value: "",
             children: [
@@ -185,10 +185,10 @@ describe("parser module end-to-end", () => {
     test("One Parameter Function (and parameter unpacking)", () => {
         const input = "exp(a asd asdf) = exp as";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe(
+        expect(operatorFromString(input).getExportFormulaString()).toBe(
             "\\mathrm{e}^{\\left({a} \\cdot {asd} \\cdot {asdf}\\right)}\\,\\,\\eq\\,\\,\\mathrm{e}^{{as}}"
         );
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "structural_container",
             value: "",
             children: [
@@ -242,8 +242,8 @@ describe("parser module end-to-end", () => {
     test("Two Parameter Function", () => {
         const input = "braket(psi phi)";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe("\\left\\lang\\Psi\\middle\\vert\\Phi\\right\\rang");
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(operatorFromString(input).getExportFormulaString()).toBe("\\left\\lang\\Psi\\middle\\vert\\Phi\\right\\rang");
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "double_braket",
             value: "",
             children: [
@@ -264,8 +264,8 @@ describe("parser module end-to-end", () => {
     test("Three Parameter Function", () => {
         const input = "sum( 1 2  3)";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe("\\sum\\limits_{1 }^{ 2}3");
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(operatorFromString(input).getExportFormulaString()).toBe("\\sum\\limits_{1 }^{ 2}3");
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "big_sum",
             value: "",
             children: [
@@ -291,8 +291,10 @@ describe("parser module end-to-end", () => {
     test("Four Parameter Function", () => {
         const input = "int((1+2) a s d)";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe("\\int\\limits_{\\left(1+2\\right)}^{{a}}{s}\\mathrm{d}{d}");
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(operatorFromString(input).getExportFormulaString()).toBe(
+            "\\int\\limits_{\\left(1+2\\right)}^{{a}}{s}\\mathrm{d}{d}"
+        );
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "big_int",
             value: "",
             children: [
@@ -339,10 +341,10 @@ describe("parser module end-to-end", () => {
     test("Default operations precedence and auto-spacing", () => {
         const input = "1 * 2 /3 +4 5:-6 ";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe(
+        expect(operatorFromString(input).getExportFormulaString()).toBe(
             "\\left(\\left(1 \\cdot \\frac{2}{3}\\right)+\\left(4 \\cdot \\frac{5}{-6}\\right)\\right)"
         );
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "bracketed_sum",
             value: "",
             children: [
@@ -413,8 +415,8 @@ describe("parser module end-to-end", () => {
     test("Minus auto-introduces plus", () => {
         const input = "-3 = 2 -5";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe("-3\\,\\,\\eq\\,\\,\\left(2-5\\right)");
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(operatorFromString(input).getExportFormulaString()).toBe("-3\\,\\,\\eq\\,\\,\\left(2-5\\right)");
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "structural_container",
             value: "",
             children: [
@@ -473,10 +475,12 @@ describe("parser module end-to-end", () => {
     });
 
     test("Automatic bracket removal", () => {
-        expect(operatorFromString("(((a))) * asd").exportFormulaString()).toEqual(
-            operatorFromString("a * asd").exportFormulaString()
+        expect(operatorFromString("(((a))) * asd").getExportFormulaString()).toEqual(
+            operatorFromString("a * asd").getExportFormulaString()
         );
-        expect(operatorFromString("(((a a)))").exportFormulaString()).toEqual(operatorFromString("a * a").exportFormulaString());
+        expect(operatorFromString("(((a a)))").getExportFormulaString()).toEqual(
+            operatorFromString("a * a").getExportFormulaString()
+        );
     });
 
     test("Repeating operator wrong argument counts", () => {
@@ -489,10 +493,10 @@ describe("parser module end-to-end", () => {
     test("Functions all parse", () => {
         const input = "func(f x) = funcrm(g x) = sin(x) = cos x";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe(
+        expect(operatorFromString(input).getExportFormulaString()).toBe(
             "{{f}}\\left({x}\\right)\\,\\,\\eq\\,\\,\\mathrm{{g}}\\left({x}\\right)\\,\\,\\eq\\,\\,\\mathrm{sin}\\left({x}\\right)\\,\\,\\eq\\,\\,\\mathrm{cos}\\left({x}\\right)"
         );
-        expect(JSON.parse(operatorFromString(input).serializeStructure())).toMatchObject({
+        expect(JSON.parse(operatorFromString(input).getSerializedStructure())).toMatchObject({
             type: "structural_container",
             value: "",
             children: [

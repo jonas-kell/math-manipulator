@@ -201,7 +201,7 @@ export abstract class Operator {
         return this.assembleFormulaString(true, renderImpliedSymbols);
     }
 
-    exportFormulaString(renderImpliedSymbols: boolean = false) {
+    getExportFormulaString(renderImpliedSymbols: boolean = false) {
         return this.assembleFormulaString(false, renderImpliedSymbols);
     }
 
@@ -216,15 +216,15 @@ export abstract class Operator {
         return out;
     }
 
-    serializeStructure() {
-        return JSON.stringify(this.serializeStructureRecursive());
+    getSerializedStructure() {
+        return JSON.stringify(this.getSerializedStructureRecursive());
     }
 
-    private serializeStructureRecursive() {
+    private getSerializedStructureRecursive() {
         let children = [] as ExportOperatorContent[];
 
         this._children.forEach((child) => {
-            children.push(child.serializeStructureRecursive());
+            children.push(child.getSerializedStructureRecursive());
         });
 
         let res: ExportOperatorContent = {
@@ -392,25 +392,68 @@ export abstract class Operator {
         return null;
     }
 
-    allChildrenAreNumbers(): [boolean, number[]] {
-        let allChildrenAreNumbers = true;
-        let numbers = [] as number[];
+    /**
+     * [boolean: all not null, (number | null)[]: number if calculable or null]
+     */
+    protected childrenNumericalValues(): [boolean, (number | null)[]] {
+        let res = [] as (number | null)[];
+        let allNull = true;
         this._children.forEach((child) => {
-            if (Object.getOwnPropertyNames(Object.getPrototypeOf(child)).includes("getNumericalValue")) {
-                numbers.push((child as any).getNumericalValue());
-            } else {
-                allChildrenAreNumbers = false;
+            const val = child.getNumericalValue();
+            if (val == null) {
+                allNull = false;
             }
+            res.push(val);
         });
 
-        return [allChildrenAreNumbers, numbers];
+        return [allNull, res];
     }
 
-    copyWithReplaced(uuid: string, replacement: Operator) {
-        let copy = this.serializeStructureRecursive();
-        copy = Operator.replaceRecursive(copy, uuid, replacement.serializeStructureRecursive());
+    protected getNumericalValue(): number | null {
+        return null;
+    }
 
-        return Operator.generateStructure(JSON.stringify(copy), false);
+    getCopyWithNumbersFolded(): Operator {
+        const ownNumericalValueOrNull = this.getNumericalValue();
+        if (ownNumericalValueOrNull == null) {
+            // create a copy and fold the contained children one for one if possible without changing the amount or position
+            let newChildren = [] as ExportOperatorContent[];
+            this._children.forEach((child) => {
+                const childNumericalOrNullValue = child.getNumericalValue();
+
+                if (childNumericalOrNullValue == null) {
+                    // no defined numerical value, just put the child
+                    newChildren.push(child.getSerializedStructureRecursive());
+                } else {
+                    // child has a pure number value
+                    newChildren.push({
+                        children: [],
+                        type: OperatorType.Numerical,
+                        uuid: uuidv4(),
+                        value: String(childNumericalOrNullValue),
+                    } as ExportOperatorContent);
+                }
+            });
+            let copy = Operator.generateStructureRecursive(
+                {
+                    children: newChildren,
+                    type: this._type,
+                    uuid: uuidv4(),
+                    value: this._value,
+                } as ExportOperatorContent,
+                false
+            );
+            return copy;
+        } else {
+            return new Numerical(ownNumericalValueOrNull);
+        }
+    }
+
+    getCopyWithReplaced(uuid: string, replacement: Operator) {
+        let copy = this.getSerializedStructureRecursive();
+        copy = Operator.replaceRecursive(copy, uuid, replacement.getSerializedStructureRecursive());
+
+        return Operator.generateStructureRecursive(copy, false);
     }
 
     private static replaceRecursive(
@@ -510,7 +553,7 @@ export class Numerical extends Operator {
         super(OperatorType.Numerical, "", "", "", [], String(parseFloat(value.toFixed(4))));
     }
 
-    getNumericalValue(): number | null {
+    protected getNumericalValue(): number | null {
         return Number(this._value);
     }
 }
@@ -520,20 +563,15 @@ export class BracketedSum extends Operator {
         super(OperatorType.BracketedSum, "\\left(", "+", "\\right)", summands, "");
     }
 
-    getNumericalValue(): number | null {
-        let res = this.allChildrenAreNumbers();
-        if (res[0]) {
-            return res[1].reduce((acc, current) => acc + current, 0);
-        }
-        return null;
-    }
+    protected getNumericalValue(): number | null {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
 
-    foldNumbersMODIFICATION(): Operator {
-        let res = this.getNumericalValue();
-        if (res == null) {
-            return this;
+        if (allNotNull) {
+            return childrenValues.reduce((acc, current) => (acc as number) + (current as number), 0);
         } else {
-            return new Numerical(res);
+            return null;
         }
     }
 }
@@ -589,20 +627,15 @@ export class Negation extends Operator {
         super(OperatorType.Negation, "-", "", "", [content], "");
     }
 
-    getNumericalValue(): number | null {
-        let res = this.allChildrenAreNumbers();
-        if (res[0]) {
-            return -res[1][0];
-        }
-        return null;
-    }
+    protected getNumericalValue(): number | null {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const childrenValues = res[1];
 
-    foldNumbersMODIFICATION(): Operator {
-        let res = this.getNumericalValue();
-        if (res == null) {
-            return this;
+        if (allNotNull) {
+            return -1 * (childrenValues[0] as number);
         } else {
-            return new Numerical(res);
+            return null;
         }
     }
 }

@@ -44,18 +44,18 @@ describe("operator module", () => {
 
     test("Maximum complexity equation poster rendering", () => {
         expect(complexExample).not.toThrow();
-        expect(complexExample().exportFormulaString()).toEqual(
+        expect(complexExample().getExportFormulaString()).toEqual(
             "\\sum\\limits_{{n=0} }^{ {100}}\\int\\limits_{-{\\infty}}^{\\left\\lang1.2\\right\\vert}\\left(123+\\frac{\\left({A} \\cdot 4\\right)}{100}\\right)\\mathrm{d}{x}"
         );
     });
 
     test("Stringificated export and re-import", () => {
         const formula = complexExample();
-        const serializedString = formula.serializeStructure();
+        const serializedString = formula.getSerializedStructure();
         const reImportedFormula = Operator.generateStructure(serializedString, true);
-        const serializedString2 = reImportedFormula.serializeStructure();
+        const serializedString2 = reImportedFormula.getSerializedStructure();
         const clonedFormula = Operator.generateStructure(serializedString, false);
-        const serializedString3 = clonedFormula.serializeStructure();
+        const serializedString3 = clonedFormula.getSerializedStructure();
 
         expect(serializedString).toBe(serializedString2);
         expect(serializedString).not.toBe(serializedString3);
@@ -64,10 +64,10 @@ describe("operator module", () => {
     test("Check QM Operators do not get implied multiplications rendered", () => {
         const input = "a  2 bra(psi) ket(phi) braket(2 3) bracket(1 2 3) 2 3 c n c#(n-1) b 1 b# 3 2";
         expect(() => operatorFromString(input)).not.toThrow();
-        expect(operatorFromString(input).exportFormulaString()).toBe(
+        expect(operatorFromString(input).getExportFormulaString()).toBe(
             "\\left({a} \\cdot 2\\left\\lang\\Psi\\right\\vert\\left\\vert\\Phi\\right\\rang\\left\\lang2\\middle\\vert3\\right\\rang\\left\\lang1\\middle\\vert2\\middle\\vert3\\right\\rang2 \\cdot 3 \\cdot \\mathrm{c}_{{n}}\\mathrm{c}^\\dagger_{\\left({n}-1\\right)}\\mathrm{b}_{1}\\mathrm{b}^\\dagger_{3} \\cdot 2\\right)"
         );
-        expect(operatorFromString(input).exportFormulaString(true)).toBe(
+        expect(operatorFromString(input).getExportFormulaString(true)).toBe(
             "\\left({a} \\cdot 2 \\cdot \\left\\lang\\Psi\\right\\vert \\cdot \\left\\vert\\Phi\\right\\rang \\cdot \\left\\lang2\\middle\\vert3\\right\\rang \\cdot \\left\\lang1\\middle\\vert2\\middle\\vert3\\right\\rang \\cdot 2 \\cdot 3 \\cdot \\mathrm{c}_{{n}} \\cdot \\mathrm{c}^\\dagger_{\\left({n}+-1\\right)} \\cdot \\mathrm{b}_{1} \\cdot \\mathrm{b}^\\dagger_{3} \\cdot 2\\right)"
         );
     });
@@ -81,11 +81,11 @@ describe("operator module", () => {
     });
 
     test("Skipping implied symbols", () => {
-        expect(operatorFromString("bra(2)ket(2)").exportFormulaString()).toBe(
+        expect(operatorFromString("bra(2)ket(2)").getExportFormulaString()).toBe(
             "\\left\\lang2\\right\\vert\\left\\vert2\\right\\rang"
         );
-        expect(operatorFromString("5-3").exportFormulaString()).toBe("\\left(5-3\\right)");
-        expect(operatorFromString("5-3").exportFormulaString(true)).toBe("\\left(5+-3\\right)");
+        expect(operatorFromString("5-3").getExportFormulaString()).toBe("\\left(5-3\\right)");
+        expect(operatorFromString("5-3").getExportFormulaString(true)).toBe("\\left(5+-3\\right)");
     });
 
     test("All uuids exported", () => {
@@ -119,4 +119,6 @@ describe("operator module", () => {
             )
         ).toThrow();
     });
+
+    //TODO folding tests
 });

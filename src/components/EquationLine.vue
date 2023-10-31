@@ -28,11 +28,21 @@
 
     const replaceWithOperator = ref(new Numerical(-2) as Operator);
     const replaceButtonAction = () => {
-        outputOperator.value = props.operator.copyWithReplaced(selectionUUID.value, replaceWithOperator.value as Operator);
+        outputOperator.value = props.operator.getCopyWithReplaced(selectionUUID.value, replaceWithOperator.value as Operator);
+    };
+    const foldButtonAction = () => {
+        if (selectedOperator.value != null) {
+            outputOperator.value = props.operator.getCopyWithReplaced(
+                selectionUUID.value,
+                selectedOperator.value.getCopyWithNumbersFolded() as Operator
+            );
+        } else {
+            console.error("Should not be possible. Operator is null");
+        }
     };
     const modificationAction = (action: string) => {
         if (selectedOperator.value != null) {
-            outputOperator.value = props.operator.copyWithReplaced(
+            outputOperator.value = props.operator.getCopyWithReplaced(
                 // as the `action` was extracted from filtered `getOwnPropertyNames` this is should always be successful
                 selectionUUID.value,
                 (selectedOperator.value as any)[action]() as Operator
@@ -62,6 +72,7 @@
 
     <template v-if="selectionUUID != '' && selectedOperator != null">
         <button @click="replaceButtonAction">Replace</button>
+        <button @click="foldButtonAction">Fold Numbers</button>
         <button @click="modificationAction(mod)" v-for="mod in availableModifications">
             {{ mod.replace("MODIFICATION", "") }}
         </button>
