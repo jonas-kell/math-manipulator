@@ -239,6 +239,4 @@ describe("operator module - numerical folding feature", () => {
             value: "",
         });
     });
-
-    // TODO replacement tests
 });
