@@ -478,7 +478,17 @@ export abstract class Operator {
 
     getCopyWithReplaced(uuid: string, replacement: Operator) {
         let copy = this.getSerializedStructureRecursive();
-        copy = Operator.replaceRecursive(copy, uuid, replacement.getSerializedStructureRecursive());
+        const replacementValue = replacement.getSerializedStructureRecursive();
+        copy = Operator.replaceRecursive(copy, uuid, (_a) => replacementValue);
+
+        return Operator.generateStructureRecursive(copy, false);
+    }
+
+    getCopyWithPackedIntoStructuralVariable(name: string, uuid: string) {
+        let copy = this.getSerializedStructureRecursive();
+        copy = Operator.replaceRecursive(copy, uuid, (a) =>
+            new StructuralVariable(name, Operator.generateStructureRecursive(a, false)).getSerializedStructureRecursive()
+        );
 
         return Operator.generateStructureRecursive(copy, false);
     }
@@ -486,15 +496,15 @@ export abstract class Operator {
     private static replaceRecursive(
         structure: ExportOperatorContent,
         uuid: string,
-        replacement: ExportOperatorContent
+        replacementCallback: (whatIsReplaced: ExportOperatorContent) => ExportOperatorContent
     ): ExportOperatorContent {
         if (structure.uuid == uuid) {
-            return replacement;
+            return replacementCallback(structure);
         } else {
             let newChildren = [] as ExportOperatorContent[];
 
             structure.children.forEach((child) => {
-                newChildren.push(Operator.replaceRecursive(child, uuid, replacement));
+                newChildren.push(Operator.replaceRecursive(child, uuid, replacementCallback));
             });
 
             structure.children = newChildren;

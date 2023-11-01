@@ -17,12 +17,18 @@
     const selectionUUID = ref("");
     const selectedOperator = ref(null as Operator | null);
     const selectOperator = (id: string) => {
-        console.log("selection", id);
+        resetControlPanel();
         selectionUUID.value = id;
         selectedOperator.value = props.operator.getOperatorByUUID(selectionUUID.value);
     };
 
     // structure of the operations line
+    enum MODES {
+        NONE,
+        REPLACEMENT,
+        STRUCTURAL_VARIABLE_DEFINITION,
+    }
+    const mode = ref(MODES.NONE);
     const availableModifications = computed((): string[] => {
         if (selectedOperator.value == null) {
             return [];
@@ -36,7 +42,7 @@
     const outputOperator = ref(null as null | Operator);
     function resetControlPanel() {
         outputOperator.value = null;
-        replaceMode.value = false;
+        mode.value = MODES.NONE;
     }
     watch(props, () => {
         resetControlPanel();
@@ -46,10 +52,9 @@
     });
 
     // modification triggers to the current line
-    const replaceMode = ref(false);
     const replaceButtonAction = () => {
         resetControlPanel();
-        replaceMode.value = true;
+        mode.value = MODES.REPLACEMENT;
         replaceWithCallback();
     };
     const replaceWithOperator = ref(null as Operator | null);
@@ -59,6 +64,21 @@
         } else {
             outputOperator.value = props.operator.getCopyWithReplaced(selectionUUID.value, replaceWithOperator.value as Operator);
         }
+    };
+    const structuralVariableDefinitionButtonAction = () => {
+        resetControlPanel();
+        mode.value = MODES.STRUCTURAL_VARIABLE_DEFINITION;
+        structuralVariableDefinitionWithCallback();
+    };
+    const structuralVariableDefinitionName = ref("");
+    watch(structuralVariableDefinitionName, () => {
+        structuralVariableDefinitionWithCallback();
+    });
+    const structuralVariableDefinitionWithCallback = () => {
+        outputOperator.value = props.operator.getCopyWithPackedIntoStructuralVariable(
+            structuralVariableDefinitionName.value == "" ? "A" : structuralVariableDefinitionName.value,
+            selectionUUID.value
+        );
     };
     const foldButtonAction = () => {
         resetControlPanel();
@@ -92,17 +112,24 @@
 
     <template v-if="selectionUUID != '' && selectedOperator != null">
         <button @click="replaceButtonAction" style="margin-right: 0.2em">Replace</button>
+        <button @click="structuralVariableDefinitionButtonAction" style="margin-right: 0.2em">Define Structural Variable</button>
         <button @click="foldButtonAction" style="margin-right: 0.2em">Fold Numbers</button>
         <button @click="modificationAction(mod)" v-for="mod in availableModifications" style="margin-right: 0.2em">
             {{ mod.replace("MODIFICATION", "") }}
         </button>
         <InputToOperatorParser
-            v-show="replaceMode"
+            v-show="mode == MODES.REPLACEMENT"
             @parsed="(a: Operator | null) => { 
                 replaceWithOperator = a; 
                 replaceWithCallback() 
             }"
             style="margin-top: 0.5em"
+        />
+        <input
+            v-show="mode == MODES.STRUCTURAL_VARIABLE_DEFINITION"
+            type="text"
+            v-model="structuralVariableDefinitionName"
+            style="margin-top: 0.5em; width: 100%"
         />
     </template>
 
