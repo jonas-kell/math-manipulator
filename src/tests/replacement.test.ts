@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { Numerical, Operator, StructuralVariable } from "../functions/operator";
+import { Numerical, Operator, StructuralVariable } from "../functions";
 
 describe("operator module - replace operator feature", () => {
     const testOp = Operator.generateStructure(

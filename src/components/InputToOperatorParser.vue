@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { operatorFromString } from "./../functions/parser";
+    import { operatorFromString } from "../functions";
     import { ref, watch } from "vue";
 
     const emit = defineEmits(["parsed"]);

@@ -4,7 +4,7 @@ import {
     OperatorType,
     MAX_CHILDREN_SPECIFICATIONS,
     MIN_CHILDREN_SPECIFICATIONS,
-} from "./operator";
+} from "./exporter";
 
 /**
  * @throws Error on failing to tokenize/parse

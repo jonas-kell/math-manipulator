@@ -1,6 +1,6 @@
 <script setup lang="ts">
     import { computed, ref, watch } from "vue";
-    import { EmptyArgument, Operator } from "../functions/operator";
+    import { Operator, EmptyArgument } from "../functions";
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
 

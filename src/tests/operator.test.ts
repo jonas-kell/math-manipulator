@@ -13,8 +13,8 @@ import {
     Bra,
     OperatorType,
     Operator,
-} from "./../functions/operator";
-import { operatorFromString } from "../functions/parser";
+    operatorFromString,
+} from "../functions";
 
 describe("operator module", () => {
     test("Too few operator children", () => {

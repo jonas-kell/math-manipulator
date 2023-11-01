@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { operatorFromString } from "./../functions/parser";
+import { operatorFromString } from "../functions";
 
 describe("parser module end-to-end", () => {
     test("Empty string default", () => {

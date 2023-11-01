@@ -1,6 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { operatorFromString } from "../functions/parser";
-import { Numerical, StructuralContainer, StructuralVariable, Variable } from "../functions/operator";
+import { operatorFromString, Numerical, StructuralContainer, StructuralVariable, Variable } from "../functions";
 
 describe("operator module - numerical folding feature", () => {
     test("default sum folding", () => {

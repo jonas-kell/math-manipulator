@@ -2,7 +2,7 @@
     import katex from "katex";
     import { ref, watch, onMounted } from "vue";
     import { v4 as uuidv4 } from "uuid";
-    import { Operator } from "../functions/operator";
+    import { Operator } from "../functions";
 
     const props = defineProps<{
         katexInput: string;

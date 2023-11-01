@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import EquationLine from "./components/EquationLine.vue";
     import InputToOperatorParser from "./components/InputToOperatorParser.vue";
-    import { Operator } from "./functions/operator";
+    import { Operator } from "./functions";
     import { ref } from "vue";
 
     const parsedOperator = ref(null as Operator | null);
