@@ -5,6 +5,11 @@
     import InputToOperatorParser from "./InputToOperatorParser.vue";
     const VITE_MODE = import.meta.env.MODE;
 
+    interface EffectMeasure {
+        hasEffect: boolean;
+        result: Operator | null;
+    }
+
     // input to the equation line
     const props = defineProps<{
         operator: Operator;
@@ -36,9 +41,12 @@
         if (selectedOperator.value == null) {
             return [];
         }
-        return Object.getOwnPropertyNames(Object.getPrototypeOf(selectedOperator.value)).filter((name) =>
-            name.includes("MODIFICATION")
-        );
+        return [
+            "getCopyWithNumbersFolded", // Modification style Method available for all instances of Operator
+            ...Object.getOwnPropertyNames(Object.getPrototypeOf(selectedOperator.value)).filter((name) =>
+                name.includes("MODIFICATION")
+            ),
+        ];
     });
 
     // output to the next line
@@ -83,30 +91,48 @@
             selectionUUID.value
         );
     };
-    const foldButtonAction = () => {
-        resetControlPanel();
+    const actionsHaveAnyEffectAndTheirResults = computed(() => {
+        let res = {} as { [key: string]: EffectMeasure };
 
-        if (selectedOperator.value != null) {
-            outputOperator.value = props.operator.getCopyWithReplaced(
-                selectionUUID.value,
-                selectedOperator.value.getCopyWithNumbersFolded() as Operator
-            );
-        } else {
-            console.error("Should not be possible. Operator is null");
-        }
-    };
+        availableModifications.value.forEach((action) => {
+            if (selectedOperator.value != null) {
+                // as the `action` was extracted from filtered `getOwnPropertyNames` or manually inserted, this is should always be a valid method
+                let actionResult = (selectedOperator.value as Operator as any)[action]() as Operator;
+
+                // only consider actions that change anything applicable
+                if (Operator.assertOperatorsEquivalent(actionResult, selectedOperator.value as Operator, false)) {
+                    res[action] = {
+                        hasEffect: false,
+                        result: null,
+                    };
+                } else {
+                    res[action] = {
+                        hasEffect: true,
+                        result: actionResult,
+                    };
+                }
+            }
+        });
+
+        return res;
+    });
     const modificationAction = (action: string) => {
         resetControlPanel();
 
+        // get the result from the modification cache and output if it has any effect
         if (selectedOperator.value != null) {
-            outputOperator.value = props.operator.getCopyWithReplaced(
-                // as the `action` was extracted from filtered `getOwnPropertyNames` this is should always be successful
-                selectionUUID.value,
-                (selectedOperator.value as any)[action]() as Operator
-            );
-        } else {
-            console.error("Should not be possible. Operator is null");
+            const resultFromCachedExecutedOperations = actionsHaveAnyEffectAndTheirResults.value[action];
+            if (resultFromCachedExecutedOperations != undefined && resultFromCachedExecutedOperations) {
+                if (resultFromCachedExecutedOperations.hasEffect && resultFromCachedExecutedOperations.result != null) {
+                    outputOperator.value = props.operator.getCopyWithReplaced(
+                        selectionUUID.value,
+                        resultFromCachedExecutedOperations.result
+                    );
+                    return;
+                }
+            }
         }
+        console.error("Something fell through, should not be executed right now");
     };
     const showLatexExportButtonAction = () => {
         resetControlPanel();
@@ -124,9 +150,13 @@
     <template v-if="selectionUUID != '' && selectedOperator != null">
         <button @click="replaceButtonAction" style="margin-right: 0.2em">Replace</button>
         <button @click="structuralVariableDefinitionButtonAction" style="margin-right: 0.2em">Define Structural Variable</button>
-        <button @click="foldButtonAction" style="margin-right: 0.2em">Fold Numbers</button>
-        <button @click="modificationAction(mod)" v-for="mod in availableModifications" style="margin-right: 0.2em">
-            {{ mod.replace("MODIFICATION", "") }}
+        <button
+            @click="modificationAction(mod)"
+            v-for="mod in availableModifications"
+            :disabled="!(actionsHaveAnyEffectAndTheirResults[mod].hasEffect ?? false)"
+            style="margin-right: 0.2em"
+        >
+            {{ mod.replace("MODIFICATION", "").replace("getCopyWithNumbersFolded", "Fold Numbers") }}
         </button>
         <button @click="showLatexExportButtonAction" style="margin-right: 0.2em; float: right">Show Latex</button>
         <button @click="showExportStructureButtonAction" style="margin-right: 0.2em; float: right">Show Export Structure</button>

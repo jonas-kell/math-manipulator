@@ -136,6 +136,10 @@ export class BracketedSum extends Operator {
             }
         }
     }
+
+    getChildren(): Operator[] {
+        return this._children;
+    }
 }
 
 export class BracketedMultiplication extends Operator {
@@ -175,6 +179,41 @@ export class BracketedMultiplication extends Operator {
                 return super.numberFoldingInternalImplementation(true, partialProduct);
             }
         }
+    }
+
+    DistributeMODIFICATION(): Operator {
+        let children = this.getChildren();
+
+        if (children.length >= 2) {
+            const childSumInstances = children.filter((child) => child instanceof BracketedSum) as BracketedSum[];
+
+            if (childSumInstances.length === children.length) {
+                const newSummands = [] as BracketedMultiplication[];
+
+                // do this recursively in order to allow for as many sum-terms in the product as you want
+                function generateCombinations(currentIndex: number, currentProduct: Operator[]) {
+                    if (currentIndex === childSumInstances.length) {
+                        // depth has reached number of terms in original multiplication -> one element from each original sum
+                        newSummands.push(new BracketedMultiplication(currentProduct));
+                    } else {
+                        const currentSum = childSumInstances[currentIndex];
+                        currentSum.getChildren().forEach((child) => {
+                            generateCombinations(currentIndex + 1, currentProduct.concat(child)); // passes array by VALUE!!
+                        });
+                    }
+                }
+                // generate the cartesian product of the sum-terms in the product
+                generateCombinations(0, []);
+
+                return new BracketedSum(newSummands);
+            }
+        }
+
+        return this;
+    }
+
+    getChildren(): Operator[] {
+        return this._children;
     }
 }
 

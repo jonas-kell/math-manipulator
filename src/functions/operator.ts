@@ -376,15 +376,17 @@ export abstract class Operator {
         }
     }
 
-    static assertOperatorsEquivalent(a: Operator, b: Operator): boolean {
-        const valA = a.getNumericalValue();
-        const valB = b.getNumericalValue();
+    static assertOperatorsEquivalent(a: Operator, b: Operator, treatSameNumericalValueAsEquivalent: boolean = true): boolean {
+        if (treatSameNumericalValueAsEquivalent) {
+            const valA = a.getNumericalValue();
+            const valB = b.getNumericalValue();
 
-        if (valA != null) {
-            if (valB != null) {
-                return valA > valB - 1e-6 && valA < valB + 1e-6;
-            } else {
-                return false; // one can be parsed to number, other not -> not equivalent
+            if (valA != null) {
+                if (valB != null) {
+                    return valA > valB - 1e-6 && valA < valB + 1e-6;
+                } else {
+                    return false; // one can be parsed to number, other not -> not equivalent
+                }
             }
         }
 
