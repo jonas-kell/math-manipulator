@@ -747,6 +747,10 @@ export class StructuralVariable extends Operator {
             return null;
         }
     }
+
+    UnpackMODIFICATION(): Operator {
+        return this._children[0];
+    }
 }
 
 export class Negation extends Operator {

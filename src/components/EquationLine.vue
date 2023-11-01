@@ -70,7 +70,7 @@
         mode.value = MODES.STRUCTURAL_VARIABLE_DEFINITION;
         structuralVariableDefinitionWithCallback();
     };
-    const structuralVariableDefinitionName = ref("");
+    const structuralVariableDefinitionName = ref("A");
     watch(structuralVariableDefinitionName, () => {
         structuralVariableDefinitionWithCallback();
     });
