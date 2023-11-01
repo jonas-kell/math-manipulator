@@ -10,7 +10,9 @@
         "lcov",
         "mathrm",
         "multiplicators",
+        "pasteable",
         "summands",
-        "uuidv"
+        "uuidv",
+        "VITE"
     ]
 }

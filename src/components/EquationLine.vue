@@ -3,6 +3,7 @@
     import { Operator, EmptyArgument } from "../functions";
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
+    const VITE_MODE = import.meta.env.MODE;
 
     // input to the equation line
     const props = defineProps<{
@@ -27,6 +28,8 @@
         NONE,
         REPLACEMENT,
         STRUCTURAL_VARIABLE_DEFINITION,
+        SHOW_LATEX,
+        SHOW_STRUCTURE,
     }
     const mode = ref(MODES.NONE);
     const availableModifications = computed((): string[] => {
@@ -105,6 +108,14 @@
             console.error("Should not be possible. Operator is null");
         }
     };
+    const showLatexExportButtonAction = () => {
+        resetControlPanel();
+        mode.value = MODES.SHOW_LATEX;
+    };
+    const showExportStructureButtonAction = () => {
+        resetControlPanel();
+        mode.value = MODES.SHOW_STRUCTURE;
+    };
 </script>
 
 <template>
@@ -117,6 +128,8 @@
         <button @click="modificationAction(mod)" v-for="mod in availableModifications" style="margin-right: 0.2em">
             {{ mod.replace("MODIFICATION", "") }}
         </button>
+        <button @click="showLatexExportButtonAction" style="margin-right: 0.2em; float: right">Show Latex</button>
+        <button @click="showExportStructureButtonAction" style="margin-right: 0.2em; float: right">Show Export Structure</button>
         <InputToOperatorParser
             v-show="mode == MODES.REPLACEMENT"
             @parsed="(a: Operator | null) => { 
@@ -131,13 +144,16 @@
             v-model="structuralVariableDefinitionName"
             style="margin-top: 0.5em; width: 100%"
         />
+        <pre v-if="mode == MODES.SHOW_STRUCTURE">{{ JSON.parse(selectedOperator.getSerializedStructure()) }}</pre>
+        <template v-if="mode == MODES.SHOW_LATEX">
+            <pre>{{ selectedOperator.getExportFormulaString() }}</pre>
+            <pre v-if="mode == MODES.SHOW_LATEX && VITE_MODE == 'development'">{{
+                {
+                    latexPasteableToJs: selectedOperator.getExportFormulaString(),
+                }
+            }}</pre>
+        </template>
     </template>
-    <!-- <template v-if="outputOperator != null">
-        <pre>{{ JSON.parse(outputOperator.getSerializedStructure()) }}</pre>
-    </template> -->
-    <!-- <template v-if="outputOperator != null">
-        <pre>{{ { latex: outputOperator.getExportFormulaString() } }}</pre>
-    </template> -->
 
     <EquationLine v-if="outputOperator != null" :operator="(outputOperator as Operator)" />
 </template>
