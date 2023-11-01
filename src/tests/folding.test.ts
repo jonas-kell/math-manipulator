@@ -273,4 +273,52 @@ describe("operator module - numerical folding feature", () => {
             "\\int\\limits_{\\infty}^{-\\infty}0\\mathrm{d}0"
         );
     });
+
+    test("Sum folding omit zero", () => {
+        expect(JSON.parse(operatorFromString("0+x+0+x").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "variable",
+                    value: "x",
+                    children: [],
+                },
+                {
+                    type: "variable",
+                    value: "x",
+                    children: [],
+                },
+            ],
+        });
+        expect(JSON.parse(operatorFromString("1+x-1").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+            type: "variable",
+            value: "x",
+            children: [],
+        });
+    });
+
+    test("Product folding omit one", () => {
+        expect(JSON.parse(operatorFromString("0.5 x 2 x").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                {
+                    type: "variable",
+                    value: "x",
+                    children: [],
+                },
+                {
+                    type: "variable",
+                    value: "x",
+                    children: [],
+                },
+            ],
+        });
+        expect(JSON.parse(operatorFromString("x*1").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+            type: "variable",
+            value: "x",
+            children: [],
+        });
+    });
 });

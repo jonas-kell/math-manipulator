@@ -276,7 +276,11 @@ export abstract class Operator {
                 res = new Fraction(childrenReconstructed[0], childrenReconstructed[1]);
                 break;
             case OperatorType.BracketedSum:
-                res = new BracketedSum(childrenReconstructed);
+                if (childrenReconstructed.length == 1) {
+                    res = childrenReconstructed[0]; // special case: no addition needed for only one child.
+                } else {
+                    res = new BracketedSum(childrenReconstructed);
+                }
                 break;
             case OperatorType.Numerical:
                 res = new Numerical(Number(input.value));
@@ -299,7 +303,11 @@ export abstract class Operator {
                 res = new RawLatex(input.value);
                 break;
             case OperatorType.BracketedMultiplication:
-                res = new BracketedMultiplication(childrenReconstructed);
+                if (childrenReconstructed.length == 1) {
+                    res = childrenReconstructed[0]; // special case: no multiplication needed for only one child.
+                } else {
+                    res = new BracketedMultiplication(childrenReconstructed);
+                }
                 break;
             case OperatorType.Negation:
                 res = new Negation(childrenReconstructed[0]);
@@ -551,8 +559,8 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Numerical]: 0,
-    [OperatorType.BracketedSum]: 2,
-    [OperatorType.BracketedMultiplication]: 2,
+    [OperatorType.BracketedSum]: 1,
+    [OperatorType.BracketedMultiplication]: 1,
     [OperatorType.Fraction]: 2,
     [OperatorType.BigSum]: 3,
     [OperatorType.BigInt]: 4,
@@ -618,13 +626,19 @@ export class BracketedSum extends Operator {
         const allNotNull = res[0];
         const childrenValues = res[1];
 
+        const partialSum = childrenValues
+            .filter((elem) => elem != null)
+            .reduce((acc, current) => (acc as number) + (current as number), 0) as number;
+        const basicallyZero = partialSum < 1e-6 && partialSum > -1e-6;
+
         if (allNotNull) {
             return super.getCopyWithNumbersFolded();
         } else {
-            const partialSum = childrenValues
-                .filter((elem) => elem != null)
-                .reduce((acc, current) => (acc as number) + (current as number), 0);
-            return super.numberFoldingInternalImplementation(true, partialSum);
+            if (basicallyZero) {
+                return super.numberFoldingInternalImplementation(true, null);
+            } else {
+                return super.numberFoldingInternalImplementation(true, partialSum);
+            }
         }
     }
 }
@@ -652,13 +666,19 @@ export class BracketedMultiplication extends Operator {
         const allNotNull = res[0];
         const childrenValues = res[1];
 
+        const partialProduct = childrenValues
+            .filter((elem) => elem != null)
+            .reduce((acc, current) => (acc as number) * (current as number), 1) as number;
+        const basicallyOne = partialProduct - 1 < 1e-6 && partialProduct - 1 > -1e-6;
+
         if (allNotNull) {
             return super.getCopyWithNumbersFolded();
         } else {
-            const partialProduct = childrenValues
-                .filter((elem) => elem != null)
-                .reduce((acc, current) => (acc as number) * (current as number), 1);
-            return super.numberFoldingInternalImplementation(true, partialProduct);
+            if (basicallyOne) {
+                return super.numberFoldingInternalImplementation(true, null);
+            } else {
+                return super.numberFoldingInternalImplementation(true, partialProduct);
+            }
         }
     }
 }
