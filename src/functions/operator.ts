@@ -375,4 +375,41 @@ export abstract class Operator {
             return structure;
         }
     }
+
+    static assertOperatorsEquivalent(a: Operator, b: Operator): boolean {
+        const valA = a.getNumericalValue();
+        const valB = b.getNumericalValue();
+
+        if (valA != null) {
+            if (valB != null) {
+                return valA > valB - 1e-6 && valA < valB + 1e-6;
+            } else {
+                return false; // one can be parsed to number, other not -> not equivalent
+            }
+        }
+
+        return Operator.assertEquivalenceRecursive(a.getSerializedStructureRecursive(), b.getSerializedStructureRecursive());
+    }
+
+    private static assertEquivalenceRecursive(a: ExportOperatorContent, b: ExportOperatorContent): boolean {
+        if (a.type != b.type) {
+            return false;
+        }
+        if (a.value != b.value) {
+            return false;
+        }
+        if (a.children.length != b.children.length) {
+            return false;
+        }
+        for (let i = 0; i < a.children.length; i++) {
+            const childA = a.children[i];
+            const childB = b.children[i];
+
+            if (!Operator.assertEquivalenceRecursive(childA, childB)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
