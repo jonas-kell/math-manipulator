@@ -83,6 +83,7 @@ const AllowedFunctionKeywordMapping = {
     funcrm: OperatorType.FunctionMathRm,
     sin: OperatorType.Sin,
     cos: OperatorType.Cos,
+    delta: OperatorType.KroneckerDelta,
 } as { [key: string]: OperatorType };
 const AllowedFunctionKeywords = Object.keys(AllowedFunctionKeywordMapping);
 const AllowedConstantKeywordMapping = {

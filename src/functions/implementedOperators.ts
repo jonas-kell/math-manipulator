@@ -81,6 +81,8 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             return new NotEquals();
         case OperatorType.Iff:
             return new Iff();
+        case OperatorType.KroneckerDelta:
+            return new KroneckerDelta(childrenReconstructed[0], childrenReconstructed[1]);
         default:
             throw Error(`type ${type} could not be parsed to an implemented Operator`);
     }
@@ -457,5 +459,31 @@ export class NotEquals extends Operator {
 export class Iff extends Operator {
     constructor() {
         super(OperatorType.Iff, "\\iff", "", "", [], "");
+    }
+}
+
+export class KroneckerDelta extends Operator {
+    constructor(firstArg: Operator, secondArg: Operator) {
+        super(OperatorType.KroneckerDelta, "\\delta_{", ",", "}", [firstArg, secondArg], "");
+    }
+
+    protected getNumericalValue(): number | null {
+        const res = this.childrenNumericalValues();
+        const allNotNull = res[0];
+        const equivalent = Operator.assertOperatorsEquivalent(this._children[0], this._children[1]);
+
+        if (equivalent) {
+            return 1;
+        } else {
+            // not equivalent.
+            if (allNotNull) {
+                // If everything could be parsed into a number, we are sure the arguments are different and we return 0 as the value for the delta
+                return 0;
+            } else {
+                // some structure could not be parsed, but still the values may be equivalent after modification that is too complex for the program to handle on its own
+                // keep the delta as a formula
+                return null;
+            }
+        }
     }
 }
