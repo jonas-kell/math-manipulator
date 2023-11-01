@@ -23,6 +23,8 @@
 </script>
 
 <template>
-    <textarea v-model="text" style="width: 100%; min-height: 4em"></textarea>
-    {{ error }}
+    <div>
+        <textarea v-model="text" style="width: 100%; min-height: 4em"></textarea>
+        {{ error }}
+    </div>
 </template>
