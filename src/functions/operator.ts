@@ -125,6 +125,13 @@ export abstract class Operator {
             formula += `\\htmlId{${this.getUUIDRef()}}{`;
         }
 
+        let value = this._value;
+        if (this._type == OperatorType.Numerical) {
+            // Bugfix: still render Infinity as \infty, even after it has been converted to Infinity by foldNumbers
+            // Only visual, the _value must stay to allow calculations to be working properly
+            value = value.replace("Infinity", "\\infty");
+        }
+
         let anyMiddleDisplayRendered = false;
         let middleFormula = "";
         if (this._renderChildren) {
@@ -173,19 +180,19 @@ export abstract class Operator {
             if (this._type == OperatorType.BracketedMultiplication && !anyMiddleDisplayRendered) {
                 // ( * * * ) if all * have been skipped, also omit the brackets
                 // I wanted to do this for ( + + + ) too, ( a "+" gets skipped before a "-"), to make (n+-1) => n-1 but his transforms {1 - {2 - 3}} into 1-2-3, which differs from 1-(2-3)
-                formula += this._value;
+                formula += value;
                 formula += middleFormula;
             } else {
                 // do not render stuff that can be implied, however no suitable implication-situation was met, so render everything
                 formula += this._startDisplayFormula;
-                formula += this._value;
+                formula += value;
                 formula += middleFormula;
                 formula += this._endDisplayFormula;
             }
         } else {
             // default situation, render all parts of the equation
             formula += this._startDisplayFormula;
-            formula += this._value;
+            formula += value;
             formula += middleFormula;
             formula += this._endDisplayFormula;
         }
