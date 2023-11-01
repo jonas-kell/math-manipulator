@@ -132,12 +132,12 @@
             style="margin-top: 0.5em; width: 100%"
         />
     </template>
-
-    <EquationLine v-if="outputOperator != null" :operator="(outputOperator as Operator)" />
     <!-- <template v-if="outputOperator != null">
         <pre>{{ JSON.parse(outputOperator.getSerializedStructure()) }}</pre>
     </template> -->
     <!-- <template v-if="outputOperator != null">
         <pre>{{ { latex: outputOperator.getExportFormulaString() } }}</pre>
     </template> -->
+
+    <EquationLine v-if="outputOperator != null" :operator="(outputOperator as Operator)" />
 </template>
