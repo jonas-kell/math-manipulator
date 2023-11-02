@@ -43,6 +43,7 @@ function parseStringToExportOperatorContent(input: string): ExportOperatorConten
 
 enum TokenType {
     Structural = "Structural",
+    StructuralSeparation = "StructuralSeparation",
     Plus = "Plus",
     Minus = "Minus",
     OpenParen = "OpenParen",
@@ -57,6 +58,7 @@ enum TokenType {
 }
 
 enum ReservedWord {
+    StructuralSeparationSign = ";",
     PlusSign = "+",
     MinusSign = "-",
     MultiplicationSign = "*",
@@ -86,6 +88,11 @@ const AllowedFunctionKeywordMapping = {
     delta: OperatorType.KroneckerDelta,
 } as { [key: string]: OperatorType };
 const AllowedFunctionKeywords = Object.keys(AllowedFunctionKeywordMapping);
+const functionsWithArgumentsConsideredStructural = [
+    // only makes a difference for functions that take more than exactly one argument
+    OperatorType.Bra,
+    OperatorType.Ket,
+] as OperatorType[];
 const AllowedConstantKeywordMapping = {
     pi: OperatorType.Pi,
     inf: OperatorType.InfinityConstant,
@@ -138,6 +145,10 @@ function tokenize(input: string): Token[] {
             const currentBufWord = currentBuf.substring(0, currentBuf.length - 1); // remove space at the end
 
             switch (currentBufWord) {
+                case ReservedWord.StructuralSeparationSign:
+                    tokens.push({ type: TokenType.StructuralSeparation, content: "" });
+                    wordFound = true;
+                    break;
                 case ReservedWord.PlusSign:
                     tokens.push({ type: TokenType.Plus, content: "" });
                     wordFound = true;
@@ -339,18 +350,28 @@ function trimTokenGroupRecursive(tokenGroup: TokenGroup): TokenGroup {
     return tokenGroup;
 }
 
+const implyStructuralSeparationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.Structural]; // Plus groups aka most of the time brackets
+const implyStructuralSeparationInFront = [
+    TokenType.Other,
+    TokenType.Number,
+    TokenType.Function,
+    TokenType.Constant,
+    TokenType.Structural,
+]; // Plus groups aka most of the time brackets
 const implyMultiplicationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant]; // Plus groups aka most of the time brackets
 const implyMultiplicationInFront = [TokenType.Other, TokenType.Number, TokenType.Function, TokenType.Constant]; // Plus groups aka most of the time brackets
 const implyAdditionBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.Function]; // Plus groups aka most of the time brackets
 const implyAdditionInFront = [TokenType.Minus]; // ! here NOT groups
 
-function insertImpliedOperationsRecursive(tokenGroup: TokenGroup): TokenGroup {
+function insertImpliedOperationsRecursive(tokenGroup: TokenGroup, insertStructuralSeparation: boolean = false): TokenGroup {
     if (tokenGroup instanceof TokenGroupKnot) {
         let children = tokenGroup.getChildren();
 
         let newChildren = [] as TokenGroup[];
 
         for (let i = 0; i < children.length; i++) {
+            let firstNeedsStructuralSeparation = false;
+            let secondNeedsStructuralSeparation = false;
             let firstNeedsMultiplication = false;
             let secondNeedsMultiplication = false;
             let firstNeedsAddition = false;
@@ -358,6 +379,21 @@ function insertImpliedOperationsRecursive(tokenGroup: TokenGroup): TokenGroup {
             const first = children[i - 1];
             const second = children[i];
 
+            // update structural separation logic
+            if (
+                first &&
+                first != undefined &&
+                (first instanceof TokenGroupKnot ||
+                    (first instanceof TokenGroupLeaf && implyStructuralSeparationBehind.includes(first.getToken().type)))
+            ) {
+                firstNeedsStructuralSeparation = true;
+            }
+            if (
+                second instanceof TokenGroupKnot ||
+                (second instanceof TokenGroupLeaf && implyStructuralSeparationInFront.includes(second.getToken().type))
+            ) {
+                secondNeedsStructuralSeparation = true;
+            }
             // update multiplication logic
             if (
                 first &&
@@ -390,49 +426,63 @@ function insertImpliedOperationsRecursive(tokenGroup: TokenGroup): TokenGroup {
                 secondNeedsAddition = true;
             }
 
+            // case: we are in a default mode. Here default assumption takes place
             if (
                 first &&
                 first != undefined &&
                 first instanceof TokenGroupLeaf &&
                 first.getToken().type == TokenType.Function &&
-                MAX_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1 &&
-                MIN_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1
+                ((MAX_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1 &&
+                    MIN_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1) ||
+                    functionsWithArgumentsConsideredStructural.includes(first.getToken().content as OperatorType))
             ) {
                 // Special case: the element after a function is the argument (bracket)
                 // NEVER insert operations before
                 // ONLY insert operations in between, when the function takes more than one argument
-                let functionArguments = [] as TokenGroup[];
                 if (second instanceof TokenGroupLeaf) {
-                    functionArguments = [second];
+                    // insert single argument wrapped in a group
+                    newChildren.push(new TokenGroupKnot([second]));
                 } else {
                     if (second instanceof TokenGroupKnot) {
-                        functionArguments = second.getChildren().map((child) => insertImpliedOperationsRecursive(child));
+                        // recursive call that makes sure
+                        newChildren.push(insertImpliedOperationsRecursive(second, true));
                     } else {
                         throw Error("Unreachable. At this point there should only exist TokenGroupLeaves and TokenGroupKnots.");
                     }
                 }
-                // insert arguments group
-                newChildren.push(new TokenGroupKnot(functionArguments));
             } else {
-                // check if need insert multiplication
-                if (firstNeedsMultiplication && secondNeedsMultiplication) {
-                    newChildren.push(
-                        // insert implicit multiplication
-                        new TokenGroupLeaf({
-                            type: TokenType.Multiplicate,
-                            content: "",
-                        })
-                    );
-                } else {
-                    // check if need insert addition
-                    if (firstNeedsAddition && secondNeedsAddition) {
+                if (insertStructuralSeparation) {
+                    // case: we are inside of a function arguments bracket. Here only possible insertion can be structural delimiters
+                    if (firstNeedsStructuralSeparation && secondNeedsStructuralSeparation) {
                         newChildren.push(
-                            // insert implicit addition
+                            // insert implicit structural separation
                             new TokenGroupLeaf({
-                                type: TokenType.Plus,
+                                type: TokenType.StructuralSeparation,
                                 content: "",
                             })
                         );
+                    }
+                } else {
+                    // check if need insert multiplication
+                    if (firstNeedsMultiplication && secondNeedsMultiplication) {
+                        newChildren.push(
+                            // insert implicit multiplication
+                            new TokenGroupLeaf({
+                                type: TokenType.Multiplicate,
+                                content: "",
+                            })
+                        );
+                    } else {
+                        // check if need insert addition
+                        if (firstNeedsAddition && secondNeedsAddition) {
+                            newChildren.push(
+                                // insert implicit addition
+                                new TokenGroupLeaf({
+                                    type: TokenType.Plus,
+                                    content: "",
+                                })
+                            );
+                        }
                     }
                 }
                 // insert self
@@ -458,11 +508,17 @@ type tokenTypesWithOperatorCharacterType =
     | TokenType.Multiplicate
     | TokenType.Divide
     | TokenType.Power
-    | TokenType.Function;
+    | TokenType.Function
+    | TokenType.StructuralSeparation;
 
 const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperatorCharacterType]: OperatorCharacter } = {
-    [TokenType.Plus]: {
+    [TokenType.StructuralSeparation]: {
         precedence: 1,
+        takesNrArgumentsBefore: 1,
+        takesNrArgumentsAfter: 1,
+    },
+    [TokenType.Plus]: {
+        precedence: 50,
         takesNrArgumentsBefore: 1,
         takesNrArgumentsAfter: 1,
     },
@@ -494,7 +550,7 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
     },
 };
 const tokenTypesWithOperatorCharacter = Object.keys(tokenTypesWithOperatorCharacterDefinitions);
-const repeatableTokenTypesWithOperatorCharacter = [TokenType.Plus, TokenType.Multiplicate];
+const repeatableTokenTypesWithOperatorCharacter = [TokenType.Plus, TokenType.Multiplicate, TokenType.StructuralSeparation];
 
 class TokenGroupKnotInfix extends TokenGroup {
     constructor(private operator: TokenGroupLeaf, private children: TokenGroup[]) {
@@ -624,13 +680,20 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
 
                     // can take the next tokens if:
                     //        - they are a knot,
-                    //        - they are a "logical" Leaf (here == not included in OperatorType leaves)
+                    //        - they are a "logical" Leaf
+                    //                  - not included in OperatorType leaves
+                    //                  - not a Structural leaf
+                    //        - its the empty argument which is allowed
                     if (
                         elementToTakeFromAfter instanceof TokenGroupKnot ||
                         elementToTakeFromAfter instanceof TokenGroupKnotInfix ||
                         (elementToTakeFromAfter instanceof TokenGroupLeaf &&
                             !tokenTypesWithOperatorCharacter.includes(elementToTakeFromAfter.getToken().type) &&
-                            elementToTakeFromAfter.getToken().type != TokenType.Structural)
+                            elementToTakeFromAfter.getToken().type != TokenType.Structural) ||
+                        (elementToTakeFromAfter instanceof TokenGroupLeaf &&
+                            elementToTakeFromAfter.getToken().type == TokenType.Structural &&
+                            AllowedStructuralKeywordMapping[elementToTakeFromAfter.getToken().content] ==
+                                OperatorType.EmptyArgument)
                     ) {
                         if (stillNeeded == 0) {
                             throw Error(
@@ -770,6 +833,13 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
         const children = tokenGroup.getChildren().map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(child));
 
         switch (operatorToken.type) {
+            case TokenType.StructuralSeparation:
+                return {
+                    type: OperatorType.StructuralContainer,
+                    value: "",
+                    children: children,
+                    uuid: "",
+                } as ExportOperatorContent;
             case TokenType.Plus:
                 return {
                     type: OperatorType.BracketedSum,
@@ -833,7 +903,7 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
                             MAX_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
                         } arguments in its arguments, but ${
                             childrenForFunctionOperator.length
-                        } were provided. Arguments need to be supplied as a group without operators. e.g. sum(n=1 \\infty n)`
+                        } were provided. Arguments need to be supplied as a group with ; as argument delimiter. e.g. sum(n=1; \\infty; n)`
                     );
                 }
 

@@ -573,11 +573,164 @@ describe("parser module end-to-end", () => {
         });
     });
 
-    test("No multiplication insertion into function-argument-groups", () => {
+    test("Automatic StructuralSeparator insertion into function-argument-groups", () => {
         expect(() => operatorFromString("sum({} a s)")).not.toThrow();
         expect(() => operatorFromString("sum(a {} s)")).not.toThrow();
         expect(() => operatorFromString("sum({} a {})")).not.toThrow();
         expect(() => operatorFromString("sum(a a {})")).not.toThrow();
         expect(() => operatorFromString("sum({} a a {})")).toThrow();
+        expect(() => operatorFromString("sum({} (a a) {})")).not.toThrow();
+        expect(() => operatorFromString("sum({};(a a) {})")).not.toThrow();
+        expect(() => operatorFromString("sum({}; a; n)")).not.toThrow();
+        expect(() => operatorFromString("int({} a a {})")).not.toThrow();
+        expect(() => operatorFromString("int({} a; a {})")).not.toThrow();
+    });
+
+    test("Functions with one parameter, difference between treats-as-structural and not", () => {
+        expect(JSON.parse(operatorFromString("exp(1 2)").getSerializedStructure())).toMatchObject({
+            type: "exp_function",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "number",
+                            value: "1",
+                            children: [],
+                        },
+                        {
+                            type: "number",
+                            value: "2",
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        });
+        expect(JSON.parse(operatorFromString("exp(1)").getSerializedStructure())).toMatchObject({
+            type: "exp_function",
+            value: "",
+            children: [
+                {
+                    type: "number",
+                    value: "1",
+                    children: [],
+                },
+            ],
+        });
+        expect(JSON.parse(operatorFromString("bra(1 0 2)").getSerializedStructure())).toMatchObject({
+            type: "singular_bra",
+            value: "",
+            children: [
+                {
+                    type: "structural_container",
+                    value: "",
+                    children: [
+                        {
+                            type: "number",
+                            value: "1",
+                            children: [],
+                        },
+                        {
+                            type: "number",
+                            value: "0",
+                            children: [],
+                        },
+                        {
+                            type: "number",
+                            value: "2",
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        });
+        expect(JSON.parse(operatorFromString("bra(1)").getSerializedStructure())).toMatchObject({
+            type: "singular_bra",
+            value: "",
+            children: [
+                {
+                    type: "number",
+                    value: "1",
+                    children: [],
+                },
+            ],
+        });
+        expect(JSON.parse(operatorFromString("ket(0;1)").getSerializedStructure())).toMatchObject({
+            type: "singular_ket",
+            value: "",
+            children: [
+                {
+                    type: "structural_container",
+                    value: "",
+                    children: [
+                        {
+                            type: "number",
+                            value: "0",
+                            children: [],
+                        },
+                        {
+                            type: "number",
+                            value: "1",
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        });
+        expect(JSON.parse(operatorFromString("ket(0 1)").getSerializedStructure())).toMatchObject({
+            type: "singular_ket",
+            value: "",
+            children: [
+                {
+                    type: "structural_container",
+                    value: "",
+                    children: [
+                        {
+                            type: "number",
+                            value: "0",
+                            children: [],
+                        },
+                        {
+                            type: "number",
+                            value: "1",
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        });
+    });
+
+    test("Create structural container with ;", () => {
+        expect(JSON.parse(operatorFromString("a;s d").getSerializedStructure())).toMatchObject({
+            type: "structural_container",
+            value: "",
+            children: [
+                {
+                    type: "variable",
+                    value: "a",
+                    children: [],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "variable",
+                            value: "s",
+                            children: [],
+                        },
+                        {
+                            type: "variable",
+                            value: "d",
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        });
     });
 });

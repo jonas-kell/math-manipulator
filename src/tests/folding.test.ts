@@ -241,7 +241,8 @@ describe("operator module - numerical folding feature", () => {
 
     test("Rendering of folded infinity", () => {
         expect(
-            JSON.parse(operatorFromString("int (inf -inf 0 0 )").getCopyWithNumbersFolded().getSerializedStructure())
+            // ; in input required, this is wanted
+            JSON.parse(operatorFromString("int (inf ;-inf 0 0 )").getCopyWithNumbersFolded().getSerializedStructure())
         ).toMatchObject({
             type: "big_int",
             value: "",
@@ -268,7 +269,7 @@ describe("operator module - numerical folding feature", () => {
                 },
             ],
         });
-        expect(operatorFromString("int (inf -inf 0 0 )").getCopyWithNumbersFolded().getExportFormulaString()).toEqual(
+        expect(operatorFromString("int (inf; -inf 0 0 )").getCopyWithNumbersFolded().getExportFormulaString()).toEqual(
             "\\int\\limits_{\\infty}^{-\\infty}0\\mathrm{d}0"
         );
     });
