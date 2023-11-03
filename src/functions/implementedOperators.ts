@@ -333,7 +333,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
     }
 }
 
-export class Fraction extends Operator {
+export class Fraction extends Operator implements MinusPulloutManagement {
     constructor(dividend: Operator, divisor: Operator) {
         super(OperatorType.Fraction, "\\frac{", "}{", "}", [dividend, divisor], "");
     }
@@ -350,6 +350,36 @@ export class Fraction extends Operator {
         } else {
             return null;
         }
+    }
+
+    minusCanBePulledOut(): [boolean, Operator] {
+        const enumerator = this._children[0];
+        const denominator = this._children[1];
+        const newChildren = [] as Operator[];
+        let even = true;
+
+        [enumerator, denominator].forEach((child) => {
+            if (implementsMinusPulloutManagement(child)) {
+                const [childEvenNumberMinusPulledOut, childResultingOperator] = child.minusCanBePulledOut();
+
+                even = childEvenNumberMinusPulledOut ? even : !even;
+                newChildren.push(childResultingOperator);
+            } else {
+                newChildren.push(child);
+            }
+        });
+
+        return [even, new Fraction(newChildren[0], newChildren[1])];
+    }
+
+    PullOutMinusMODIFICATION(): Operator {
+        const [evenNumberMinusPulledOut, resultingOperator] = this.minusCanBePulledOut();
+
+        if (evenNumberMinusPulledOut) {
+            return resultingOperator;
+        }
+
+        return new Negation(resultingOperator);
     }
 }
 
