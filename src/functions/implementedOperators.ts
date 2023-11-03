@@ -88,7 +88,17 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
     }
 }
 
-export class Numerical extends Operator {
+interface MinusPulloutManagement {
+    /**
+     * @returns [evenNumberMinusPulledOut: boolean, resultingOperator: Operator]
+     */
+    minusCanBePulledOut(): [boolean, Operator];
+}
+function implementsMinusPulloutManagement(object: any): object is MinusPulloutManagement {
+    return "minusCanBePulledOut" in object;
+}
+
+export class Numerical extends Operator implements MinusPulloutManagement {
     constructor(value: number) {
         super(OperatorType.Numerical, "", "", "", [], String(parseFloat(value.toFixed(4))));
     }
@@ -96,9 +106,29 @@ export class Numerical extends Operator {
     protected getNumericalValue(): number | null {
         return Number(this._value);
     }
+
+    minusCanBePulledOut(): [boolean, Operator] {
+        const value = this.getNumericalValue() as number;
+
+        if (value < 0) {
+            return [false, new Numerical(-1 * value)];
+        }
+
+        return [true, this];
+    }
+
+    PullOutMinusMODIFICATION(): Operator {
+        const [evenNumberMinusPulledOut, resultingOperator] = this.minusCanBePulledOut();
+
+        if (evenNumberMinusPulledOut) {
+            return resultingOperator;
+        }
+
+        return new Negation(resultingOperator);
+    }
 }
 
-export class BracketedSum extends Operator {
+export class BracketedSum extends Operator implements MinusPulloutManagement {
     constructor(summands: Operator[]) {
         super(OperatorType.BracketedSum, "\\left(", "+", "\\right)", summands, "");
     }
@@ -140,9 +170,66 @@ export class BracketedSum extends Operator {
     getChildren(): Operator[] {
         return this._children;
     }
+
+    /**
+     * Calculate the two cases, where a total minus was pulled out and where it wasn't
+     * @returns [allChildrenPulledOutOddNumber: boolean, newOperatorAfterNotPullingOut: Operator, newOperatorAfterPullingOut: Operator]
+     */
+    pullOutMinusHandler(): [boolean, Operator, Operator] {
+        let allChildrenPulledOutOddNumber = true;
+        let newChildrenNotPullingOut = [] as Operator[];
+        let newChildrenPullingOut = [] as Operator[];
+
+        this._children.forEach((child) => {
+            if (implementsMinusPulloutManagement(child)) {
+                const [childEvenNumberMinusPulledOut, childResultingOperator] = child.minusCanBePulledOut();
+
+                if (childEvenNumberMinusPulledOut) {
+                    allChildrenPulledOutOddNumber = false;
+                }
+
+                if (childEvenNumberMinusPulledOut) {
+                    newChildrenNotPullingOut.push(childResultingOperator);
+                    newChildrenPullingOut.push(new Negation(childResultingOperator));
+                } else {
+                    newChildrenNotPullingOut.push(new Negation(childResultingOperator));
+                    newChildrenPullingOut.push(childResultingOperator);
+                }
+            } else {
+                allChildrenPulledOutOddNumber = false;
+
+                newChildrenNotPullingOut.push(child);
+                newChildrenPullingOut.push(new Negation(child));
+            }
+        });
+
+        return [
+            allChildrenPulledOutOddNumber,
+            new BracketedSum(newChildrenNotPullingOut),
+            new BracketedSum(newChildrenPullingOut),
+        ];
+    }
+
+    // TODO this could also deal with the special case, that it may be interesting to rearrange elements in the sum (2-3) -> -(3-2)
+    minusCanBePulledOut(): [boolean, Operator] {
+        const [allChildrenPulledOutOddNumber, newOperatorAfterNotPullingOut, newOperatorAfterPullingOut] =
+            this.pullOutMinusHandler();
+
+        if (allChildrenPulledOutOddNumber) {
+            return [false, newOperatorAfterPullingOut];
+        }
+        return [true, newOperatorAfterNotPullingOut];
+    }
+
+    PullOutMinusMODIFICATION(): Operator {
+        const [_allChildrenPulledOutOddNumber, _newOperatorAfterNotPullingOut, newOperatorAfterPullingOut] =
+            this.pullOutMinusHandler();
+
+        return new Negation(newOperatorAfterPullingOut);
+    }
 }
 
-export class BracketedMultiplication extends Operator {
+export class BracketedMultiplication extends Operator implements MinusPulloutManagement {
     constructor(multiplicators: Operator[]) {
         super(OperatorType.BracketedMultiplication, "\\left(", " \\cdot ", "\\right)", multiplicators, "");
     }
@@ -214,6 +301,35 @@ export class BracketedMultiplication extends Operator {
 
     getChildren(): Operator[] {
         return this._children;
+    }
+
+    minusCanBePulledOut(): [boolean, Operator] {
+        const children = this._children;
+        const newChildren = [] as Operator[];
+        let even = true;
+
+        children.forEach((child) => {
+            if (implementsMinusPulloutManagement(child)) {
+                const [childEvenNumberMinusPulledOut, childResultingOperator] = child.minusCanBePulledOut();
+
+                even = childEvenNumberMinusPulledOut ? even : !even;
+                newChildren.push(childResultingOperator);
+            } else {
+                newChildren.push(child);
+            }
+        });
+
+        return [even, new BracketedMultiplication(newChildren)];
+    }
+
+    PullOutMinusMODIFICATION(): Operator {
+        const [evenNumberMinusPulledOut, resultingOperator] = this.minusCanBePulledOut();
+
+        if (evenNumberMinusPulledOut) {
+            return resultingOperator;
+        }
+
+        return new Negation(resultingOperator);
     }
 }
 
@@ -287,7 +403,7 @@ export class StructuralVariable extends Operator {
     }
 }
 
-export class Negation extends Operator {
+export class Negation extends Operator implements MinusPulloutManagement {
     constructor(content: Operator) {
         super(OperatorType.Negation, "-", "", "", [content], "");
     }
@@ -302,6 +418,28 @@ export class Negation extends Operator {
         } else {
             return null;
         }
+    }
+
+    minusCanBePulledOut(): [boolean, Operator] {
+        const child = this._children[0];
+
+        if (implementsMinusPulloutManagement(child)) {
+            const [childEvenNumberMinusPulledOut, childResultingOperator] = child.minusCanBePulledOut();
+
+            return [childEvenNumberMinusPulledOut !== true, childResultingOperator];
+        } else {
+            return [false, child];
+        }
+    }
+
+    PullOutMinusMODIFICATION(): Operator {
+        const [evenNumberMinusPulledOut, resultingOperator] = this.minusCanBePulledOut();
+
+        if (evenNumberMinusPulledOut) {
+            return resultingOperator;
+        }
+
+        return new Negation(resultingOperator);
     }
 }
 

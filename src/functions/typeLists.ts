@@ -75,8 +75,8 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Numerical]: 0,
-    [OperatorType.BracketedSum]: 1,
-    [OperatorType.BracketedMultiplication]: 1,
+    [OperatorType.BracketedSum]: 1, // on parsing from export, sums with only one element will remove themselves
+    [OperatorType.BracketedMultiplication]: 1, // on parsing from export, products with only one element will remove themselves
     [OperatorType.Fraction]: 2,
     [OperatorType.BigSum]: 3,
     [OperatorType.BigInt]: 4,
@@ -102,7 +102,7 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.FunctionMathRm]: 2,
     [OperatorType.Sin]: 1,
     [OperatorType.Cos]: 1,
-    [OperatorType.StructuralContainer]: 2, // makes no sense keeping extraneous containers if they don't contain anything
+    [OperatorType.StructuralContainer]: 2, // makes no sense having extraneous containers if they only contain one element
     [OperatorType.EmptyArgument]: 0,
     [OperatorType.Equals]: 0,
     [OperatorType.NotEquals]: 0,
