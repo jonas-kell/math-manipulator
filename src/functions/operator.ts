@@ -194,24 +194,29 @@ export abstract class Operator {
         return out;
     }
 
-    getSerializedStructure() {
-        return JSON.stringify(this.getSerializedStructureRecursive());
+    getSerializedStructure(includeUUIDs: boolean = true) {
+        return JSON.stringify(this.getSerializedStructureRecursive(includeUUIDs));
     }
 
-    private getSerializedStructureRecursive() {
+    private getSerializedStructureRecursive(includeUUIDs: boolean = true) {
         let children = [] as ExportOperatorContent[];
 
         this._children.forEach((child) => {
-            children.push(child.getSerializedStructureRecursive());
+            children.push(child.getSerializedStructureRecursive(includeUUIDs));
         });
 
-        let res: ExportOperatorContent = {
+        // not totally type-save cool, but whatever. It is not worth making extra functions and Export types only for the non-inclusion of uuids for the display
+        let res: any = {
             type: this._type,
             value: this._value,
             children: children,
-            uuid: this._uuid,
         };
-        return res;
+
+        if (includeUUIDs) {
+            res.uuid = this._uuid;
+        }
+
+        return res as ExportOperatorContent;
     }
 
     static generateStructure(input: string, keepUUIDs: boolean = false): Operator {

@@ -174,7 +174,7 @@
             v-model="structuralVariableDefinitionName"
             style="margin-top: 0.5em; width: 100%"
         />
-        <pre v-if="mode == MODES.SHOW_STRUCTURE">{{ JSON.parse(selectedOperator.getSerializedStructure()) }}</pre>
+        <pre v-if="mode == MODES.SHOW_STRUCTURE">{{ JSON.parse(selectedOperator.getSerializedStructure(false)) }}</pre>
         <template v-if="mode == MODES.SHOW_LATEX">
             <pre>{{ selectedOperator.getExportFormulaString() }}</pre>
             <pre v-if="mode == MODES.SHOW_LATEX && VITE_MODE == 'development'">{{

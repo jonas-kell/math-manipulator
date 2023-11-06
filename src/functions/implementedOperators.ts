@@ -381,6 +381,84 @@ export class Fraction extends Operator implements MinusPulloutManagement {
 
         return new Negation(resultingOperator);
     }
+
+    ReduceMODIFICATION(): Operator {
+        const enumerator = this._children[0];
+        const denominator = this._children[1];
+        let enumeratorInputs = [] as Operator[];
+        let denominatorInputs = [] as Operator[];
+
+        if (enumerator instanceof BracketedMultiplication) {
+            enumeratorInputs = enumerator.getChildren();
+        } else {
+            enumeratorInputs = [enumerator];
+        }
+
+        if (denominator instanceof BracketedMultiplication) {
+            denominatorInputs = denominator.getChildren();
+        } else {
+            denominatorInputs = [denominator];
+        }
+
+        let enumeratorInputsKeep = Array(enumeratorInputs.length).fill(true);
+        let denominatorInputsKeep = Array(denominatorInputs.length).fill(true);
+
+        for (let enumIndex = 0; enumIndex < enumeratorInputs.length; enumIndex++) {
+            const enumeratorChild = enumeratorInputs[enumIndex];
+            for (let denomIndex = 0; denomIndex < denominatorInputs.length; denomIndex++) {
+                if (denominatorInputsKeep[denomIndex]) {
+                    const denominatorChild = denominatorInputs[denomIndex];
+
+                    if (Operator.assertOperatorsEquivalent(enumeratorChild, denominatorChild)) {
+                        enumeratorInputsKeep[enumIndex] = false;
+                        denominatorInputsKeep[denomIndex] = false;
+                        break; // break the denominator loop
+                    }
+                }
+            }
+        }
+
+        const enumeratorOutput = enumeratorInputs.filter((_elem, index) => enumeratorInputsKeep[index]);
+        const denominatorOutput = denominatorInputs.filter((_elem, index) => denominatorInputsKeep[index]);
+
+        if (enumeratorOutput.length == 0) {
+            if (denominatorOutput.length == 0) {
+                // {} / {}
+                return new Numerical(1);
+            } else if (denominatorOutput.length == 1) {
+                // {} / [a]
+                return new Fraction(new Numerical(1), denominatorOutput[0]);
+            } else {
+                // {} / [a,b,c,...]
+                return new Fraction(new Numerical(1), new BracketedMultiplication(denominatorOutput));
+            }
+        } else if (enumeratorOutput.length == 1) {
+            if (denominatorOutput.length == 0) {
+                // [x] / {}
+                return enumeratorOutput[0];
+            } else if (denominatorOutput.length == 1) {
+                // [x] / [a]
+                return new Fraction(enumeratorOutput[0], denominatorOutput[0]);
+            } else {
+                // [x] / [a,b,c,...]
+                return new Fraction(enumeratorOutput[0], new BracketedMultiplication(denominatorOutput));
+            }
+        } else {
+            if (denominatorOutput.length == 0) {
+                // [x, y, z] / {}
+                return new BracketedMultiplication(enumeratorOutput);
+            } else if (denominatorOutput.length == 1) {
+                // [x, y, z] / [a]
+                return new Fraction(new BracketedMultiplication(enumeratorOutput), denominatorOutput[0]);
+            } else {
+                // [x, y, z] / [a,b,c,...]
+                return new Fraction(
+                    new BracketedMultiplication(enumeratorOutput),
+                    new BracketedMultiplication(denominatorOutput)
+                );
+            }
+        }
+    }
 }
 
 export class BigSum extends Operator {
