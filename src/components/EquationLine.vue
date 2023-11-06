@@ -3,12 +3,16 @@
     import { Operator, EmptyArgument } from "../functions";
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
+    import { v4 as uuidv4 } from "uuid";
+    import { useSelectFunctionStore } from "./../stores/selectors";
     const VITE_MODE = import.meta.env.MODE;
 
     interface EffectMeasure {
         hasEffect: boolean;
         result: Operator | null;
     }
+    const rendererUUID = ref(uuidv4());
+    const selectFunctionStore = useSelectFunctionStore();
 
     // input to the equation line
     const props = defineProps<{
@@ -26,7 +30,14 @@
         resetControlPanel();
         selectionUUID.value = id;
         selectedOperator.value = props.operator.getOperatorByUUID(selectionUUID.value);
+        const parentOperator = props.operator.findParentOperator(selectionUUID.value);
+        if (parentOperator != null) {
+            parentOperatorUUIDRef.value = parentOperator.getUUIDRef();
+        } else {
+            parentOperatorUUIDRef.value = null;
+        }
     };
+    const parentOperatorUUIDRef = ref(null as string | null);
 
     // structure of the operations line
     enum MODES {
@@ -58,11 +69,17 @@
     watch(props, () => {
         resetControlPanel();
         selectionUUID.value = "";
+        parentOperatorUUIDRef.value = null;
         selectedOperator.value = null;
         replaceWithOperator.value = null;
     });
 
     // modification triggers to the current line
+    const selectParentAction = () => {
+        if (parentOperatorUUIDRef.value != null) {
+            selectFunctionStore.callHandlerCallback(rendererUUID.value, parentOperatorUUIDRef.value);
+        }
+    };
     const replaceButtonAction = () => {
         resetControlPanel();
         mode.value = MODES.REPLACEMENT;
@@ -145,9 +162,17 @@
 </script>
 
 <template>
-    <KatexRenderer :katex-input="katexInput" :uuid-refs-to-process="uuidRefsToProcess" @selected="selectOperator" />
+    <KatexRenderer
+        :katex-input="katexInput"
+        :uuid-refs-to-process="uuidRefsToProcess"
+        @selected="selectOperator"
+        :renderer-uuid="rendererUUID"
+    />
 
     <template v-if="selectionUUID != '' && selectedOperator != null">
+        <button @click="selectParentAction" style="margin-right: 0.2em" :disabled="parentOperatorUUIDRef == null">
+            Sel. Parent
+        </button>
         <button @click="replaceButtonAction" style="margin-right: 0.2em">Replace</button>
         <button @click="structuralVariableDefinitionButtonAction" style="margin-right: 0.2em">Define Structural Variable</button>
         <button

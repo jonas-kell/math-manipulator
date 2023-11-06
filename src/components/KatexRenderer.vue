@@ -1,39 +1,36 @@
 <script setup lang="ts">
     import katex from "katex";
-    import { ref, watch, onMounted } from "vue";
-    import { v4 as uuidv4 } from "uuid";
+    import { ref, watch, onBeforeMount, onMounted, computed, onBeforeUnmount } from "vue";
     import { Operator } from "../functions";
+    import { useSelectFunctionStore } from "./../stores/selectors";
+
+    const selectFunctionStore = useSelectFunctionStore();
 
     const props = defineProps<{
         katexInput: string;
         uuidRefsToProcess: string[]; // make sure the uuids that are put into this always start with a letter!! Our default is "ref_{{uuid}}"
+        rendererUuid: string;
     }>();
 
     const emit = defineEmits(["selected"]);
 
-    const containerId = ref("ref_" + uuidv4());
+    const containerId = computed(() => {
+        return Operator.UUIDRefFromUUID(props.rendererUuid);
+    });
+    const selectionRef = ref(null as string | null);
 
     const clickListenerWrapper = (UUIDRef: string) => {
         return (event: MouseEvent) => {
             event.stopPropagation();
 
-            const container = document.getElementById(containerId.value);
-            if (container) {
-                // remove the border-class from all that have it
-                const elements = container.querySelectorAll(".border");
-                elements.forEach(function (element) {
-                    element.classList.remove("border");
-                });
-
-                // add the class only to the current container
-                const current = container.querySelector("#" + UUIDRef);
-                if (current) {
-                    current.classList.add("border");
-
-                    emit("selected", Operator.uuidFromUUIDRef(UUIDRef));
-                }
-            }
+            selectUUIDProgrammatically(UUIDRef);
         };
+    };
+
+    const selectUUIDProgrammatically = (UUIDRef: string) => {
+        selectionRef.value = UUIDRef;
+        updateBorders();
+        emit("selected", Operator.UUIDFromUUIDRef(UUIDRef));
     };
 
     const postProcess = () => {
@@ -43,12 +40,35 @@
                 outer.addEventListener("click", clickListenerWrapper(UUIDRef));
             }
         });
+
+        updateBorders();
+    };
+
+    const updateBorders = () => {
+        const container = document.getElementById(containerId.value);
+        if (container) {
+            // remove the border-class from all that have it
+            const elements = container.querySelectorAll(".border");
+            elements.forEach(function (element) {
+                element.classList.remove("border");
+            });
+
+            // add the class only to the current container
+            const selected = container.querySelector("#" + selectionRef.value);
+            if (selected) {
+                selected.classList.add("border");
+            }
+        }
     };
 
     const render = () => {
         const element = document.getElementById(containerId.value);
 
         if (element) {
+            // empty
+            element.replaceChildren();
+
+            // render new content
             katex.render(props.katexInput, element, {
                 macros: {
                     "\\eq": "=",
@@ -64,12 +84,21 @@
         postProcess();
     };
 
+    onBeforeMount(() => {
+        selectFunctionStore.addHandlerToStore(props.rendererUuid, selectUUIDProgrammatically as any);
+    });
+
     onMounted(() => {
         render();
     });
 
     watch(props, () => {
+        selectFunctionStore.addHandlerToStore(props.rendererUuid, selectUUIDProgrammatically as any);
         render();
+    });
+
+    onBeforeUnmount(() => {
+        selectFunctionStore.removeHandlerFromStore(props.rendererUuid);
     });
 </script>
 

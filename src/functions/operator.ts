@@ -78,11 +78,15 @@ export abstract class Operator {
     }
 
     getUUIDRef() {
-        return "ref_" + this._uuid;
+        return Operator.UUIDRefFromUUID(this._uuid);
     }
 
-    static uuidFromUUIDRef(UUIDRef: string) {
+    static UUIDFromUUIDRef(UUIDRef: string) {
         return UUIDRef.substring(4);
+    }
+
+    static UUIDRefFromUUID(UUID: string) {
+        return "ref_" + UUID;
     }
 
     manuallySetUUID(uuid: string) {
@@ -418,5 +422,30 @@ export abstract class Operator {
         }
 
         return true;
+    }
+
+    public findParentOperator(uuid: string): Operator | null {
+        return this.findParentOperatorRecursive(uuid);
+    }
+
+    private findParentOperatorRecursive(uuid: string): Operator | null {
+        // search first in own children
+        for (let i = 0; i < this._children.length; i++) {
+            const child = this._children[i];
+            if (child._uuid == uuid) {
+                return this;
+            }
+        }
+
+        // then go recursive
+        for (let i = 0; i < this._children.length; i++) {
+            const child = this._children[i];
+            const childRes = child.findParentOperatorRecursive(uuid);
+            if (childRes != null) {
+                return childRes;
+            }
+        }
+
+        return null;
     }
 }
