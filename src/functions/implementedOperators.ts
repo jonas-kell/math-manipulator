@@ -272,9 +272,20 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         let children = this.getChildren();
 
         if (children.length >= 2) {
-            const childSumInstances = children.filter((child) => child instanceof BracketedSum) as BracketedSum[];
+            let numberOfSums = 0;
+            const childSumInstances = children
+                // can only distribute into sum. Therefore wrap singular elements into a single sum for ease of use
+                .map((child) => {
+                    if (child instanceof BracketedSum) {
+                        numberOfSums += 1;
+                        return child;
+                    } else {
+                        return new BracketedSum([child]);
+                    }
+                })
+                .filter((child) => child instanceof BracketedSum) as BracketedSum[];
 
-            if (childSumInstances.length === children.length) {
+            if (numberOfSums > 0 && childSumInstances.length === children.length) {
                 const newSummands = [] as BracketedMultiplication[];
 
                 // do this recursively in order to allow for as many sum-terms in the product as you want

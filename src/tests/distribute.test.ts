@@ -120,15 +120,36 @@ describe("DistributeMODIFICATION", () => {
 
     test("Default self return", () => {
         expect(
-            JSON.parse(
-                (operatorFromString("(a+x+z)*3") as BracketedMultiplication).DistributeMODIFICATION().getSerializedStructure()
-            )
+            JSON.parse((operatorFromString("x*3") as BracketedMultiplication).DistributeMODIFICATION().getSerializedStructure())
         ).toMatchObject({
             type: "bracketed_multiplication",
             value: "",
             children: [
                 {
-                    type: "bracketed_sum",
+                    type: "variable",
+                    value: "x",
+                    children: [],
+                },
+                {
+                    type: "number",
+                    value: "3",
+                    children: [],
+                },
+            ],
+        });
+    });
+
+    test("Distribute with singular elements", () => {
+        expect(
+            JSON.parse(
+                (operatorFromString("(a+x+z)*3") as BracketedMultiplication).DistributeMODIFICATION().getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
                     value: "",
                     children: [
                         {
@@ -137,21 +158,43 @@ describe("DistributeMODIFICATION", () => {
                             children: [],
                         },
                         {
-                            type: "variable",
-                            value: "x",
-                            children: [],
-                        },
-                        {
-                            type: "variable",
-                            value: "z",
+                            type: "number",
+                            value: "3",
                             children: [],
                         },
                     ],
                 },
                 {
-                    type: "number",
-                    value: "3",
-                    children: [],
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "variable",
+                            value: "x",
+                            children: [],
+                        },
+                        {
+                            type: "number",
+                            value: "3",
+                            children: [],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "variable",
+                            value: "z",
+                            children: [],
+                        },
+                        {
+                            type: "number",
+                            value: "3",
+                            children: [],
+                        },
+                    ],
                 },
             ],
         });
