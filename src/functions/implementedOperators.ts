@@ -342,6 +342,29 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
 
         return new Negation(resultingOperator);
     }
+
+    MergeAndEvaluateBraKetMODIFICATION(): Operator {
+        let newChildren = [] as Operator[];
+
+        for (let i = 0; i < this._children.length; i++) {
+            const child = this._children[i];
+            const nextChild = this._children[i + 1];
+
+            if (nextChild && nextChild != undefined && nextChild != null) {
+                if (child instanceof Bra) {
+                    if (nextChild instanceof Ket) {
+                        newChildren.push(Operator.MergeBraKet(child, nextChild).OrthoNormalEvalMODIFICATION());
+                        i += 1; // skip next
+                        continue; // do not push self
+                    }
+                }
+            }
+
+            newChildren.push(child);
+        }
+
+        return new BracketedMultiplication(newChildren);
+    }
 }
 
 export class Fraction extends Operator implements MinusPulloutManagement {
@@ -648,6 +671,61 @@ export class Braket extends Operator {
     constructor(bra: Operator, ket: Operator) {
         super(OperatorType.Braket, "\\left\\lang", "\\middle\\vert", "\\right\\rang", [bra, ket], "");
     }
+
+    OrthoNormalEvalMODIFICATION(): Operator {
+        const bra = this._children[0];
+        const ket = this._children[1];
+
+        let braChildren = [] as Operator[];
+        if (bra instanceof StructuralContainer) {
+            braChildren = bra.getChildren();
+        } else {
+            braChildren = [bra];
+        }
+        let ketChildren = [] as Operator[];
+        if (ket instanceof StructuralContainer) {
+            ketChildren = ket.getChildren();
+        } else {
+            ketChildren = [ket];
+        }
+
+        if (braChildren.length != ketChildren.length) {
+            // uneven length, not comparable
+            return this;
+        }
+
+        let oneCouldNotBeParsedYet = false;
+
+        for (let i = 0; i < braChildren.length; i++) {
+            const braChild = braChildren[i];
+            const ketChild = ketChildren[i];
+
+            const equivalent = Operator.assertOperatorsEquivalent(braChild, ketChild);
+
+            // helper instance to access getNumericalValue
+            const [allNotNull, _] = new Braket(braChild, ketChild).childrenNumericalValues();
+
+            if (equivalent) {
+                // this is fine, still overlaps
+            } else {
+                if (allNotNull) {
+                    // no equivalence, but could be parsed to number -> definitely different
+                    return new Numerical(0);
+                } else {
+                    // if NOT equal AND one of them could not be parsed to a number ->
+                    oneCouldNotBeParsedYet = true;
+                }
+            }
+        }
+
+        if (oneCouldNotBeParsedYet) {
+            // after all checks we could still evaluate to true with further more complex changes
+            return this;
+        } else {
+            // no check exited, we have 100% overlap
+            return new Numerical(1);
+        }
+    }
 }
 
 export class Bracket extends Operator {
@@ -731,6 +809,10 @@ export class Cos extends Operator {
 export class StructuralContainer extends Operator {
     constructor(children: Operator[]) {
         super(OperatorType.StructuralContainer, "", "\\,\\,", "", children, "");
+    }
+
+    getChildren(): Operator[] {
+        return this._children;
     }
 }
 

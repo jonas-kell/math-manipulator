@@ -6,6 +6,9 @@ import {
     Numerical,
     operatorConstructorSwitch,
     StructuralVariable,
+    Bra,
+    Ket,
+    Braket,
 } from "./exporter";
 
 const FERMIONIC_BOSONIC_OPERATORS = [
@@ -447,5 +450,9 @@ export abstract class Operator {
         }
 
         return null;
+    }
+
+    static MergeBraKet(bra: Bra, ket: Ket) {
+        return new Braket(bra._children[0], ket._children[0]);
     }
 }
