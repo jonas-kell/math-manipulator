@@ -150,6 +150,8 @@ export function implementsMinusPulloutManagement(object: any): object is MinusPu
 }
 
 /**
+ * The boolean states if an additional minus (-) was introduced
+ *
  * The elements of the inner (Operator & OrderableOperator)[] need to be concatenated with multiplication. The boolean instructs if they need to be wrapped in minus
  * If more than one inner [boolean, (Operator & OrderableOperator)[]] is returned (outer array more than one element), the inner multiplications need to be concatenated with addition
  */
@@ -622,6 +624,13 @@ function mapReorderResultToOperator(reorderResult: ReorderResultIntermediate): O
 }
 
 /**
+ * This implements the Odd-even-sort https://en.wikipedia.org/wiki/Odd%E2%80%93even_sort
+ *
+ * This is a O(n^2) algorithm, that allows for the restriction that only adjacent elements can be compared/swapped
+ *
+ * If the swap-operation returns additional sum-elements, the rest of the elements are appended left and right and sorted recursively
+ * TODO This can be made more efficient. Because if we know that the extra elements (currently only KroneckerDelta) always commute, we can save on sorting multiple times, however this is too hard for my brain currently
+ *
  * @param inString -> at least two elements
  *
  * @returns Operator: single Operator or multiple wrapped in a BracketedMultiplication
@@ -633,21 +642,53 @@ function orderOperatorStringRecursive(inString: ReorderResultIntermediate): Reor
     // all outer brackets are terms of the final outermost sum. They always all have to be executed
     for (let i = 0; i < inString.length; i++) {
         const currentString = inString[i];
+        let elements = currentString[1];
+        const n = elements.length;
+        let minus = currentString[0];
 
-        let child = currentString[1][0];
-        let nextChild = currentString[1][1];
+        let sorted = false;
+        function compareAndSwap(i: number) {
+            if (compareOperatorOrder(elements[i], elements[i + 1]) > 0) {
+                const commutedResult = elements[i].commute(elements[i + 1]);
+                // TODO deal with additional terms that may emerge here
+                const first = commutedResult[0];
+                const minusFromNew = first[0];
+                const swappedElements = first[1];
 
-        let commutedResult = [[false, [child, nextChild]]] as ReorderResultIntermediate;
-        if (compareOperatorOrder(child, nextChild) > 0) {
-            commutedResult = child.commute(nextChild);
+                // generate minus state for new element
+                minus = minusFromNew ? !minus : minus;
+
+                // assumes a swap only generates exactly two elements. If this changes a overhaul is needed!
+                elements[i] = swappedElements[0];
+                elements[i + 1] = swappedElements[1];
+
+                // modification means list not sorted
+                sorted = false;
+            }
         }
+        while (!sorted) {
+            sorted = true;
+            // Odd phase (comparing and swapping elements starting at odd indices)
+            for (let i = 1; i < n - 1; i += 2) {
+                compareAndSwap(i);
+            }
 
-        commutedResult.forEach((res) => {
-            const ops = res[1];
-            ops.push(...currentString[1].slice(2));
-        });
+            // Even phase (comparing and swapping elements starting at even indices)
+            for (let i = 0; i < n - 1; i += 2) {
+                compareAndSwap(i);
+            }
+        }
+        outerAllocator.push([minus, elements]);
 
-        outerAllocator.push(...commutedResult);
+        // let commutedResult = [[false, [child, nextChild]]] as ReorderResultIntermediate;
+        // if (compareOperatorOrder(child, nextChild) > 0) {
+        //     commutedResult = child.commute(nextChild);
+        // }
+        // commutedResult.forEach((res) => {
+        //     const ops = res[1];
+        //     ops.push(...currentString[1].slice(2));
+        // });
+        // outerAllocator.push(...commutedResult);
     }
 
     return outerAllocator;
@@ -1060,6 +1101,9 @@ export class FermionicCreationOperator extends QMOperatorWithOneArgument {
                 [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
             ];
         }
+        if (commuteWith instanceof FermionicCreationOperator) {
+            return [[true, [commuteWith, this]]];
+        }
 
         return [[false, [commuteWith, this]]];
     }
@@ -1076,6 +1120,9 @@ export class FermionicAnnihilationOperator extends QMOperatorWithOneArgument {
                 [true, [commuteWith, this]],
                 [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
             ];
+        }
+        if (commuteWith instanceof FermionicAnnihilationOperator) {
+            return [[true, [commuteWith, this]]];
         }
 
         return [[false, [commuteWith, this]]];
