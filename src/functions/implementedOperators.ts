@@ -627,14 +627,18 @@ function mapReorderResultToOperator(reorderResult: ReorderResultIntermediate): O
 function orderOperatorStringRecursive(inString: ReorderResultIntermediate): ReorderResultIntermediate {
     let outerAllocator = [] as ReorderResultIntermediate;
 
+    // all outer brackets are terms of the final outermost sum. They always all have to be executed
     for (let i = 0; i < inString.length; i++) {
         const currentString = inString[i];
 
         let child = currentString[1][0];
         let nextChild = currentString[1][1];
-        compareOperatorOrder(child, nextChild); // does nothing at the moment
 
-        let commutedResult = child.commute(nextChild);
+        let commutedResult = [[false, [child, nextChild]]] as ReorderResultIntermediate;
+        if (compareOperatorOrder(child, nextChild) > 0) {
+            commutedResult = child.commute(nextChild);
+        }
+
         commutedResult.forEach((res) => {
             const ops = res[1];
             ops.push(...currentString[1].slice(2));
