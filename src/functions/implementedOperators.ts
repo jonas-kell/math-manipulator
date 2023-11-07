@@ -149,6 +149,11 @@ export function implementsMinusPulloutManagement(object: any): object is MinusPu
     return "minusCanBePulledOut" in object && "PullOutMinusMODIFICATION" in object;
 }
 
+/**
+ * The elements of the inner (Operator & OrderableOperator)[] need to be concatenated with multiplication. The boolean instructs if they need to be wrapped in minus
+ * If more than one inner [boolean, (Operator & OrderableOperator)[]] is returned (outer array more than one element), the inner multiplications need to be concatenated with addition
+ */
+type ReorderResultIntermediate = [boolean, (Operator & OrderableOperator)[]][];
 interface OrderableOperator {
     /**
      * @returns a string computable purely from the instance of the Operator that allows for sorting via local compare
@@ -158,12 +163,9 @@ interface OrderableOperator {
     /**
      * Performs the swapping of two OrderableOperators (this <-> commuteWith)
      *
-     * The elements of the inner (Operator & OrderableOperator)[] need to be concatenated with multiplication. The boolean instructs if they need to be wrapped in minus
-     * If more than one inner [boolean, (Operator & OrderableOperator)[]] is returned (outer array more than one element), the inner multiplications need to be concatenated with addition
-     *
      * @returns the result after swapping (if the operators commute, this returns [[false, [commuteWith, this]]]
      */
-    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][];
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate;
 }
 function implementsOrderableOperator(object: any): object is OrderableOperator & Operator {
     return object instanceof Operator && "orderPriorityString" in object && "commute" in object;
@@ -238,7 +240,7 @@ export class Numerical extends Operator implements MinusPulloutManagement, Order
         return this._value;
     }
 
-    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
     }
 }
@@ -533,12 +535,14 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         return constructContainerOrFirstChild(OperatorType.BracketedMultiplication, newChildren);
     }
 
-    OrderOperatorStringsMODIFICATION(): Operator {
+    orderOperatorStrings(): Operator {
         let newChildren = [] as Operator[];
         let currentOperatorString = [] as (Operator & OrderableOperator)[];
 
         function sortAndPush() {
-            newChildren.push(...BracketedMultiplication.orderOperatorString(currentOperatorString));
+            if (currentOperatorString.length > 0) {
+                newChildren.push(orderOperatorString(currentOperatorString));
+            }
             currentOperatorString = [];
         }
 
@@ -548,17 +552,13 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
             if (implementsOrderableOperator(child)) {
                 currentOperatorString.push(child);
             } else {
-                sortAndPush();
+                sortAndPush(); // handle all sortable operators up to this point
                 newChildren.push(child);
             }
         }
-        sortAndPush();
+        sortAndPush(); // handle possible rest of operators
 
         return constructContainerOrFirstChild(OperatorType.BracketedMultiplication, newChildren);
-    }
-
-    static orderOperatorString(inString: (Operator & OrderableOperator)[]): (Operator & OrderableOperator)[] {
-        return inString.sort((a, b) => compareOperatorOrder(a, b));
     }
 
     commuteChildAndSubsequent(childUUID: string): Operator {
@@ -572,15 +572,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
                 if (nextChild && nextChild != null && nextChild != undefined) {
                     if (implementsOrderableOperator(child) && implementsOrderableOperator(nextChild)) {
                         // use the inherit commutation actions of the OrderableOperatorsInterface
-                        const commutedResult = child.commute(nextChild);
-                        let aggregatedMultiplications = [] as Operator[];
-                        commutedResult.forEach(([prodMinus, swappedChildren]) => {
-                            let inner = constructContainerOrFirstChild(OperatorType.BracketedMultiplication, swappedChildren);
-                            inner = prodMinus ? new Negation(inner) : inner; // apply needed minus
-                            aggregatedMultiplications.push(inner);
-                        });
-
-                        newChildren.push(constructContainerOrFirstChild(OperatorType.BracketedSum, aggregatedMultiplications));
+                        newChildren.push(mapReorderResultToOperator(child.commute(nextChild)));
                     } else {
                         // no special logic, just swap them forcefully
                         newChildren.push(nextChild, child);
@@ -596,6 +588,62 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
 
         return constructContainerOrFirstChild(OperatorType.BracketedMultiplication, newChildren);
     }
+}
+
+function orderOperatorString(inString: (Operator & OrderableOperator)[]): Operator {
+    if (inString.length == 0) {
+        throw Error("Cannot reorder empty String of arguments");
+    }
+
+    if (inString.length == 1) {
+        return inString[0];
+    }
+
+    const orderedResult = orderOperatorStringRecursive([[false, inString]]);
+    return mapReorderResultToOperator(orderedResult);
+}
+
+/**
+ * @returns Operator: single Operator or multiple wrapped in a BracketedMultiplication
+ * (You can use `constructContainerOrFirstChild` to integrate directly into another multiplication)
+ */
+function mapReorderResultToOperator(reorderResult: ReorderResultIntermediate): Operator {
+    let aggregatedMultiplications = [] as Operator[];
+    reorderResult.forEach(([prodMinus, swappedChildren]) => {
+        let inner = constructContainerOrFirstChild(OperatorType.BracketedMultiplication, swappedChildren);
+        inner = prodMinus ? new Negation(inner) : inner; // apply needed minus
+        aggregatedMultiplications.push(inner);
+    });
+
+    return constructContainerOrFirstChild(OperatorType.BracketedSum, aggregatedMultiplications);
+}
+
+/**
+ * @param inString -> at least two elements
+ *
+ * @returns Operator: single Operator or multiple wrapped in a BracketedMultiplication
+ * (You can use `constructContainerOrFirstChild` to integrate directly into another multiplication)
+ */
+function orderOperatorStringRecursive(inString: ReorderResultIntermediate): ReorderResultIntermediate {
+    let outerAllocator = [] as ReorderResultIntermediate;
+
+    for (let i = 0; i < inString.length; i++) {
+        const currentString = inString[i];
+
+        let child = currentString[1][0];
+        let nextChild = currentString[1][1];
+        compareOperatorOrder(child, nextChild); // does nothing at the moment
+
+        let commutedResult = child.commute(nextChild);
+        commutedResult.forEach((res) => {
+            const ops = res[1];
+            ops.push(...currentString[1].slice(2));
+        });
+
+        outerAllocator.push(...commutedResult);
+    }
+
+    return outerAllocator;
 }
 
 export class Fraction extends Operator implements MinusPulloutManagement {
@@ -737,7 +785,7 @@ export class Variable extends Operator implements OrderableOperator {
         return this._value;
     }
 
-    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
     }
 }
@@ -823,7 +871,7 @@ abstract class Constant extends Operator implements OrderableOperator {
         return this._startDisplayFormula;
     }
 
-    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
     }
 }
@@ -990,7 +1038,7 @@ abstract class QMOperatorWithOneArgument extends Operator implements OrderableOp
         return this._children[0];
     }
 
-    abstract commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][];
+    abstract commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate;
 }
 
 export class FermionicCreationOperator extends QMOperatorWithOneArgument {
@@ -998,7 +1046,7 @@ export class FermionicCreationOperator extends QMOperatorWithOneArgument {
         super(OperatorType.FermionicCreationOperator, "\\mathrm{c}^\\dagger", index);
     }
 
-    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof FermionicAnnihilationOperator) {
             return [
                 [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
@@ -1015,7 +1063,7 @@ export class FermionicAnnihilationOperator extends QMOperatorWithOneArgument {
         super(OperatorType.FermionicAnnihilationOperator, "\\mathrm{c}", index);
     }
 
-    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof FermionicCreationOperator) {
             return [
                 [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
@@ -1032,7 +1080,7 @@ export class BosonicCreationOperator extends QMOperatorWithOneArgument {
         super(OperatorType.BosonicCreationOperator, "\\mathrm{b}^\\dagger", index);
     }
 
-    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof BosonicAnnihilationOperator) {
             return [
                 [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
@@ -1049,7 +1097,7 @@ export class BosonicAnnihilationOperator extends QMOperatorWithOneArgument {
         super(OperatorType.BosonicAnnihilationOperator, "\\mathrm{b}", index);
     }
 
-    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof BosonicCreationOperator) {
             return [
                 [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
@@ -1172,7 +1220,7 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
         return this._children[0].getSerializedStructure(false) + this._children[1].getSerializedStructure(false);
     }
 
-    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
     }
 }

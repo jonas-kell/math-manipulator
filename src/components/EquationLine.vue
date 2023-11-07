@@ -130,6 +130,28 @@
                 }
             }
 
+            // order operator Strings
+            if (selOp instanceof BracketedMultiplication) {
+                const actionResult = selOp.orderOperatorStrings();
+
+                // allows to execute getCopyWithGottenRidOfUnnecessaryTerms one level above if possible
+                let target = selOp as Operator;
+                if (selectedOperatorsParentOperator.value != null) {
+                    const selParent = selectedOperatorsParentOperator.value as Operator;
+                    target = selParent;
+                }
+
+                const newToInsert = target
+                    .getCopyWithReplaced(selOp.getUUID(), actionResult)
+                    .getCopyWithGottenRidOfUnnecessaryTerms(); // make sure to get rid of --() or x+0 artifacts
+
+                res["Order Operator Strings"] = {
+                    hasEffect: !Operator.assertOperatorsEquivalent(target, newToInsert),
+                    replacesUUID: target.getUUID(),
+                    result: newToInsert,
+                };
+            }
+
             // single-replace-modifications
             [
                 "getCopyWithNumbersFolded", // Modification style Method available for all instances of Operator
