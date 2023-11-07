@@ -83,7 +83,19 @@ function constructContainerOrFirstChild(
     children: Operator[],
     removeBracketsAllowedByAssociativity: boolean = true
 ): Operator {
-    if (children.length == 1) {
+    if (children.length == 0) {
+        // canonical replacements for when initialized without inputChildren
+        switch (containerType) {
+            case OperatorType.BracketedMultiplication:
+                return new Numerical(1);
+            case OperatorType.BracketedSum:
+                return new Numerical(0);
+            case OperatorType.StructuralContainer:
+                return new EmptyArgument();
+            default:
+                throw Error(`type ${containerType} Is not a container type`);
+        }
+    } else if (children.length == 1) {
         return children[0]; // special case: no container needed for only one child.
     } else {
         let newChildren = children;
@@ -329,6 +341,34 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             }
             // push self
             newChildren.push(child);
+        }
+
+        return constructContainerOrFirstChild(OperatorType.BracketedSum, newChildren);
+    }
+
+    EliminateCancelingTermsMODIFICATION(): Operator {
+        let newChildren = this.getChildren();
+        let changes = true;
+        while (changes) {
+            changes = false;
+
+            lop: for (let i = 0; i < newChildren.length; i++) {
+                const childA = newChildren[i];
+                for (let j = i + 1; j < newChildren.length; j++) {
+                    const childB = newChildren[j];
+
+                    if (
+                        Operator.assertOperatorsEquivalent(
+                            new Negation(new Negation(childA)).PullOutMinusMODIFICATION(),
+                            new Negation(childB).PullOutMinusMODIFICATION()
+                        )
+                    ) {
+                        newChildren = newChildren.filter((_el, index) => index != i && index != j);
+                        changes = true;
+                        break lop;
+                    }
+                }
+            }
         }
 
         return constructContainerOrFirstChild(OperatorType.BracketedSum, newChildren);
