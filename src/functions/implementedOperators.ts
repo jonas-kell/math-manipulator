@@ -363,7 +363,11 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
             newChildren.push(child);
         }
 
-        return new BracketedMultiplication(newChildren);
+        if (newChildren.length == 1) {
+            return newChildren[0];
+        } else {
+            return new BracketedMultiplication(newChildren);
+        }
     }
 }
 
