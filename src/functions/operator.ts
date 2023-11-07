@@ -9,6 +9,9 @@ import {
     Bra,
     Ket,
     Braket,
+    implementsMinusPulloutManagement,
+    Negation,
+    BracketedSum,
 } from "./exporter";
 
 const FERMIONIC_BOSONIC_OPERATORS = [
@@ -458,5 +461,30 @@ export abstract class Operator {
 
     static MergeBraKet(bra: Bra, ket: Ket) {
         return new Braket(bra._children[0], ket._children[0]);
+    }
+
+    getCopyWithGottenRidOfUnnecessaryTerms() {
+        let copy = this.getCopyWithNumbersFolded(); // directly eliminate all unnecessary delta, 0, 1, etc.
+        copy = Operator.handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(copy);
+        return copy;
+    }
+
+    private static handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(op: Operator): Operator {
+        // go into structures to treat their children
+        op._children = op._children.map((child) => Operator.handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(child));
+
+        // make sure to pull out the minus if it was just included into a number
+        // also eliminates Negation(Negation(stuff))
+        if (implementsMinusPulloutManagement(op)) {
+            const [evenNumberMinusPulledOut, resOp] = op.minusCanBePulledOut();
+            op = evenNumberMinusPulledOut ? resOp : new Negation(resOp);
+        }
+
+        // Make sure to get rid of cancelling terms
+        if (op instanceof BracketedSum) {
+            op = op.EliminateCancelingTermsMODIFICATION();
+        }
+
+        return op;
     }
 }

@@ -110,7 +110,9 @@
 
                 // swap with subsequent
                 if (selParent instanceof BracketedSum || selParent instanceof BracketedMultiplication) {
-                    const actionResult = selParent.commuteChildAndSubsequent(selectedOperator.value.getUUID());
+                    const actionResult = selParent
+                        .commuteChildAndSubsequent(selectedOperator.value.getUUID())
+                        .getCopyWithGottenRidOfUnnecessaryTerms();
 
                     if (Operator.assertOperatorsEquivalent(actionResult, selParent, false)) {
                         res["Commute with subsequent"] = {
@@ -131,9 +133,13 @@
             // single-replace-modifications
             [
                 "getCopyWithNumbersFolded", // Modification style Method available for all instances of Operator
+                "getCopyWithGottenRidOfUnnecessaryTerms", // Modification style Method available for all instances of Operator
                 ...Object.getOwnPropertyNames(Object.getPrototypeOf(selOp)).filter((name) => name.includes("MODIFICATION")),
             ].forEach((action) => {
-                const name = action.replace("MODIFICATION", "").replace("getCopyWithNumbersFolded", "Fold Numbers");
+                const name = action
+                    .replace("MODIFICATION", "")
+                    .replace("getCopyWithNumbersFolded", "Fold Numbers")
+                    .replace("getCopyWithGottenRidOfUnnecessaryTerms", "Cleanup Terms");
 
                 // as the `action` was extracted from filtered `getOwnPropertyNames` or manually inserted, this is should always be a valid method
                 let actionResult = (selOp as any)[action]() as Operator;

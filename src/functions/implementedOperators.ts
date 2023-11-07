@@ -117,6 +117,12 @@ function constructContainerOrFirstChild(
                     newChildren = children.flatMap((child) => {
                         if (child instanceof BracketedSum) {
                             return child.getChildren();
+                        } else if (child instanceof Negation && child.getChild() instanceof BracketedSum) {
+                            // for negated sum directly spread negated arguments
+                            const negatedSum = child.getChild() as BracketedSum;
+                            return negatedSum.getChildren().map((sumChild) => {
+                                return new Negation(sumChild);
+                            });
                         } else {
                             return child;
                         }
@@ -136,9 +142,11 @@ interface MinusPulloutManagement {
      * @returns [evenNumberMinusPulledOut: boolean, resultingOperator: Operator]
      */
     minusCanBePulledOut(): [boolean, Operator];
+
+    PullOutMinusMODIFICATION(): Operator;
 }
-function implementsMinusPulloutManagement(object: any): object is MinusPulloutManagement {
-    return "minusCanBePulledOut" in object;
+export function implementsMinusPulloutManagement(object: any): object is MinusPulloutManagement {
+    return "minusCanBePulledOut" in object && "PullOutMinusMODIFICATION" in object;
 }
 
 interface OrderableOperator {
@@ -150,18 +158,28 @@ interface OrderableOperator {
     /**
      * Performs the swapping of two OrderableOperators (this <-> commuteWith)
      *
-     * The elements of the inner OrderableOperator[] need to be concatenated with multiplication
-     * If more than one inner OrderableOperator[] is returned (outer array more than one element), the inner multiplications need to be concatenated with addition
+     * The elements of the inner (Operator & OrderableOperator)[] need to be concatenated with multiplication. The boolean instructs if they need to be wrapped in minus
+     * If more than one inner [boolean, (Operator & OrderableOperator)[]] is returned (outer array more than one element), the inner multiplications need to be concatenated with addition
      *
-     * @returns the result after swapping (if the operators commute, this returns [[commuteWith, this]])
+     * @returns the result after swapping (if the operators commute, this returns [[false, [commuteWith, this]]]
      */
-    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][];
+    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][];
 }
 function implementsOrderableOperator(object: any): object is OrderableOperator & Operator {
     return object instanceof Operator && "orderPriorityString" in object && "commute" in object;
 }
 function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOperator & Operator): number {
-    const orderClasses = [Numerical, Constant, Variable, Operator];
+    const orderClasses = [
+        Numerical,
+        Constant,
+        Variable,
+        FermionicCreationOperator,
+        FermionicAnnihilationOperator,
+        BosonicCreationOperator,
+        BosonicAnnihilationOperator,
+        KroneckerDelta,
+        Operator,
+    ];
     let indexA = -1;
     let indexB = -1;
     for (let i = 0; i < orderClasses.length; i++) {
@@ -220,8 +238,8 @@ export class Numerical extends Operator implements MinusPulloutManagement, Order
         return this._value;
     }
 
-    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
-        return [[commuteWith, this]];
+    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+        return [[false, [commuteWith, this]]];
     }
 }
 
@@ -556,17 +574,13 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
                         // use the inherit commutation actions of the OrderableOperatorsInterface
                         const commutedResult = child.commute(nextChild);
                         let aggregatedMultiplications = [] as Operator[];
-                        commutedResult.forEach((array) => {
-                            aggregatedMultiplications.push(
-                                constructContainerOrFirstChild(OperatorType.BracketedMultiplication, array)
-                            );
+                        commutedResult.forEach(([prodMinus, swappedChildren]) => {
+                            let inner = constructContainerOrFirstChild(OperatorType.BracketedMultiplication, swappedChildren);
+                            inner = prodMinus ? new Negation(inner) : inner; // apply needed minus
+                            aggregatedMultiplications.push(inner);
                         });
-                        newChildren.push(
-                            constructContainerOrFirstChild(
-                                OperatorType.BracketedSum,
-                                aggregatedMultiplications
-                            ).getCopyWithNumbersFolded() // directly eliminate all unnecessary delta, 0, 1, etc.
-                        );
+
+                        newChildren.push(constructContainerOrFirstChild(OperatorType.BracketedSum, aggregatedMultiplications));
                     } else {
                         // no special logic, just swap them forcefully
                         newChildren.push(nextChild, child);
@@ -723,8 +737,8 @@ export class Variable extends Operator implements OrderableOperator {
         return this._value;
     }
 
-    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
-        return [[commuteWith, this]];
+    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+        return [[false, [commuteWith, this]]];
     }
 }
 
@@ -794,6 +808,10 @@ export class Negation extends Operator implements MinusPulloutManagement {
 
         return new Negation(resultingOperator);
     }
+
+    getChild() {
+        return this._children[0];
+    }
 }
 
 abstract class Constant extends Operator implements OrderableOperator {
@@ -805,8 +823,8 @@ abstract class Constant extends Operator implements OrderableOperator {
         return this._startDisplayFormula;
     }
 
-    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
-        return [[commuteWith, this]];
+    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+        return [[false, [commuteWith, this]]];
     }
 }
 
@@ -972,7 +990,7 @@ abstract class QMOperatorWithOneArgument extends Operator implements OrderableOp
         return this._children[0];
     }
 
-    abstract commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][];
+    abstract commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][];
 }
 
 export class FermionicCreationOperator extends QMOperatorWithOneArgument {
@@ -980,12 +998,15 @@ export class FermionicCreationOperator extends QMOperatorWithOneArgument {
         super(OperatorType.FermionicCreationOperator, "\\mathrm{c}^\\dagger", index);
     }
 
-    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
+    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
         if (commuteWith instanceof FermionicAnnihilationOperator) {
-            return [[new KroneckerDelta(this.getChild(), commuteWith.getChild())], [commuteWith, this]];
+            return [
+                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
+                [true, [commuteWith, this]],
+            ];
         }
 
-        return [[commuteWith, this]];
+        return [[false, [commuteWith, this]]];
     }
 }
 
@@ -994,12 +1015,15 @@ export class FermionicAnnihilationOperator extends QMOperatorWithOneArgument {
         super(OperatorType.FermionicAnnihilationOperator, "\\mathrm{c}", index);
     }
 
-    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
-        if (commuteWith instanceof FermionicAnnihilationOperator) {
-            return [];
+    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+        if (commuteWith instanceof FermionicCreationOperator) {
+            return [
+                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
+                [true, [commuteWith, this]],
+            ];
         }
 
-        return [[commuteWith, this]];
+        return [[false, [commuteWith, this]]];
     }
 }
 
@@ -1008,12 +1032,15 @@ export class BosonicCreationOperator extends QMOperatorWithOneArgument {
         super(OperatorType.BosonicCreationOperator, "\\mathrm{b}^\\dagger", index);
     }
 
-    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
-        if (commuteWith instanceof FermionicAnnihilationOperator) {
-            return [];
+    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+        if (commuteWith instanceof BosonicAnnihilationOperator) {
+            return [
+                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
+                [false, [commuteWith, this]],
+            ];
         }
 
-        return [[commuteWith, this]];
+        return [[false, [commuteWith, this]]];
     }
 }
 
@@ -1022,12 +1049,15 @@ export class BosonicAnnihilationOperator extends QMOperatorWithOneArgument {
         super(OperatorType.BosonicAnnihilationOperator, "\\mathrm{b}", index);
     }
 
-    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
-        if (commuteWith instanceof FermionicAnnihilationOperator) {
-            return [];
+    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+        if (commuteWith instanceof BosonicCreationOperator) {
+            return [
+                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
+                [false, [commuteWith, this]],
+            ];
         }
 
-        return [[commuteWith, this]];
+        return [[false, [commuteWith, this]]];
     }
 }
 
@@ -1142,7 +1172,7 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
         return this._children[0].getSerializedStructure(false) + this._children[1].getSerializedStructure(false);
     }
 
-    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
-        return [[commuteWith, this]];
+    commute(commuteWith: Operator & OrderableOperator): [boolean, (Operator & OrderableOperator)[]][] {
+        return [[false, [commuteWith, this]]];
     }
 }
