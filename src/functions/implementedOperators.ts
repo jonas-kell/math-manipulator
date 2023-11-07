@@ -180,10 +180,10 @@ function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOpera
         Numerical,
         Constant,
         Variable,
-        FermionicCreationOperator,
         FermionicAnnihilationOperator,
-        BosonicCreationOperator,
+        FermionicCreationOperator,
         BosonicAnnihilationOperator,
+        BosonicCreationOperator,
         KroneckerDelta,
         Operator,
     ];
@@ -410,6 +410,19 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         const allNotNull = res[0];
         const childrenValues = res[1];
 
+        // product is 0 if one element is 0
+        // TODO theoretically if one element is Infinity, this fails...
+        for (let i = 0; i < childrenValues.length; i++) {
+            const value = childrenValues[i];
+
+            if (value != null) {
+                const basicallyZero = value < 1e-6 && value > -1e-6;
+                if (basicallyZero) {
+                    return 0;
+                }
+            }
+        }
+
         if (allNotNull) {
             return childrenValues.reduce((acc, current) => (acc as number) * (current as number), 1);
         } else {
@@ -604,7 +617,24 @@ function orderOperatorString(inString: (Operator & OrderableOperator)[]): Operat
         return inString[0];
     }
 
-    const orderedResult = orderOperatorStringRecursive([[false, inString]]);
+    let orderedResult = orderOperatorStringRecursive([[false, inString]]);
+
+    // sort the summands here we do not need to consider commutation relations)
+    orderedResult = orderedResult.sort((a, b) => {
+        if (a[1].length != b[1].length) {
+            return a[1].length - b[1].length;
+        }
+
+        if (a[0] != b[0]) {
+            return a[0] ? 1 : -1;
+        }
+
+        return a[1]
+            .map((a) => a.orderPriorityString())
+            .join("")
+            .localeCompare(b[1].map((b) => b.orderPriorityString()).join(""));
+    });
+
     return mapReorderResultToOperator(orderedResult);
 }
 
@@ -650,7 +680,21 @@ function orderOperatorStringRecursive(inString: ReorderResultIntermediate): Reor
         function compareAndSwap(i: number) {
             if (compareOperatorOrder(elements[i], elements[i + 1]) > 0) {
                 const commutedResult = elements[i].commute(elements[i + 1]);
-                // TODO deal with additional terms that may emerge here
+
+                // ! Deal with potential additional elements
+                const emergingElements = commutedResult.slice(1);
+                const paddedEmergentElements = emergingElements.map(
+                    (emergingElementCollection): [boolean, (Operator & OrderableOperator)[]] => {
+                        return [
+                            emergingElementCollection[0] ? !minus : minus,
+                            [...elements.slice(0, i), ...emergingElementCollection[1], ...elements.slice(i + 2)],
+                        ];
+                    }
+                );
+                // this is a very scary recursive call... But it SHOULD terminate... I think.
+                outerAllocator.push(...orderOperatorStringRecursive(paddedEmergentElements));
+
+                // ! Deal with the first element, this one must contain the swapped elements as per convention
                 const first = commutedResult[0];
                 const minusFromNew = first[0];
                 const swappedElements = first[1];
@@ -679,16 +723,6 @@ function orderOperatorStringRecursive(inString: ReorderResultIntermediate): Reor
             }
         }
         outerAllocator.push([minus, elements]);
-
-        // let commutedResult = [[false, [child, nextChild]]] as ReorderResultIntermediate;
-        // if (compareOperatorOrder(child, nextChild) > 0) {
-        //     commutedResult = child.commute(nextChild);
-        // }
-        // commutedResult.forEach((res) => {
-        //     const ops = res[1];
-        //     ops.push(...currentString[1].slice(2));
-        // });
-        // outerAllocator.push(...commutedResult);
     }
 
     return outerAllocator;
