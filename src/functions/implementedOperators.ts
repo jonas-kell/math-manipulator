@@ -2,16 +2,14 @@ import { Operator, OperatorType } from "./exporter";
 
 export function operatorConstructorSwitch(type: OperatorType, value: string, childrenReconstructed: Operator[]): Operator {
     switch (type) {
+        case OperatorType.BracketedSum:
+        case OperatorType.BracketedMultiplication:
+        case OperatorType.StructuralContainer:
+            return constructContainerOrFirstChild(type, childrenReconstructed);
         case OperatorType.BigSum:
             return new BigSum(childrenReconstructed[0], childrenReconstructed[1], childrenReconstructed[2]);
         case OperatorType.Fraction:
             return new Fraction(childrenReconstructed[0], childrenReconstructed[1]);
-        case OperatorType.BracketedSum:
-            if (childrenReconstructed.length == 1) {
-                return childrenReconstructed[0]; // special case: no addition needed for only one child.
-            } else {
-                return new BracketedSum(childrenReconstructed);
-            }
         case OperatorType.Numerical:
             return new Numerical(Number(value));
         case OperatorType.Variable:
@@ -27,12 +25,6 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             );
         case OperatorType.RawLatex:
             return new RawLatex(value);
-        case OperatorType.BracketedMultiplication:
-            if (childrenReconstructed.length == 1) {
-                return childrenReconstructed[0]; // special case: no multiplication needed for only one child.
-            } else {
-                return new BracketedMultiplication(childrenReconstructed);
-            }
         case OperatorType.Negation:
             return new Negation(childrenReconstructed[0]);
         case OperatorType.Pi:
@@ -71,8 +63,6 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             return new Sin(childrenReconstructed[0]);
         case OperatorType.Cos:
             return new Cos(childrenReconstructed[0]);
-        case OperatorType.StructuralContainer:
-            return new StructuralContainer(childrenReconstructed);
         case OperatorType.EmptyArgument:
             return new EmptyArgument();
         case OperatorType.Equals:
@@ -88,6 +78,26 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
     }
 }
 
+function constructContainerOrFirstChild(
+    containerType: OperatorType.BracketedMultiplication | OperatorType.BracketedSum | OperatorType.StructuralContainer,
+    children: Operator[]
+): Operator {
+    if (children.length == 1) {
+        return children[0]; // special case: no container needed for only one child.
+    } else {
+        switch (containerType) {
+            case OperatorType.BracketedMultiplication:
+                return new BracketedMultiplication(children);
+            case OperatorType.BracketedSum:
+                return new BracketedSum(children);
+            case OperatorType.StructuralContainer:
+                return new StructuralContainer(children);
+            default:
+                throw Error(`type ${containerType} Is not a container type`);
+        }
+    }
+}
+
 interface MinusPulloutManagement {
     /**
      * @returns [evenNumberMinusPulledOut: boolean, resultingOperator: Operator]
@@ -98,7 +108,53 @@ function implementsMinusPulloutManagement(object: any): object is MinusPulloutMa
     return "minusCanBePulledOut" in object;
 }
 
-export class Numerical extends Operator implements MinusPulloutManagement {
+interface OrderableOperator {
+    /**
+     * @returns a string computable purely from the instance of the Operator that allows for sorting via local compare
+     */
+    orderPriorityString(): string;
+
+    /**
+     * Performs the swapping of two OrderableOperators (this <-> commuteWith)
+     *
+     * The elements of the inner OrderableOperator[] need to be concatenated with multiplication
+     * If more than one inner OrderableOperator[] is returned (outer array more than one element), the inner multiplications need to be concatenated with addition
+     *
+     * @returns the result after swapping (if the operators commute, this returns [[commuteWith, this]])
+     */
+    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][];
+}
+function implementsOrderableOperator(object: any): object is OrderableOperator & Operator {
+    return object instanceof Operator && "orderPriorityString" in object && "commute" in object;
+}
+function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOperator & Operator): number {
+    const orderClasses = [Numerical, Constant, Variable, Operator];
+    let indexA = -1;
+    let indexB = -1;
+    for (let i = 0; i < orderClasses.length; i++) {
+        const className = orderClasses[i];
+
+        if (a instanceof className) {
+            indexA = i;
+        }
+        if (b instanceof className) {
+            indexB = i;
+        }
+        if (indexA >= 0 && indexB >= 0) {
+            break;
+        }
+    }
+
+    if (indexA != indexB) {
+        // different class
+        return indexA - indexB;
+    } else {
+        // same class
+        return a.orderPriorityString().localeCompare(b.orderPriorityString());
+    }
+}
+
+export class Numerical extends Operator implements MinusPulloutManagement, OrderableOperator {
     constructor(value: number) {
         super(OperatorType.Numerical, "", "", "", [], String(parseFloat(value.toFixed(4))));
     }
@@ -125,6 +181,14 @@ export class Numerical extends Operator implements MinusPulloutManagement {
         }
 
         return new Negation(resultingOperator);
+    }
+
+    orderPriorityString() {
+        return this._value;
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
+        return [[commuteWith, this]];
     }
 }
 
@@ -205,8 +269,8 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
 
         return [
             allChildrenPulledOutOddNumber,
-            new BracketedSum(newChildrenNotPullingOut),
-            new BracketedSum(newChildrenPullingOut),
+            constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenNotPullingOut),
+            constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenPullingOut),
         ];
     }
 
@@ -226,6 +290,27 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             this.pullOutMinusHandler();
 
         return new Negation(newOperatorAfterPullingOut);
+    }
+
+    commuteChildAndSubsequent(childUUID: string): Operator {
+        const children = this.getChildren();
+        let newChildren = [] as Operator[];
+
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.getUUID() == childUUID) {
+                const nextChild = children[i + 1];
+                if (nextChild && nextChild != null && nextChild != undefined) {
+                    newChildren.push(nextChild, child);
+                    i += 1; // skip next;
+                    continue;
+                }
+            }
+            // push self
+            newChildren.push(child);
+        }
+
+        return constructContainerOrFirstChild(OperatorType.BracketedSum, newChildren);
     }
 }
 
@@ -280,6 +365,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
                         numberOfSums += 1;
                         return child;
                     } else {
+                        // because do not use `constructContainerOrFirstChild` here, because we SPECIFICALLY WANT a sum with only one element.
                         return new BracketedSum([child]);
                     }
                 })
@@ -292,6 +378,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
                 function generateCombinations(currentIndex: number, currentProduct: Operator[]) {
                     if (currentIndex === childSumInstances.length) {
                         // depth has reached number of terms in original multiplication -> one element from each original sum
+                        // because of typing do not use `constructContainerOrFirstChild` here. We know there are enough elements because of assertion
                         newSummands.push(new BracketedMultiplication(currentProduct));
                     } else {
                         const currentSum = childSumInstances[currentIndex];
@@ -303,6 +390,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
                 // generate the cartesian product of the sum-terms in the product
                 generateCombinations(0, []);
 
+                // because of typing do not use `constructContainerOrFirstChild` here. We know there are enough elements because of assertion
                 return new BracketedSum(newSummands);
             }
         }
@@ -330,7 +418,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
             }
         });
 
-        return [even, new BracketedMultiplication(newChildren)];
+        return [even, constructContainerOrFirstChild(OperatorType.BracketedMultiplication, newChildren)];
     }
 
     PullOutMinusMODIFICATION(): Operator {
@@ -363,11 +451,70 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
             newChildren.push(child);
         }
 
-        if (newChildren.length == 1) {
-            return newChildren[0];
-        } else {
-            return new BracketedMultiplication(newChildren);
+        return constructContainerOrFirstChild(OperatorType.BracketedMultiplication, newChildren);
+    }
+
+    OrderOperatorStringsMODIFICATION(): Operator {
+        let newChildren = [] as Operator[];
+        let currentOperatorString = [] as (Operator & OrderableOperator)[];
+
+        function sortAndPush() {
+            newChildren.push(...BracketedMultiplication.orderOperatorString(currentOperatorString));
+            currentOperatorString = [];
         }
+
+        for (let i = 0; i < this._children.length; i++) {
+            const child = this._children[i];
+
+            if (implementsOrderableOperator(child)) {
+                currentOperatorString.push(child);
+            } else {
+                sortAndPush();
+                newChildren.push(child);
+            }
+        }
+        sortAndPush();
+
+        return constructContainerOrFirstChild(OperatorType.BracketedMultiplication, newChildren);
+    }
+
+    static orderOperatorString(inString: (Operator & OrderableOperator)[]): (Operator & OrderableOperator)[] {
+        return inString.sort((a, b) => compareOperatorOrder(a, b));
+    }
+
+    commuteChildAndSubsequent(childUUID: string): Operator {
+        const children = this.getChildren();
+        let newChildren = [] as Operator[];
+
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.getUUID() == childUUID) {
+                const nextChild = children[i + 1];
+                if (nextChild && nextChild != null && nextChild != undefined) {
+                    if (implementsOrderableOperator(child) && implementsOrderableOperator(nextChild)) {
+                        // use the inherit commutation actions of the OrderableOperatorsInterface
+                        const commutedResult = child.commute(nextChild);
+                        let aggregatedMultiplications = [] as Operator[];
+                        commutedResult.forEach((array) => {
+                            aggregatedMultiplications.push(
+                                constructContainerOrFirstChild(OperatorType.BracketedMultiplication, array)
+                            );
+                        });
+                        newChildren.push(constructContainerOrFirstChild(OperatorType.BracketedSum, aggregatedMultiplications));
+                    } else {
+                        // no special logic, just swap them forcefully
+                        newChildren.push(nextChild, child);
+                    }
+
+                    i += 1; // skip next;
+                    continue;
+                }
+            }
+            // push self
+            newChildren.push(child);
+        }
+
+        return constructContainerOrFirstChild(OperatorType.BracketedMultiplication, newChildren);
     }
 }
 
@@ -463,36 +610,22 @@ export class Fraction extends Operator implements MinusPulloutManagement {
             if (denominatorOutput.length == 0) {
                 // {} / {}
                 return new Numerical(1);
-            } else if (denominatorOutput.length == 1) {
-                // {} / [a]
-                return new Fraction(new Numerical(1), denominatorOutput[0]);
             } else {
-                // {} / [a,b,c,...]
-                return new Fraction(new Numerical(1), new BracketedMultiplication(denominatorOutput));
-            }
-        } else if (enumeratorOutput.length == 1) {
-            if (denominatorOutput.length == 0) {
-                // [x] / {}
-                return enumeratorOutput[0];
-            } else if (denominatorOutput.length == 1) {
-                // [x] / [a]
-                return new Fraction(enumeratorOutput[0], denominatorOutput[0]);
-            } else {
-                // [x] / [a,b,c,...]
-                return new Fraction(enumeratorOutput[0], new BracketedMultiplication(denominatorOutput));
+                // {} / [a] or [a,b,c,...]
+                return new Fraction(
+                    new Numerical(1),
+                    constructContainerOrFirstChild(OperatorType.BracketedMultiplication, denominatorOutput)
+                );
             }
         } else {
             if (denominatorOutput.length == 0) {
-                // [x, y, z] / {}
-                return new BracketedMultiplication(enumeratorOutput);
-            } else if (denominatorOutput.length == 1) {
-                // [x, y, z] / [a]
-                return new Fraction(new BracketedMultiplication(enumeratorOutput), denominatorOutput[0]);
+                // [x] or [x, y, z] / {}
+                return constructContainerOrFirstChild(OperatorType.BracketedMultiplication, enumeratorOutput);
             } else {
-                // [x, y, z] / [a,b,c,...]
+                // [x] or [x, y, z] / [a] or [a,b,c,...]
                 return new Fraction(
-                    new BracketedMultiplication(enumeratorOutput),
-                    new BracketedMultiplication(denominatorOutput)
+                    constructContainerOrFirstChild(OperatorType.BracketedMultiplication, enumeratorOutput),
+                    constructContainerOrFirstChild(OperatorType.BracketedMultiplication, denominatorOutput)
                 );
             }
         }
@@ -515,9 +648,17 @@ export class BigInt extends Operator {
     }
 }
 
-export class Variable extends Operator {
+export class Variable extends Operator implements OrderableOperator {
     constructor(name: string) {
         super(OperatorType.Variable, "{", "", "}", [], name);
+    }
+
+    orderPriorityString() {
+        return this._value;
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
+        return [[commuteWith, this]];
     }
 }
 
@@ -589,9 +730,23 @@ export class Negation extends Operator implements MinusPulloutManagement {
     }
 }
 
-export class Pi extends Operator {
+abstract class Constant extends Operator implements OrderableOperator {
+    constructor(opType: OperatorType, latex: string) {
+        super(opType, latex, "", "", [], "");
+    }
+
+    orderPriorityString() {
+        return this._startDisplayFormula;
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
+        return [[commuteWith, this]];
+    }
+}
+
+export class Pi extends Constant {
     constructor() {
-        super(OperatorType.Pi, "\\pi", "", "", [], "");
+        super(OperatorType.Pi, "\\pi");
     }
 
     protected getNumericalValue(): number | null {
@@ -599,9 +754,9 @@ export class Pi extends Operator {
     }
 }
 
-export class InfinityConstant extends Operator {
+export class InfinityConstant extends Constant {
     constructor() {
-        super(OperatorType.InfinityConstant, "\\infty", "", "", [], "");
+        super(OperatorType.InfinityConstant, "\\infty");
     }
 
     protected getNumericalValue(): number | null {

@@ -81,7 +81,11 @@ export abstract class Operator {
     }
 
     getUUIDRef() {
-        return Operator.UUIDRefFromUUID(this._uuid);
+        return Operator.UUIDRefFromUUID(this.getUUID());
+    }
+
+    getUUID() {
+        return this._uuid;
     }
 
     static UUIDFromUUIDRef(UUIDRef: string) {

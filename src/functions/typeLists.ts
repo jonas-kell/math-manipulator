@@ -102,7 +102,7 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.FunctionMathRm]: 2,
     [OperatorType.Sin]: 1,
     [OperatorType.Cos]: 1,
-    [OperatorType.StructuralContainer]: 2, // makes no sense having extraneous containers if they only contain one element
+    [OperatorType.StructuralContainer]: 1, // on parsing from export, containers with only one element will remove themselves
     [OperatorType.EmptyArgument]: 0,
     [OperatorType.Equals]: 0,
     [OperatorType.NotEquals]: 0,

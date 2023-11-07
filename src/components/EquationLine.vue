@@ -1,6 +1,6 @@
 <script setup lang="ts">
     import { computed, ref, watch } from "vue";
-    import { Operator, EmptyArgument } from "../functions";
+    import { Operator, EmptyArgument, BracketedSum, BracketedMultiplication } from "../functions";
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
     import { v4 as uuidv4 } from "uuid";
@@ -9,6 +9,7 @@
 
     interface EffectMeasure {
         hasEffect: boolean;
+        replacesUUID: string;
         result: Operator | null;
     }
     const rendererUUID = ref(uuidv4());
@@ -26,18 +27,18 @@
     });
     const selectionUUID = ref("");
     const selectedOperator = ref(null as Operator | null);
+    const selectedOperatorsParentOperator = ref(null as null | Operator);
     const selectOperator = (id: string) => {
         resetControlPanel();
         selectionUUID.value = id;
         selectedOperator.value = props.operator.getOperatorByUUID(selectionUUID.value);
-        const parentOperator = props.operator.findParentOperator(selectionUUID.value);
-        if (parentOperator != null) {
-            parentOperatorUUIDRef.value = parentOperator.getUUIDRef();
+        const parentOperatorResult = props.operator.findParentOperator(selectionUUID.value);
+        if (parentOperatorResult != null) {
+            selectedOperatorsParentOperator.value = parentOperatorResult;
         } else {
-            parentOperatorUUIDRef.value = null;
+            selectedOperatorsParentOperator.value = null;
         }
     };
-    const parentOperatorUUIDRef = ref(null as string | null);
 
     // structure of the operations line
     enum MODES {
@@ -48,17 +49,6 @@
         SHOW_STRUCTURE,
     }
     const mode = ref(MODES.NONE);
-    const availableModifications = computed((): string[] => {
-        if (selectedOperator.value == null) {
-            return [];
-        }
-        return [
-            "getCopyWithNumbersFolded", // Modification style Method available for all instances of Operator
-            ...Object.getOwnPropertyNames(Object.getPrototypeOf(selectedOperator.value)).filter((name) =>
-                name.includes("MODIFICATION")
-            ),
-        ];
-    });
 
     // output to the next line
     const outputOperator = ref(null as null | Operator);
@@ -69,15 +59,16 @@
     watch(props, () => {
         resetControlPanel();
         selectionUUID.value = "";
-        parentOperatorUUIDRef.value = null;
+        selectedOperatorsParentOperator.value = null;
         selectedOperator.value = null;
         replaceWithOperator.value = null;
     });
 
     // modification triggers to the current line
     const selectParentAction = () => {
-        if (parentOperatorUUIDRef.value != null) {
-            selectFunctionStore.callHandlerCallback(rendererUUID.value, parentOperatorUUIDRef.value);
+        const UUIDref = selectedOperatorsParentOperator.value?.getUUIDRef() ?? null;
+        if (UUIDref != null) {
+            selectFunctionStore.callHandlerCallback(rendererUUID.value, UUIDref);
         }
     };
     const replaceButtonAction = () => {
@@ -111,43 +102,68 @@
     const actionsHaveAnyEffectAndTheirResults = computed(() => {
         let res = {} as { [key: string]: EffectMeasure };
 
-        availableModifications.value.forEach((action) => {
-            if (selectedOperator.value != null) {
+        if (selectedOperator.value != null) {
+            const selOp = selectedOperator.value as Operator;
+
+            if (selectedOperatorsParentOperator.value != null) {
+                const selParent = selectedOperatorsParentOperator.value as Operator;
+
+                // swap with subsequent
+                if (selParent instanceof BracketedSum || selParent instanceof BracketedMultiplication) {
+                    const actionResult = selParent.commuteChildAndSubsequent(selectedOperator.value.getUUID());
+
+                    if (Operator.assertOperatorsEquivalent(actionResult, selParent, false)) {
+                        res["Commute with subsequent"] = {
+                            hasEffect: false,
+                            replacesUUID: "",
+                            result: null,
+                        };
+                    } else {
+                        res["Commute with subsequent"] = {
+                            hasEffect: true,
+                            replacesUUID: selParent.getUUID(),
+                            result: actionResult,
+                        };
+                    }
+                }
+            }
+
+            // single-replace-modifications
+            [
+                "getCopyWithNumbersFolded", // Modification style Method available for all instances of Operator
+                ...Object.getOwnPropertyNames(Object.getPrototypeOf(selOp)).filter((name) => name.includes("MODIFICATION")),
+            ].forEach((action) => {
+                const name = action.replace("MODIFICATION", "").replace("getCopyWithNumbersFolded", "Fold Numbers");
+
                 // as the `action` was extracted from filtered `getOwnPropertyNames` or manually inserted, this is should always be a valid method
-                let actionResult = (selectedOperator.value as Operator as any)[action]() as Operator;
+                let actionResult = (selOp as any)[action]() as Operator;
 
                 // only consider actions that change anything applicable
-                if (Operator.assertOperatorsEquivalent(actionResult, selectedOperator.value as Operator, false)) {
-                    res[action] = {
+                if (Operator.assertOperatorsEquivalent(actionResult, selOp, false)) {
+                    res[name] = {
                         hasEffect: false,
+                        replacesUUID: "",
                         result: null,
                     };
                 } else {
-                    res[action] = {
+                    res[name] = {
                         hasEffect: true,
+                        replacesUUID: selOp.getUUID(),
                         result: actionResult,
                     };
                 }
-            }
-        });
+            });
+        }
 
         return res;
     });
-    const modificationAction = (action: string) => {
+    const modificationAction = (actionEffect: EffectMeasure) => {
         resetControlPanel();
 
         // get the result from the modification cache and output if it has any effect
-        if (selectedOperator.value != null) {
-            const resultFromCachedExecutedOperations = actionsHaveAnyEffectAndTheirResults.value[action];
-            if (resultFromCachedExecutedOperations != undefined && resultFromCachedExecutedOperations) {
-                if (resultFromCachedExecutedOperations.hasEffect && resultFromCachedExecutedOperations.result != null) {
-                    outputOperator.value = props.operator.getCopyWithReplaced(
-                        selectionUUID.value,
-                        resultFromCachedExecutedOperations.result
-                    );
-                    return;
-                }
-            }
+        if (actionEffect.hasEffect && actionEffect.result != null) {
+            outputOperator.value = props.operator.getCopyWithReplaced(actionEffect.replacesUUID, actionEffect.result);
+            return;
         }
         console.error("Something fell through, should not be executed right now");
     };
@@ -170,18 +186,18 @@
     />
 
     <template v-if="selectionUUID != '' && selectedOperator != null">
-        <button @click="selectParentAction" style="margin-right: 0.2em" :disabled="parentOperatorUUIDRef == null">
+        <button @click="selectParentAction" style="margin-right: 0.2em" :disabled="selectedOperatorsParentOperator == null">
             Sel. Parent
         </button>
         <button @click="replaceButtonAction" style="margin-right: 0.2em">Replace</button>
         <button @click="structuralVariableDefinitionButtonAction" style="margin-right: 0.2em">Define Structural Variable</button>
         <button
+            v-for="(mod, name) in actionsHaveAnyEffectAndTheirResults"
             @click="modificationAction(mod)"
-            v-for="mod in availableModifications"
-            :disabled="!(actionsHaveAnyEffectAndTheirResults[mod].hasEffect ?? false)"
+            :disabled="!mod.hasEffect"
             style="margin-right: 0.2em"
         >
-            {{ mod.replace("MODIFICATION", "").replace("getCopyWithNumbersFolded", "Fold Numbers") }}
+            {{ name }}
         </button>
         <button @click="showLatexExportButtonAction" style="margin-right: 0.2em; float: right">Show Latex</button>
         <button @click="showExportStructureButtonAction" style="margin-right: 0.2em; float: right">Show Export Structure</button>
