@@ -561,7 +561,12 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
                                 constructContainerOrFirstChild(OperatorType.BracketedMultiplication, array)
                             );
                         });
-                        newChildren.push(constructContainerOrFirstChild(OperatorType.BracketedSum, aggregatedMultiplications));
+                        newChildren.push(
+                            constructContainerOrFirstChild(
+                                OperatorType.BracketedSum,
+                                aggregatedMultiplications
+                            ).getCopyWithNumbersFolded() // directly eliminate all unnecessary delta, 0, 1, etc.
+                        );
                     } else {
                         // no special logic, just swap them forcefully
                         newChildren.push(nextChild, child);
@@ -954,27 +959,75 @@ export class Bracket extends Operator {
     }
 }
 
-export class FermionicCreationOperator extends Operator {
+abstract class QMOperatorWithOneArgument extends Operator implements OrderableOperator {
+    constructor(opType: OperatorType, latex: string, argument: Operator) {
+        super(opType, latex + "_{", "", "}", [argument], "");
+    }
+
+    orderPriorityString() {
+        return this.getChild().getSerializedStructure(false);
+    }
+
+    getChild() {
+        return this._children[0];
+    }
+
+    abstract commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][];
+}
+
+export class FermionicCreationOperator extends QMOperatorWithOneArgument {
     constructor(index: Operator) {
-        super(OperatorType.FermionicCreationOperator, "\\mathrm{c}^\\dagger_{", "", "}", [index], "");
+        super(OperatorType.FermionicCreationOperator, "\\mathrm{c}^\\dagger", index);
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
+        if (commuteWith instanceof FermionicAnnihilationOperator) {
+            return [[new KroneckerDelta(this.getChild(), commuteWith.getChild())], [commuteWith, this]];
+        }
+
+        return [[commuteWith, this]];
     }
 }
 
-export class FermionicAnnihilationOperator extends Operator {
+export class FermionicAnnihilationOperator extends QMOperatorWithOneArgument {
     constructor(index: Operator) {
-        super(OperatorType.FermionicAnnihilationOperator, "\\mathrm{c}_{", "", "}", [index], "");
+        super(OperatorType.FermionicAnnihilationOperator, "\\mathrm{c}", index);
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
+        if (commuteWith instanceof FermionicAnnihilationOperator) {
+            return [];
+        }
+
+        return [[commuteWith, this]];
     }
 }
 
-export class BosonicCreationOperator extends Operator {
+export class BosonicCreationOperator extends QMOperatorWithOneArgument {
     constructor(index: Operator) {
-        super(OperatorType.BosonicCreationOperator, "\\mathrm{b}^\\dagger_{", "", "}", [index], "");
+        super(OperatorType.BosonicCreationOperator, "\\mathrm{b}^\\dagger", index);
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
+        if (commuteWith instanceof FermionicAnnihilationOperator) {
+            return [];
+        }
+
+        return [[commuteWith, this]];
     }
 }
 
-export class BosonicAnnihilationOperator extends Operator {
+export class BosonicAnnihilationOperator extends QMOperatorWithOneArgument {
     constructor(index: Operator) {
-        super(OperatorType.BosonicAnnihilationOperator, "\\mathrm{b}_{", "", "}", [index], "");
+        super(OperatorType.BosonicAnnihilationOperator, "\\mathrm{b}", index);
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
+        if (commuteWith instanceof FermionicAnnihilationOperator) {
+            return [];
+        }
+
+        return [[commuteWith, this]];
     }
 }
 
@@ -1060,7 +1113,7 @@ export class Iff extends Operator {
     }
 }
 
-export class KroneckerDelta extends Operator {
+export class KroneckerDelta extends Operator implements OrderableOperator {
     constructor(firstArg: Operator, secondArg: Operator) {
         super(OperatorType.KroneckerDelta, "\\delta_{", ",", "}", [firstArg, secondArg], "");
     }
@@ -1083,5 +1136,13 @@ export class KroneckerDelta extends Operator {
                 return null;
             }
         }
+    }
+
+    orderPriorityString() {
+        return this._children[0].getSerializedStructure(false) + this._children[1].getSerializedStructure(false);
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): (Operator & OrderableOperator)[][] {
+        return [[commuteWith, this]];
     }
 }
