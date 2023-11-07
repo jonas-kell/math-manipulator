@@ -80,18 +80,39 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
 
 function constructContainerOrFirstChild(
     containerType: OperatorType.BracketedMultiplication | OperatorType.BracketedSum | OperatorType.StructuralContainer,
-    children: Operator[]
+    children: Operator[],
+    removeBracketsAllowedByAssociativity: boolean = true
 ): Operator {
     if (children.length == 1) {
         return children[0]; // special case: no container needed for only one child.
     } else {
+        let newChildren = children;
+
         switch (containerType) {
             case OperatorType.BracketedMultiplication:
-                return new BracketedMultiplication(children);
+                if (removeBracketsAllowedByAssociativity) {
+                    newChildren = children.flatMap((child) => {
+                        if (child instanceof BracketedMultiplication) {
+                            return child.getChildren();
+                        } else {
+                            return child;
+                        }
+                    });
+                }
+                return new BracketedMultiplication(newChildren);
             case OperatorType.BracketedSum:
-                return new BracketedSum(children);
+                if (removeBracketsAllowedByAssociativity) {
+                    newChildren = children.flatMap((child) => {
+                        if (child instanceof BracketedSum) {
+                            return child.getChildren();
+                        } else {
+                            return child;
+                        }
+                    });
+                }
+                return new BracketedSum(newChildren);
             case OperatorType.StructuralContainer:
-                return new StructuralContainer(children);
+                return new StructuralContainer(newChildren);
             default:
                 throw Error(`type ${containerType} Is not a container type`);
         }

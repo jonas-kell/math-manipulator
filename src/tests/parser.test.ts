@@ -733,4 +733,121 @@ describe("parser module end-to-end", () => {
             ],
         });
     });
+
+    test("Associative Brackets removed for Sums and Products, but NOT Structural", () => {
+        expect(JSON.parse(operatorFromString("1*2*(3*4)").getSerializedStructure())).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                {
+                    type: "number",
+                    value: "1",
+                    children: [],
+                },
+                {
+                    type: "number",
+                    value: "2",
+                    children: [],
+                },
+                {
+                    type: "number",
+                    value: "3",
+                    children: [],
+                },
+                {
+                    type: "number",
+                    value: "4",
+                    children: [],
+                },
+            ],
+        });
+
+        expect(JSON.parse(operatorFromString("1+2+(3+4)").getSerializedStructure())).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "number",
+                    value: "1",
+                    children: [],
+                },
+                {
+                    type: "number",
+                    value: "2",
+                    children: [],
+                },
+                {
+                    type: "number",
+                    value: "3",
+                    children: [],
+                },
+                {
+                    type: "number",
+                    value: "4",
+                    children: [],
+                },
+            ],
+        });
+
+        expect(JSON.parse(operatorFromString("1*(3+4)").getSerializedStructure())).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                {
+                    type: "number",
+                    value: "1",
+                    children: [],
+                },
+                {
+                    type: "bracketed_sum",
+                    value: "",
+                    children: [
+                        {
+                            type: "number",
+                            value: "3",
+                            children: [],
+                        },
+                        {
+                            type: "number",
+                            value: "4",
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        });
+
+        expect(JSON.parse(operatorFromString("1;2;(3;4)").getSerializedStructure())).toMatchObject({
+            type: "structural_container",
+            value: "",
+            children: [
+                {
+                    type: "number",
+                    value: "1",
+                    children: [],
+                },
+                {
+                    type: "number",
+                    value: "2",
+                    children: [],
+                },
+                {
+                    type: "structural_container",
+                    value: "",
+                    children: [
+                        {
+                            type: "number",
+                            value: "3",
+                            children: [],
+                        },
+                        {
+                            type: "number",
+                            value: "4",
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        });
+    });
 });
