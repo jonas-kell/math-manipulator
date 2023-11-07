@@ -163,6 +163,9 @@ interface OrderableOperator {
     /**
      * Performs the swapping of two OrderableOperators (this <-> commuteWith)
      *
+     * THE FIRST ELEMENT MUST BE THE ONE WHERE THE ELEMENTS SWAPPED (for efficiency reasons).
+     * This IS Assumed and will break stuff if not properly implemented!
+     *
      * @returns the result after swapping (if the operators commute, this returns [[false, [commuteWith, this]]]
      */
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate;
@@ -1053,8 +1056,8 @@ export class FermionicCreationOperator extends QMOperatorWithOneArgument {
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof FermionicAnnihilationOperator) {
             return [
-                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
                 [true, [commuteWith, this]],
+                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
             ];
         }
 
@@ -1070,8 +1073,8 @@ export class FermionicAnnihilationOperator extends QMOperatorWithOneArgument {
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof FermionicCreationOperator) {
             return [
-                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
                 [true, [commuteWith, this]],
+                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
             ];
         }
 
@@ -1087,8 +1090,8 @@ export class BosonicCreationOperator extends QMOperatorWithOneArgument {
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof BosonicAnnihilationOperator) {
             return [
-                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
                 [false, [commuteWith, this]],
+                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
             ];
         }
 
@@ -1104,8 +1107,8 @@ export class BosonicAnnihilationOperator extends QMOperatorWithOneArgument {
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof BosonicCreationOperator) {
             return [
-                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
                 [false, [commuteWith, this]],
+                [false, [new KroneckerDelta(this.getChild(), commuteWith.getChild())]],
             ];
         }
 
