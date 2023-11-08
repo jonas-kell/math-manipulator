@@ -1,0 +1,712 @@
+import { describe, expect, test } from "@jest/globals";
+import { BracketedMultiplication, operatorFromString } from "../functions";
+
+describe("operator module - ordering of operators", () => {
+    test("Default implementation", () => {
+        expect(
+            JSON.parse(
+                (operatorFromString("sum({} {} {}) x sum({} {} {})") as BracketedMultiplication)
+                    .orderOperatorStrings()
+                    .getCopyWithGottenRidOfUnnecessaryTerms()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                {
+                    type: "big_sum",
+                    value: "",
+                    children: [
+                        {
+                            type: "empty_argument",
+                            value: "",
+                            children: [],
+                        },
+                        {
+                            type: "empty_argument",
+                            value: "",
+                            children: [],
+                        },
+                        {
+                            type: "empty_argument",
+                            value: "",
+                            children: [],
+                        },
+                    ],
+                },
+                {
+                    type: "variable",
+                    value: "x",
+                    children: [],
+                },
+                {
+                    type: "big_sum",
+                    value: "",
+                    children: [
+                        {
+                            type: "empty_argument",
+                            value: "",
+                            children: [],
+                        },
+                        {
+                            type: "empty_argument",
+                            value: "",
+                            children: [],
+                        },
+                        {
+                            type: "empty_argument",
+                            value: "",
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        });
+    });
+
+    test("Correct detection of substrings and local ordering", () => {
+        expect(
+            JSON.parse(
+                (operatorFromString("c#(0)c#(2)c#(1)sum({} {} {})c(2)c(0)c(1)") as BracketedMultiplication)
+                    .orderOperatorStrings()
+                    .getCopyWithGottenRidOfUnnecessaryTerms()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "negation",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "big_sum",
+                            value: "",
+                            children: [
+                                {
+                                    type: "empty_argument",
+                                    value: "",
+                                    children: [],
+                                },
+                                {
+                                    type: "empty_argument",
+                                    value: "",
+                                    children: [],
+                                },
+                                {
+                                    type: "empty_argument",
+                                    value: "",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+    });
+
+    test("Complex ordering with different number of terms", () => {
+        expect(
+            JSON.parse(
+                (operatorFromString("c#(0)c#(2)c#(1)c(1)c(0)c(2)") as BracketedMultiplication)
+                    .orderOperatorStrings()
+                    .getCopyWithGottenRidOfUnnecessaryTerms()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "negation",
+                    value: "",
+                    children: [
+                        {
+                            type: "number",
+                            value: "1",
+                            children: [],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "negation",
+                    value: "",
+                    children: [
+                        {
+                            type: "bracketed_multiplication",
+                            value: "",
+                            children: [
+                                {
+                                    type: "fermionic_annihilation",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "number",
+                                            value: "0",
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: "fermionic_annihilation",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "number",
+                                            value: "1",
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: "fermionic_annihilation",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "number",
+                                            value: "2",
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: "fermionic_creation",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "number",
+                                            value: "0",
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: "fermionic_creation",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "number",
+                                            value: "1",
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: "fermionic_creation",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "number",
+                                            value: "2",
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+    });
+
+    test("More orderable types and getting type ordering correct", () => {
+        expect(
+            JSON.parse(
+                (operatorFromString("pi pi 3 c#(1)c(n)b(2) 1") as BracketedMultiplication)
+                    .orderOperatorStrings()
+                    .getCopyWithGottenRidOfUnnecessaryTerms()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "number",
+                            value: "29.6088",
+                            children: [],
+                        },
+                        {
+                            type: "bosonic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "kronecker_delta",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                                {
+                                    type: "variable",
+                                    value: "n",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "negation",
+                    value: "",
+                    children: [
+                        {
+                            type: "bracketed_multiplication",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "29.6088",
+                                    children: [],
+                                },
+                                {
+                                    type: "fermionic_annihilation",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "variable",
+                                            value: "n",
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: "fermionic_creation",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "number",
+                                            value: "1",
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: "bosonic_annihilation",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "number",
+                                            value: "2",
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+        expect(
+            JSON.parse(
+                (operatorFromString("x y b#(n)b(2)pi") as BracketedMultiplication)
+                    .orderOperatorStrings()
+                    .getCopyWithGottenRidOfUnnecessaryTerms()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "number",
+                            value: "3.1416",
+                            children: [],
+                        },
+                        {
+                            type: "variable",
+                            value: "x",
+                            children: [],
+                        },
+                        {
+                            type: "variable",
+                            value: "y",
+                            children: [],
+                        },
+                        {
+                            type: "kronecker_delta",
+                            value: "",
+                            children: [
+                                {
+                                    type: "variable",
+                                    value: "n",
+                                    children: [],
+                                },
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "number",
+                            value: "3.1416",
+                            children: [],
+                        },
+                        {
+                            type: "variable",
+                            value: "x",
+                            children: [],
+                        },
+                        {
+                            type: "variable",
+                            value: "y",
+                            children: [],
+                        },
+                        {
+                            type: "bosonic_annihilation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "bosonic_creation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "variable",
+                                    value: "n",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+    });
+});

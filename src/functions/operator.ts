@@ -463,6 +463,7 @@ export abstract class Operator {
         return new Braket(bra._children[0], ket._children[0]);
     }
 
+    // TODO I would find it nicer, if this didn't collapse constant values to numbers.
     getCopyWithGottenRidOfUnnecessaryTerms() {
         let copy = this.getCopyWithNumbersFolded(); // directly eliminate all unnecessary delta, 0, 1, etc.
         copy = Operator.handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(copy);

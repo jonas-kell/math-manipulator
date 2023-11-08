@@ -78,7 +78,7 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
     }
 }
 
-function constructContainerOrFirstChild(
+export function constructContainerOrFirstChild(
     containerType: OperatorType.BracketedMultiplication | OperatorType.BracketedSum | OperatorType.StructuralContainer,
     children: Operator[],
     removeBracketsAllowedByAssociativity: boolean = true
