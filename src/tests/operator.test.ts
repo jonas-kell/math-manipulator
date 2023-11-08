@@ -8,7 +8,6 @@ import {
     Negation,
     Numerical,
     RawLatex,
-    StructuralVariable,
     Variable,
     BigInt,
     Bra,
@@ -35,10 +34,7 @@ describe("operator module", () => {
                 new Bra(new Numerical(1.2)),
                 new BracketedSum([
                     new Numerical(123),
-                    new Fraction(
-                        new BracketedMultiplication([new StructuralVariable("A", new Numerical(1)), new Numerical(4)]),
-                        new Numerical(100)
-                    ),
+                    new Fraction(new BracketedMultiplication([new Numerical(1), new Numerical(4)]), new Numerical(100)),
                 ]),
                 new Variable("x")
             )
@@ -50,7 +46,7 @@ describe("operator module", () => {
     test("Maximum complexity equation poster rendering", () => {
         expect(complexExample).not.toThrow();
         expect(complexExample().getExportFormulaString()).toEqual(
-            "\\sum\\limits_{{n=0} }^{ {100}}\\int\\limits_{-{\\infty}}^{\\left\\lang1.2\\right\\vert}\\left(123+\\frac{\\left({A} \\cdot 4\\right)}{100}\\right)\\mathrm{d}{x}"
+            "\\sum\\limits_{{n=0} }^{ {100}}\\int\\limits_{-{\\infty}}^{\\left\\lang1.2\\right\\vert}\\left(123+\\frac{\\left(1 \\cdot 4\\right)}{100}\\right)\\mathrm{d}{x}"
         );
     });
 

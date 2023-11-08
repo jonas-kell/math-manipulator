@@ -14,8 +14,6 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             return new Numerical(Number(value));
         case OperatorType.Variable:
             return new Variable(value);
-        case OperatorType.StructuralVariable:
-            return new StructuralVariable(value, childrenReconstructed[0]);
         case OperatorType.BigInt:
             return new BigInt(
                 childrenReconstructed[0],
@@ -874,6 +872,20 @@ export class Variable extends Operator implements OrderableOperator {
         return null;
     }
 
+    public setOperatorStoredHere(op: Operator | null) {
+        useVariablesStore().setOperatorForVariable(this._value, op);
+    }
+
+    UnpackMODIFICATION(): Operator {
+        const stored = useVariablesStore().getVariableContent(this._value);
+
+        if (stored && stored != null) {
+            return stored;
+        }
+
+        return this;
+    }
+
     orderPriorityString() {
         return this._value;
     }
@@ -886,28 +898,6 @@ export class Variable extends Operator implements OrderableOperator {
 export class RawLatex extends Operator {
     constructor(formula: string) {
         super(OperatorType.RawLatex, "{", "", "}", [], formula);
-    }
-}
-
-export class StructuralVariable extends Operator {
-    constructor(name: string, content: Operator) {
-        super(OperatorType.StructuralVariable, "{", "", "}", [content], name, [], false);
-    }
-
-    public getNumericalValue(): number | null {
-        const res = this.childrenNumericalValues();
-        const allNotNull = res[0];
-        const childrenValues = res[1];
-
-        if (allNotNull) {
-            return childrenValues[0]; // no more content needed, if it can be folded into number
-        } else {
-            return null;
-        }
-    }
-
-    UnpackMODIFICATION(): Operator {
-        return this._children[0];
     }
 }
 

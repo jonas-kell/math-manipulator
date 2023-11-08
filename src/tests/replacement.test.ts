@@ -1,59 +1,53 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import mockPinia from "./setupPiniaForTesting";
-import { Numerical, Operator, StructuralVariable } from "../functions";
+import { Numerical, Operator, Variable } from "../functions";
 
 describe("operator module - replace operator feature", () => {
     beforeEach(() => {
         mockPinia();
     });
 
-    const testOp = Operator.generateStructure(
-        JSON.stringify({
-            type: "exp_function",
-            value: "",
-            children: [
-                {
-                    type: "bracketed_sum",
-                    value: "",
-                    children: [
-                        {
-                            type: "number",
-                            value: "1",
-                            children: [],
-                            uuid: "c0dc69c0-f5af-48ea-b8a5-b96870d595da",
-                        },
-                        {
-                            type: "number",
-                            value: "4",
-                            children: [],
-                            uuid: "f7f98f57-4211-4cc4-9182-dfb0fd5ed470",
-                        },
-                        {
-                            type: "structural_variable",
-                            value: "A",
-                            children: [
-                                {
-                                    type: "variable",
-                                    value: "x",
-                                    children: [],
-                                    uuid: "0b27cb45-640f-410b-97c7-8dc09f93104a",
-                                },
-                            ],
-                            uuid: "521f0012-1366-41e1-a322-d5d893817930",
-                        },
-                    ],
-                    uuid: "be603e6b-8dda-4eaf-84bd-3ac74b107940",
-                },
-            ],
-            uuid: "9e546568-4914-4a8a-bce5-e90aa6ded1dd",
-        }),
-        true
-    );
+    const testOp = () =>
+        Operator.generateStructure(
+            JSON.stringify({
+                type: "exp_function",
+                value: "",
+                children: [
+                    {
+                        type: "bracketed_sum",
+                        value: "",
+                        children: [
+                            {
+                                type: "number",
+                                value: "1",
+                                children: [],
+                                uuid: "c0dc69c0-f5af-48ea-b8a5-b96870d595da",
+                            },
+                            {
+                                type: "number",
+                                value: "4",
+                                children: [],
+                                uuid: "f7f98f57-4211-4cc4-9182-dfb0fd5ed470",
+                            },
+                            {
+                                type: "variable",
+                                value: "A",
+                                children: [],
+                                uuid: "521f0012-1366-41e1-a322-d5d893817930",
+                            },
+                        ],
+                        uuid: "be603e6b-8dda-4eaf-84bd-3ac74b107940",
+                    },
+                ],
+                uuid: "9e546568-4914-4a8a-bce5-e90aa6ded1dd",
+            }),
+            true
+        );
 
     test("replace an operator from nested", () => {
         expect(
             JSON.parse(
-                testOp
+                testOp()
                     .getCopyWithReplaced(Operator.UUIDFromUUIDRef("ref_f7f98f57-4211-4cc4-9182-dfb0fd5ed470"), new Numerical(5))
                     .getSerializedStructure()
             )
@@ -76,15 +70,9 @@ describe("operator module - replace operator feature", () => {
                             children: [],
                         },
                         {
-                            type: "structural_variable",
+                            type: "variable",
                             value: "A",
-                            children: [
-                                {
-                                    type: "variable",
-                                    value: "x",
-                                    children: [],
-                                },
-                            ],
+                            children: [],
                         },
                     ],
                 },
@@ -95,7 +83,7 @@ describe("operator module - replace operator feature", () => {
     test("get operator from nested", () => {
         expect(
             JSON.parse(
-                testOp
+                testOp()
                     .getOperatorByUUID(Operator.UUIDFromUUIDRef("ref_c0dc69c0-f5af-48ea-b8a5-b96870d595da"))!
                     .getSerializedStructure()
             )
@@ -108,17 +96,15 @@ describe("operator module - replace operator feature", () => {
     });
 
     test("get operator where it cannot be found", () => {
-        expect(testOp.getOperatorByUUID(Operator.UUIDFromUUIDRef("ref_c0dc69c0-f5af-48ea-b8a5-b96870d595d9"))).toBeNull();
+        expect(testOp().getOperatorByUUID(Operator.UUIDFromUUIDRef("ref_c0dc69c0-f5af-48ea-b8a5-b96870d595d9"))).toBeNull();
     });
 
-    test("Replace with structural variable", () => {
+    test("Replace with variable and unpack again", () => {
+        // puts value into variable-storage
         expect(
             JSON.parse(
-                testOp
-                    .getCopyWithPackedIntoStructuralVariable(
-                        "B",
-                        Operator.UUIDFromUUIDRef("ref_f7f98f57-4211-4cc4-9182-dfb0fd5ed470")
-                    )!
+                testOp()
+                    .getCopyWithPackedIntoVariable("B", Operator.UUIDFromUUIDRef("ref_521f0012-1366-41e1-a322-d5d893817930"))!
                     .getSerializedStructure()
             )
         ).toMatchObject({
@@ -135,54 +121,66 @@ describe("operator module - replace operator feature", () => {
                             children: [],
                         },
                         {
-                            type: "structural_variable",
-                            value: "B",
-                            children: [
-                                {
-                                    type: "number",
-                                    value: "4",
-                                    children: [],
-                                },
-                            ],
+                            type: "number",
+                            value: "4",
+                            children: [],
                         },
                         {
-                            type: "structural_variable",
-                            value: "A",
-                            children: [
-                                {
-                                    type: "variable",
-                                    value: "x",
-                                    children: [],
-                                },
-                            ],
+                            type: "variable",
+                            value: "B",
+                            children: [],
                         },
                     ],
                 },
             ],
         });
-    });
 
-    test("Unpack structural variable", () => {
         expect(
             JSON.parse(
                 (
-                    testOp.getOperatorByUUID(
-                        Operator.UUIDFromUUIDRef("ref_521f0012-1366-41e1-a322-d5d893817930")
-                    )! as StructuralVariable
+                    Operator.generateStructure(
+                        JSON.stringify({
+                            type: "exp_function",
+                            value: "",
+                            children: [
+                                {
+                                    type: "bracketed_multiplication",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "variable",
+                                            value: "B",
+                                            children: [],
+                                            uuid: "15543986-86ca-43d3-a07b-0af07acafd7a",
+                                        },
+                                        {
+                                            type: "number",
+                                            value: "1",
+                                            children: [],
+                                            uuid: "8116367b-4bb3-4759-b770-953abc838024",
+                                        },
+                                    ],
+                                    uuid: "ff812707-f969-4ca6-ad44-91264636e3c4",
+                                },
+                            ],
+                            uuid: "ac7a21eb-1387-47c0-b476-558e8b10f2c2",
+                        }),
+                        true
+                    ).getOperatorByUUID(Operator.UUIDFromUUIDRef("ref_15543986-86ca-43d3-a07b-0af07acafd7a"))! as Variable
                 )
                     .UnpackMODIFICATION()
                     .getSerializedStructure()
             )
         ).toMatchObject({
             type: "variable",
-            value: "x",
+            value: "A",
             children: [],
         });
     });
 
     test("Find parent Functionality", () => {
         expect(
-            JSON.parse(testOp.findParentOperator("f7f98f57-4211-4cc4-9182-dfb0fd5ed470")!.getSerializedStructure())
+            JSON.parse(testOp().findParentOperator("f7f98f57-4211-4cc4-9182-dfb0fd5ed470")!.getSerializedStructure())
         ).toMatchObject({
             type: "bracketed_sum",
             value: "",
@@ -200,21 +198,14 @@ describe("operator module - replace operator feature", () => {
                     uuid: "f7f98f57-4211-4cc4-9182-dfb0fd5ed470",
                 },
                 {
-                    type: "structural_variable",
+                    type: "variable",
                     value: "A",
-                    children: [
-                        {
-                            type: "variable",
-                            value: "x",
-                            children: [],
-                            uuid: "0b27cb45-640f-410b-97c7-8dc09f93104a",
-                        },
-                    ],
+                    children: [],
                     uuid: "521f0012-1366-41e1-a322-d5d893817930",
                 },
             ],
             uuid: "be603e6b-8dda-4eaf-84bd-3ac74b107940",
         });
-        expect(testOp.findParentOperator("f7f98f57-4211-4cc4-9182-dfb0fd5aaaaa")).toBeNull();
+        expect(testOp().findParentOperator("f7f98f57-4211-4cc4-9182-dfb0fd5aaaaa")).toBeNull();
     });
 });

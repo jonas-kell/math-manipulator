@@ -5,13 +5,13 @@ import {
     MAX_CHILDREN_SPECIFICATIONS,
     Numerical,
     operatorConstructorSwitch,
-    StructuralVariable,
     Bra,
     Ket,
     Braket,
     implementsMinusPulloutManagement,
     Negation,
     BracketedSum,
+    Variable,
 } from "./exporter";
 
 const FERMIONIC_BOSONIC_OPERATORS = [
@@ -367,11 +367,15 @@ export abstract class Operator {
         return Operator.generateStructureRecursive(copy, false);
     }
 
-    getCopyWithPackedIntoStructuralVariable(name: string, uuid: string) {
+    getCopyWithPackedIntoVariable(name: string, uuid: string) {
         let copy = this.getSerializedStructureRecursive();
-        copy = Operator.replaceRecursive(copy, uuid, (a) =>
-            new StructuralVariable(name, Operator.generateStructureRecursive(a, false)).getSerializedStructureRecursive()
-        );
+        copy = Operator.replaceRecursive(copy, uuid, (a) => {
+            const variable = new Variable(name);
+            // store the replaced values
+            variable.setOperatorStoredHere(Operator.generateStructureRecursive(a, false));
+
+            return variable.getSerializedStructureRecursive();
+        });
 
         return Operator.generateStructureRecursive(copy, false);
     }

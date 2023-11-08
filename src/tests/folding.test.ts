@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import mockPinia from "./setupPiniaForTesting";
-import { operatorFromString, Numerical, StructuralContainer, StructuralVariable, Variable } from "../functions";
+import { operatorFromString, Numerical, StructuralContainer, Variable, BracketedSum } from "../functions";
 
 describe("operator module - numerical folding feature", () => {
     beforeEach(() => {
@@ -213,25 +213,16 @@ describe("operator module - numerical folding feature", () => {
         });
         expect(
             JSON.parse(
-                new StructuralContainer([
-                    new StructuralVariable("A", new Variable("x")),
-                    new StructuralVariable("B", new Numerical(1)),
-                ])
+                new StructuralContainer([new Variable("x"), new BracketedSum([new Numerical(1), new Numerical(0)])])
                     .getCopyWithNumbersFolded()
                     .getSerializedStructure()
             )
         ).toMatchObject({
             children: [
                 {
-                    children: [
-                        {
-                            children: [],
-                            type: "variable",
-                            value: "x",
-                        },
-                    ],
-                    type: "structural_variable",
-                    value: "A",
+                    children: [],
+                    type: "variable",
+                    value: "x",
                 },
                 {
                     children: [],

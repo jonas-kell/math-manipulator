@@ -85,18 +85,18 @@
             outputOperator.value = props.operator.getCopyWithReplaced(selectionUUID.value, replaceWithOperator.value as Operator);
         }
     };
-    const structuralVariableDefinitionButtonAction = () => {
+    const variableDefinitionButtonAction = () => {
         resetControlPanel();
         mode.value = MODES.STRUCTURAL_VARIABLE_DEFINITION;
-        structuralVariableDefinitionWithCallback();
+        variableDefinitionWithCallback();
     };
-    const structuralVariableDefinitionName = ref("A");
-    watch(structuralVariableDefinitionName, () => {
-        structuralVariableDefinitionWithCallback();
+    const variableDefinitionName = ref("A");
+    watch(variableDefinitionName, () => {
+        variableDefinitionWithCallback();
     });
-    const structuralVariableDefinitionWithCallback = () => {
-        outputOperator.value = props.operator.getCopyWithPackedIntoStructuralVariable(
-            structuralVariableDefinitionName.value == "" ? "A" : structuralVariableDefinitionName.value,
+    const variableDefinitionWithCallback = () => {
+        outputOperator.value = props.operator.getCopyWithPackedIntoVariable(
+            variableDefinitionName.value == "" ? "A" : variableDefinitionName.value,
             selectionUUID.value
         );
     };
@@ -223,7 +223,7 @@
             Sel. Parent
         </button>
         <button @click="replaceButtonAction" style="margin-right: 0.2em">Replace</button>
-        <button @click="structuralVariableDefinitionButtonAction" style="margin-right: 0.2em">Define Structural Variable</button>
+        <button @click="variableDefinitionButtonAction" style="margin-right: 0.2em">Define Variable</button>
         <button
             v-for="(mod, name) in actionsHaveAnyEffectAndTheirResults"
             @click="modificationAction(mod)"
@@ -250,7 +250,7 @@
         <input
             v-show="mode == MODES.STRUCTURAL_VARIABLE_DEFINITION"
             type="text"
-            v-model="structuralVariableDefinitionName"
+            v-model="variableDefinitionName"
             style="margin-top: 0.5em; width: 100%"
         />
         <pre v-if="mode == MODES.SHOW_STRUCTURE || mode == MODES.SHOW_STRUCTURE_WITH_UUIDS">{{
