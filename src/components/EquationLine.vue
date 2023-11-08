@@ -18,7 +18,9 @@
     // input to the equation line
     const props = defineProps<{
         operator: Operator;
+        lineUuid: string;
     }>();
+    const childLineUUID = ref(uuidv4());
     const katexInput = computed(() => {
         return props.operator.getFormulaString();
     });
@@ -210,6 +212,40 @@
         resetControlPanel();
         mode.value = MODES.SHOW_STRUCTURE_WITH_UUIDS;
     };
+
+    // STATE AND EXPORT
+    const lineStateAllocation = computed(() => {
+        return {
+            outOperator: outputOperator.value != null ? outputOperator.value.getExportFormulaString() : null,
+            childLineUUID: childLineUUID.value,
+            mode: mode.value,
+        };
+    });
+    watch(
+        lineStateAllocation,
+        (newVal) => {
+            localStorage.setItem("storage_" + props.lineUuid, JSON.stringify(newVal));
+        },
+        {
+            deep: true,
+        }
+    );
+    // LOAD
+    const loadedState = localStorage.getItem("storage_" + props.lineUuid);
+    console.log(props.lineUuid);
+    if (loadedState && loadedState != null && loadedState != undefined) {
+        console.log("loaded");
+        // const loadedObject = JSON.parse(loadedState) as {
+        //     outOperator: string | null;
+        //     childLineUUID: string;
+        //     mode: MODES;
+        // };
+        // if (loadedObject.outOperator != null) {
+        //     outputOperator.value = Operator.generateStructure(loadedObject.outOperator);
+        // }
+        // mode.value = loadedObject.mode;
+        // childLineUUID.value = loadedObject.childLineUUID;
+    }
 </script>
 
 <template>
@@ -269,6 +305,6 @@
     </template>
 
     <div style="margin-top: 0.1em; width: 100%">
-        <EquationLine v-if="outputOperator != null" :operator="(outputOperator as Operator)" />
+        <EquationLine v-if="outputOperator != null" :operator="(outputOperator as Operator)" :line-uuid="childLineUUID" />
     </div>
 </template>

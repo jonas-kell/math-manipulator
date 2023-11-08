@@ -12,6 +12,7 @@ export const useVariablesStore = defineStore("variables", {
     actions: {
         makeSureVariableAvailable(name: string, skipVariablePurge: boolean = false) {
             if (!skipVariablePurge) {
+                // TODO this causes a call stack size exceeded, if a variable is created, that includes a variable
                 this.purgeLastElementsWithNamesLeadingUpToThis(name);
             }
 

@@ -4,15 +4,18 @@
     import InputToOperatorParser from "./components/InputToOperatorParser.vue";
     import { Operator } from "./functions";
     import { ref } from "vue";
+    import { v4 as uuidv4 } from "uuid";
 
     const parsedOperator = ref(null as Operator | null);
+    const firstLineUuid = ref(uuidv4());
+    firstLineUuid.value = "3935295c-069c-48a4-a4d0-235ec8fd70fa"; // TODO should later be generated from the router path
 </script>
 
 <template>
     <p>Try:</p>
     <pre>sum((n = 0); 100; int(-inf; inf; (123+(A*4)/100); x))</pre>
     <InputToOperatorParser @parsed="(a: Operator) => {parsedOperator = a}" style="width: 100%; min-height: 4em" />
-    <EquationLine v-if="parsedOperator" :operator="(parsedOperator as Operator)" />
+    <EquationLine v-if="parsedOperator" :operator="(parsedOperator as Operator)" :line-uuid="firstLineUuid" />
     <VariableList style="margin-top: 3em" />
     <div style="width: 100%; min-height: 40vh"></div>
 </template>
