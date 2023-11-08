@@ -90,15 +90,17 @@
         mode.value = MODES.STRUCTURAL_VARIABLE_DEFINITION;
         variableDefinitionWithCallback();
     };
-    const variableDefinitionName = ref("A");
+    const variableDefinitionName = ref("");
     watch(variableDefinitionName, () => {
         variableDefinitionWithCallback();
     });
     const variableDefinitionWithCallback = () => {
-        outputOperator.value = props.operator.getCopyWithPackedIntoVariable(
-            variableDefinitionName.value == "" ? "A" : variableDefinitionName.value,
-            selectionUUID.value
-        );
+        if (variableDefinitionName.value != "") {
+            outputOperator.value = props.operator.getCopyWithPackedIntoVariable(
+                variableDefinitionName.value,
+                selectionUUID.value
+            );
+        }
     };
     const actionsHaveAnyEffectAndTheirResults = computed(() => {
         let res = {} as { [key: string]: EffectMeasure };
