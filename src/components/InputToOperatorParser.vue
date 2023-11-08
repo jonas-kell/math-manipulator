@@ -2,6 +2,13 @@
     import { operatorFromString } from "../functions";
     import { ref, watch } from "vue";
 
+    const props = defineProps({
+        textarea: {
+            type: Boolean,
+            default: true,
+        },
+    });
+
     const emit = defineEmits(["parsed"]);
 
     const text = ref("");
@@ -11,11 +18,13 @@
 
         let res = null;
 
-        try {
-            res = operatorFromString(text.value);
-        } catch (err) {
-            console.error(err);
-            error.value = String(err);
+        if (text.value != "") {
+            try {
+                res = operatorFromString(text.value);
+            } catch (err) {
+                console.error(err);
+                error.value = String(err);
+            }
         }
 
         emit("parsed", res);
@@ -24,7 +33,8 @@
 
 <template>
     <div>
-        <textarea v-model="text" style="width: 100%; min-height: 4em"></textarea>
+        <textarea v-model="text" :style="($attrs.style as any)" v-if="props.textarea"></textarea>
+        <input v-model="text" :style="($attrs.style as any)" v-else />
         {{ error }}
     </div>
 </template>

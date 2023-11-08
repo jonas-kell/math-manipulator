@@ -217,7 +217,7 @@ export class Numerical extends Operator implements MinusPulloutManagement, Order
         super(OperatorType.Numerical, "", "", "", [], String(parseFloat(value.toFixed(4))));
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         return Number(this._value);
     }
 
@@ -255,7 +255,7 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
         super(OperatorType.BracketedSum, "\\left(", "+", "\\right)", summands, "");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         const res = this.childrenNumericalValues();
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -405,7 +405,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         super(OperatorType.BracketedMultiplication, "\\left(", " \\cdot ", "\\right)", multiplicators, "");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         const res = this.childrenNumericalValues();
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -733,7 +733,7 @@ export class Fraction extends Operator implements MinusPulloutManagement {
         super(OperatorType.Fraction, "\\frac{", "}{", "}", [dividend, divisor], "");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         const res = this.childrenNumericalValues();
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -860,11 +860,18 @@ export class BigInt extends Operator {
 
 export class Variable extends Operator implements OrderableOperator {
     constructor(name: string) {
+        useVariablesStore().makeSureVariableAvailable(name);
+
         super(OperatorType.Variable, "{", "", "}", [], name);
     }
 
-    protected getNumericalValue(): number | null {
-        return useVariablesStore().getVariable(this._value);
+    public getNumericalValue(): number | null {
+        const stored = useVariablesStore().getVariableContent(this._value);
+        if (stored && stored != null) {
+            return stored.getNumericalValue();
+        }
+
+        return null;
     }
 
     orderPriorityString() {
@@ -887,7 +894,7 @@ export class StructuralVariable extends Operator {
         super(OperatorType.StructuralVariable, "{", "", "}", [content], name, [], false);
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         const res = this.childrenNumericalValues();
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -909,7 +916,7 @@ export class Negation extends Operator implements MinusPulloutManagement {
         super(OperatorType.Negation, "-", "", "", [content], "");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         const res = this.childrenNumericalValues();
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -967,7 +974,7 @@ export class Pi extends Constant {
         super(OperatorType.Pi, "\\pi");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         return Math.PI;
     }
 }
@@ -977,7 +984,7 @@ export class InfinityConstant extends Constant {
         super(OperatorType.InfinityConstant, "\\infty");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         return Infinity;
     }
 }
@@ -987,7 +994,7 @@ export class Exp extends Operator {
         super(OperatorType.Exp, "\\mathrm{e}^{", "", "}", [exponent], "");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         const res = this.childrenNumericalValues();
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -1005,7 +1012,7 @@ export class Power extends Operator {
         super(OperatorType.Power, "{", "}^{", "}", [base, exponent], "");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         const res = this.childrenNumericalValues();
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -1218,7 +1225,7 @@ export class Sin extends Operator {
         super(OperatorType.Sin, "\\mathrm{sin}\\left(", "", "\\right)", [content], "");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         const res = this.childrenNumericalValues();
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -1236,7 +1243,7 @@ export class Cos extends Operator {
         super(OperatorType.Cos, "\\mathrm{cos}\\left(", "", "\\right)", [content], "");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         const res = this.childrenNumericalValues();
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -1288,7 +1295,7 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
         super(OperatorType.KroneckerDelta, "\\delta_{", ",", "}", [firstArg, secondArg], "");
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         const res = this.childrenNumericalValues();
         const allNotNull = res[0];
         const equivalent = Operator.assertOperatorsEquivalent(this._children[0], this._children[1]);

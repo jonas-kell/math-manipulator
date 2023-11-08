@@ -299,7 +299,7 @@ export abstract class Operator {
         return [allNull, res];
     }
 
-    protected getNumericalValue(): number | null {
+    public getNumericalValue(): number | null {
         return null;
     }
 
