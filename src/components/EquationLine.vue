@@ -47,6 +47,7 @@
         STRUCTURAL_VARIABLE_DEFINITION,
         SHOW_LATEX,
         SHOW_STRUCTURE,
+        SHOW_STRUCTURE_WITH_UUIDS,
     }
     const mode = ref(MODES.NONE);
 
@@ -203,6 +204,10 @@
         resetControlPanel();
         mode.value = MODES.SHOW_STRUCTURE;
     };
+    const showExportStructureWithUUIDsButtonAction = () => {
+        resetControlPanel();
+        mode.value = MODES.SHOW_STRUCTURE_WITH_UUIDS;
+    };
 </script>
 
 <template>
@@ -227,15 +232,20 @@
         >
             {{ name }}
         </button>
+        <div style="margin-bottom: -0.9em; width: 100%">&nbsp;</div>
         <button @click="showLatexExportButtonAction" style="margin-right: 0.2em; float: right">Show Latex</button>
         <button @click="showExportStructureButtonAction" style="margin-right: 0.2em; float: right">Show Export Structure</button>
+        <button @click="showExportStructureWithUUIDsButtonAction" style="margin-right: 0.2em; float: right">
+            Show Export Structure (UUIDs)
+        </button>
+        <div style="margin-bottom: 0.5em; width: 100%">&nbsp;</div>
         <InputToOperatorParser
             v-show="mode == MODES.REPLACEMENT"
             @parsed="(a: Operator | null) => { 
                 replaceWithOperator = a; 
                 replaceWithCallback() 
             }"
-            style="margin-top: 0.5em"
+            style="margin-top: 0.5em; width: 100%"
         />
         <input
             v-show="mode == MODES.STRUCTURAL_VARIABLE_DEFINITION"
@@ -243,7 +253,9 @@
             v-model="structuralVariableDefinitionName"
             style="margin-top: 0.5em; width: 100%"
         />
-        <pre v-if="mode == MODES.SHOW_STRUCTURE">{{ JSON.parse(selectedOperator.getSerializedStructure(false)) }}</pre>
+        <pre v-if="mode == MODES.SHOW_STRUCTURE || mode == MODES.SHOW_STRUCTURE_WITH_UUIDS">{{
+            JSON.parse(selectedOperator.getSerializedStructure(mode == MODES.SHOW_STRUCTURE_WITH_UUIDS))
+        }}</pre>
         <template v-if="mode == MODES.SHOW_LATEX">
             <pre>{{ selectedOperator.getExportFormulaString() }}</pre>
             <pre v-if="mode == MODES.SHOW_LATEX && VITE_MODE == 'development'">{{
@@ -254,5 +266,7 @@
         </template>
     </template>
 
-    <EquationLine v-if="outputOperator != null" :operator="(outputOperator as Operator)" />
+    <div style="margin-top: 0.1em; width: 100%">
+        <EquationLine v-if="outputOperator != null" :operator="(outputOperator as Operator)" />
+    </div>
 </template>
