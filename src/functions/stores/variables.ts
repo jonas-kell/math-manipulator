@@ -37,8 +37,8 @@ export const useVariablesStore = defineStore("variables", {
                 }
             });
         },
-        setOperatorForVariable(name: string, value: Operator | null) {
-            this.makeSureVariableAvailable(name);
+        setOperatorForVariable(name: string, value: Operator | null, skipVariablePurge: boolean = false) {
+            this.makeSureVariableAvailable(name, skipVariablePurge);
             this.values[name].op = value;
         },
         removeVariableFromStore(name: string) {
