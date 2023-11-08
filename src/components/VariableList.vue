@@ -55,37 +55,39 @@
 </script>
 
 <template>
-    <h3>Variables:</h3>
-    <table>
-        <template v-for="draw in drawSource">
-            <tr>
-                <td>
-                    <span style="display: inline">
-                        <b>{{ draw.name }}:</b>
-                    </span>
-                </td>
-                <td>
-                    <InputToOperatorParser
-                        @parsed="(a: Operator | null) => setOperator(draw.name, a)"
-                        :textarea="false"
-                        :key="draw.name"
-                    />
-                </td>
-                <td>
-                    <button class="delete-button" @click="removeVariableReference(draw.name)">x</button>
-                </td>
-                <td :key="draw.uuid">
-                    <KatexRenderer
-                        v-if="draw.renderOperator"
-                        :katex-input="draw.katex"
-                        :uuid-refs-to-process="[]"
-                        @selected="() => {}"
-                        :renderer-uuid="draw.uuid"
-                    />
-                </td>
-            </tr>
-        </template>
-    </table>
+    <div>
+        <h3 style="margin-bottom: 0.2em">Variables:</h3>
+        <table>
+            <template v-for="draw in drawSource">
+                <tr>
+                    <td>
+                        <span style="display: inline">
+                            <b>{{ draw.name }}:</b>
+                        </span>
+                    </td>
+                    <td>
+                        <InputToOperatorParser
+                            @parsed="(a: Operator | null) => setOperator(draw.name, a)"
+                            :textarea="false"
+                            :key="draw.name"
+                        />
+                    </td>
+                    <td>
+                        <button class="delete-button" @click="removeVariableReference(draw.name)">x</button>
+                    </td>
+                    <td :key="draw.uuid">
+                        <KatexRenderer
+                            v-if="draw.renderOperator"
+                            :katex-input="draw.katex"
+                            :uuid-refs-to-process="[]"
+                            @selected="() => {}"
+                            :renderer-uuid="draw.uuid"
+                        />
+                    </td>
+                </tr>
+            </template>
+        </table>
+    </div>
 </template>
 
 <style scoped>
