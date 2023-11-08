@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { operatorFromString, Fraction } from "../functions";
 
 describe("operator module - reduce fraction feature", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("Single Operator Inputs", () => {
         expect(JSON.parse((operatorFromString("x/z") as Fraction).ReduceMODIFICATION().getSerializedStructure())).toMatchObject({
             type: "fraction",

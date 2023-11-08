@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { operatorFromString } from "../functions";
 
 describe("operator implementation delta", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("Parsing", () => {
         expect(JSON.parse(operatorFromString("delta(1 2)").getSerializedStructure())).toMatchObject({
             type: "kronecker_delta",

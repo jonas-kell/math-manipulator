@@ -1,8 +1,7 @@
 <script setup lang="ts">
     import katex from "katex";
     import { ref, watch, onBeforeMount, onMounted, computed, onBeforeUnmount } from "vue";
-    import { Operator } from "../functions";
-    import { useSelectFunctionStore } from "./../stores/selectors";
+    import { Operator, useSelectFunctionStore } from "../functions";
 
     const selectFunctionStore = useSelectFunctionStore();
 

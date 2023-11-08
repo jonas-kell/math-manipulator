@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { operatorFromString, Numerical, StructuralContainer, StructuralVariable, Variable } from "../functions";
 
 describe("operator module - numerical folding feature", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("default sum folding", () => {
         expect(JSON.parse(operatorFromString("2+3+4").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
             type: "number",

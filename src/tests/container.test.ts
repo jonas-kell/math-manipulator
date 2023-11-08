@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { constructContainerOrFirstChild, OperatorType, EmptyArgument, operatorFromString } from "../functions";
 
 describe("operator module - create container function", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("Not implemented type", () => {
         expect(() => constructContainerOrFirstChild(OperatorType.BigInt as any, [])).toThrow();
         expect(() =>

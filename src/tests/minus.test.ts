@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { operatorFromString, Numerical, BracketedMultiplication, Fraction, Negation, BracketedSum } from "../functions";
 
 describe("operator module - pull out minus feature", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("Pull out of number", () => {
         expect(JSON.parse(new Numerical(101).PullOutMinusMODIFICATION().getSerializedStructure())).toMatchObject({
             type: "number",

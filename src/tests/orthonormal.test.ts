@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { BracketedMultiplication, Braket, operatorFromString } from "../functions";
 
 describe("operator module - evaluate orthonormal BraKet", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("Merging: No BraKet", () => {
         expect(
             JSON.parse(

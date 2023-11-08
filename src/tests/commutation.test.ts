@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { BracketedMultiplication, BracketedSum, Operator } from "../functions";
 
 describe("operator module - commute with subsequent", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("Select right one from a longer string", () => {
         const input = Operator.generateStructure(
             JSON.stringify({

@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { operatorFromString, Operator } from "../functions";
 
 describe("operator module - equivalence assertion", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("Default comparison, type and value", () => {
         expect(Operator.assertOperatorsEquivalent(operatorFromString("x"), operatorFromString("x"))).toBeTruthy();
         expect(Operator.assertOperatorsEquivalent(operatorFromString("x"), operatorFromString("pi"))).toBeFalsy();

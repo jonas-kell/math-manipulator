@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { operatorFromString } from "../functions";
 
 describe("parser module end-to-end", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("Empty string default", () => {
         const input = "";
         expect(() => operatorFromString(input)).not.toThrow();

@@ -1,4 +1,5 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import {
     BigSum,
     BracketedMultiplication,
@@ -17,6 +18,10 @@ import {
 } from "../functions";
 
 describe("operator module", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("Too few operator children", () => {
         expect(() => new BracketedSum([])).toThrow();
     });

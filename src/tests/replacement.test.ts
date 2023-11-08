@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { Numerical, Operator, StructuralVariable } from "../functions";
 
 describe("operator module - replace operator feature", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     const testOp = Operator.generateStructure(
         JSON.stringify({
             type: "exp_function",

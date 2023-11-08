@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { BracketedMultiplication, operatorFromString } from "../functions";
 
 describe("operator module - ordering of operators", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("Default implementation", () => {
         expect(
             JSON.parse(

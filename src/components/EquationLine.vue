@@ -4,7 +4,7 @@
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
     import { v4 as uuidv4 } from "uuid";
-    import { useSelectFunctionStore } from "./../stores/selectors";
+    import { useSelectFunctionStore, useVariablesStore } from "../functions";
     const VITE_MODE = import.meta.env.MODE;
 
     interface EffectMeasure {
@@ -14,6 +14,8 @@
     }
     const rendererUUID = ref(uuidv4());
     const selectFunctionStore = useSelectFunctionStore();
+    const variablesStore = useVariablesStore();
+    variablesStore.setValueForVariable("x", 1);
 
     // input to the equation line
     const props = defineProps<{

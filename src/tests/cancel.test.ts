@@ -1,7 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import mockPinia from "./setupPiniaForTesting";
 import { operatorFromString, BracketedSum } from "../functions";
 
 describe("operator module - cancel from sums feature", () => {
+    beforeEach(() => {
+        mockPinia();
+    });
+
     test("nothing to fold", () => {
         expect(
             JSON.parse(

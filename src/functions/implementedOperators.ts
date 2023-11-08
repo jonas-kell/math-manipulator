@@ -1,4 +1,4 @@
-import { Operator, OperatorType } from "./exporter";
+import { Operator, OperatorType, useVariablesStore } from "./exporter";
 
 export function operatorConstructorSwitch(type: OperatorType, value: string, childrenReconstructed: Operator[]): Operator {
     switch (type) {
@@ -861,6 +861,10 @@ export class BigInt extends Operator {
 export class Variable extends Operator implements OrderableOperator {
     constructor(name: string) {
         super(OperatorType.Variable, "{", "", "}", [], name);
+    }
+
+    protected getNumericalValue(): number | null {
+        return useVariablesStore().getVariable(this._value);
     }
 
     orderPriorityString() {
