@@ -9,5 +9,5 @@ export * from "./typeLists"; // by design uses no dependency
 export * from "./operator";
 export * from "./implementedOperators";
 export * from "./parser";
-export * from "./stores/variables"; // store uses operator.ts and parser.ts dependency. Is required by implementedOperators.ts, but only on runtime as it calls the useStore function, so this NEEDS to be after parser.ts and luckily may be also after implementedOperators.ts
 export * from "./stores/permanence"; // store uses operator.ts but only required ion .vue at the moment
+export * from "./stores/variables"; // store uses operator.ts, parser.ts and stores/permanence.ts dependency. Is required by implementedOperators.ts, but only on runtime as it calls the useStore function, so this NEEDS to be after parser.ts and luckily may be also after implementedOperators.ts

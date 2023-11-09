@@ -6,6 +6,11 @@
     import { computed, ref } from "vue";
     const variablesStore = useVariablesStore();
 
+    const props = defineProps<{
+        uuid: string;
+    }>();
+    variablesStore.setUUIDForPersistence(props.uuid);
+
     const names = computed(() => {
         return variablesStore.availableVariables;
     });
@@ -35,6 +40,7 @@
         let res = [] as Draw;
         names.value.forEach((name) => {
             const op = variablesStore.getVariableContent(name);
+            const variableUUID = variablesStore.getVariableUUID(name) ?? ""; // must always be set, otherwise worse things fail
             let hasOp = !!op && op != null && op != undefined;
             let katex = hasOp ? (op as unknown as Operator).getFormulaString() : "";
             if (op && op != null && op != undefined) {
@@ -46,7 +52,7 @@
                 name: name,
                 renderOperator: hasOp,
                 katex: katex,
-                parserUUID: uuidv4(), // TODO this needs to be persistent
+                parserUUID: variableUUID, // TODO this needs to be persistent
                 rendererUUID: uuidv4(),
             };
 

@@ -1,10 +1,12 @@
 import { defineStore } from "pinia";
-import { Operator, wordsParserConsidersReserved } from "./../exporter";
+import { Operator, wordsParserConsidersReserved, PersistentVariablesStoreStorage, usePermanenceStore } from "./../exporter";
+import { v4 as uuidv4 } from "uuid";
 
 interface StoreType {
-    values: { [key: string]: { op: Operator | null; created: number } };
+    values: { [key: string]: { op: Operator | null; created: number; uuid: string } };
     recentlyCreatedVariables: string[];
     mostRecentVariableName: string;
+    storeUUIDForPersistence: string | null;
 }
 
 const MAX_RECENT_LIFETIME = 1500;
@@ -16,6 +18,7 @@ export const useVariablesStore = defineStore("variables", {
             values: {},
             recentlyCreatedVariables: [],
             mostRecentVariableName: "Will not be choose-able by user because spaces",
+            storeUUIDForPersistence: null,
         };
     },
     actions: {
@@ -26,7 +29,8 @@ export const useVariablesStore = defineStore("variables", {
                 // ok, variable is set
             } else {
                 // There NEEDS to be a new creation
-                this.values[name] = { op: null, created: Date.now() };
+                this.values[name] = { op: null, created: Date.now(), uuid: uuidv4() };
+                this.storeValues();
 
                 // cache the variable name temporarily for debouncing
                 this.recentlyCreatedVariables.push(name);
@@ -81,9 +85,13 @@ export const useVariablesStore = defineStore("variables", {
         setOperatorForVariable(name: string, value: Operator | null) {
             this.makeSureVariableAvailable(name);
             this.values[name].op = value;
+
+            this.storeValues();
         },
         removeVariableFromStore(name: string) {
             delete this.values[name];
+
+            this.storeValues();
         },
         getVariableContent(name: string): Operator | null {
             let val = this.values[name];
@@ -94,10 +102,52 @@ export const useVariablesStore = defineStore("variables", {
                 return null;
             }
         },
+        getVariableUUID(name: string): string | null {
+            let val = this.values[name];
+
+            if (val != undefined && val != null && val) {
+                return val.uuid;
+            } else {
+                return null;
+            }
+        },
+        setUUIDForPersistence(uuid: string) {
+            // delete all variables
+            this.availableVariables.forEach((varName) => {
+                this.removeVariableFromStore(varName);
+            });
+
+            // set new uuid
+            this.storeUUIDForPersistence = uuid;
+
+            // re-import
+            const reimport = usePermanenceStore().getVariablesStoreForUUID(this.storeUUIDForPersistence);
+            if (reimport && reimport != null) {
+                for (const key in reimport.variables) {
+                    const reimportedVariable = reimport.variables[key];
+                    this.values[key] = reimportedVariable;
+                }
+            }
+        },
+        storeValues() {
+            if (this.storeUUIDForPersistence != null) {
+                let exp = { variables: {} } as PersistentVariablesStoreStorage;
+
+                this.availableVariables.forEach((variableName) => {
+                    const variableToExport = this.values[variableName];
+                    exp.variables[variableName] = variableToExport;
+                });
+
+                usePermanenceStore().storeVariablesStoreForUUID(this.storeUUIDForPersistence, exp);
+            }
+        },
     },
     getters: {
         availableVariables(state): string[] {
-            return Object.keys(state.values).sort();
+            return Object.keys(state.values).sort((keyA, keyB) => {
+                // append to end of list if is newer
+                return state.values[keyA].created - state.values[keyB].created;
+            });
         },
     },
 });
