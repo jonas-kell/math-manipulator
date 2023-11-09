@@ -3,27 +3,43 @@ import { defineStore } from "pinia";
 type Handler = (UUIDRef: string) => {};
 
 interface StoreType {
-    registeredHandlers: { [key: string]: Handler };
+    registeredSelectionHandlers: { [key: string]: Handler };
+    registeredGraphicalSelectionHandlers: { [key: string]: Handler };
 }
 
 export const useSelectFunctionStore = defineStore("selectors", {
     state: (): StoreType => {
-        return { registeredHandlers: {} };
+        return { registeredSelectionHandlers: {}, registeredGraphicalSelectionHandlers: {} };
     },
     actions: {
-        addHandlerToStore(rendererUUID: string, callback: Handler) {
-            this.registeredHandlers[rendererUUID] = callback;
+        addSelectionHandlerToStore(rendererUUID: string, callback: Handler) {
+            this.registeredSelectionHandlers[rendererUUID] = callback;
         },
-        removeHandlerFromStore(rendererUUID: string) {
-            delete this.registeredHandlers[rendererUUID];
+        addGraphicalSelectionHandlerToStore(rendererUUID: string, callback: Handler) {
+            this.registeredGraphicalSelectionHandlers[rendererUUID] = callback;
         },
-        callHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string) {
-            let func = this.registeredHandlers[rendererUUID];
+        removeSelectionHandlerFromStore(rendererUUID: string) {
+            delete this.registeredSelectionHandlers[rendererUUID];
+        },
+        removeGraphicalSelectionHandlerFromStore(rendererUUID: string) {
+            delete this.registeredGraphicalSelectionHandlers[rendererUUID];
+        },
+        callSelectionHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string) {
+            let func = this.registeredSelectionHandlers[rendererUUID];
 
             if (func != undefined) {
                 (func as Handler)(UUIDRefToCallWith);
             } else {
-                console.error("There was no handler registered...", rendererUUID, UUIDRefToCallWith);
+                console.error("There was no selection handler registered...", rendererUUID, UUIDRefToCallWith);
+            }
+        },
+        callGraphicalSelectionHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string) {
+            let func = this.registeredGraphicalSelectionHandlers[rendererUUID];
+
+            if (func != undefined) {
+                (func as Handler)(UUIDRefToCallWith);
+            } else {
+                console.error("There was no graphical selection handler registered...", rendererUUID, UUIDRefToCallWith);
             }
         },
     },
