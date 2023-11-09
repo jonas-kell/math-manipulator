@@ -27,9 +27,13 @@
     };
 
     const selectUUIDProgrammatically = (UUIDRef: string) => {
+        selectUUIDGraphically(UUIDRef);
+        emit("selected", Operator.UUIDFromUUIDRef(UUIDRef));
+    };
+
+    const selectUUIDGraphically = (UUIDRef: string) => {
         selectionRef.value = UUIDRef;
         updateBorders();
-        emit("selected", Operator.UUIDFromUUIDRef(UUIDRef));
     };
 
     const postProcess = () => {
@@ -84,7 +88,8 @@
     };
 
     onBeforeMount(() => {
-        selectFunctionStore.addHandlerToStore(props.rendererUuid, selectUUIDProgrammatically as any);
+        selectFunctionStore.addSelectionHandlerToStore(props.rendererUuid, selectUUIDProgrammatically as any);
+        selectFunctionStore.addGraphicalSelectionHandlerToStore(props.rendererUuid, selectUUIDGraphically as any);
     });
 
     onMounted(() => {
@@ -92,12 +97,14 @@
     });
 
     watch(props, () => {
-        selectFunctionStore.addHandlerToStore(props.rendererUuid, selectUUIDProgrammatically as any);
+        selectFunctionStore.addSelectionHandlerToStore(props.rendererUuid, selectUUIDProgrammatically as any);
+        selectFunctionStore.addGraphicalSelectionHandlerToStore(props.rendererUuid, selectUUIDGraphically as any);
         render();
     });
 
     onBeforeUnmount(() => {
-        selectFunctionStore.removeHandlerFromStore(props.rendererUuid);
+        selectFunctionStore.removeSelectionHandlerFromStore(props.rendererUuid);
+        selectFunctionStore.removeGraphicalSelectionHandlerFromStore(props.rendererUuid);
     });
 </script>
 

@@ -17,6 +17,8 @@
         return {
             operator: parsedOperator.value as Operator | null,
             childUUID: firstLineUuid.value,
+            selectionUUID: "",
+            mode: "",
         };
     });
     watch(

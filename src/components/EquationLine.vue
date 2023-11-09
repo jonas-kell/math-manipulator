@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed, onBeforeMount, ref, watch } from "vue";
+    import { computed, onMounted, ref, watch } from "vue";
     import { Operator, EmptyArgument, BracketedSum, BracketedMultiplication } from "../functions";
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
@@ -42,6 +42,10 @@
         } else {
             selectedOperatorsParentOperator.value = null;
         }
+        // trigger select graphically manually (important on e.g. load)
+        if (selectedOperator.value && selectedOperator.value != null) {
+            selectFunctionStore.callGraphicalSelectionHandlerCallback(rendererUUID.value, selectedOperator.value.getUUIDRef());
+        }
     };
 
     // structure of the operations line
@@ -73,7 +77,7 @@
     const selectParentAction = () => {
         const UUIDref = selectedOperatorsParentOperator.value?.getUUIDRef() ?? null;
         if (UUIDref != null) {
-            selectFunctionStore.callHandlerCallback(rendererUUID.value, UUIDref);
+            selectFunctionStore.callSelectionHandlerCallback(rendererUUID.value, UUIDref);
         }
     };
     const replaceButtonAction = () => {
@@ -226,6 +230,8 @@
         return {
             operator: outputOperator.value as Operator | null,
             childUUID: childLineUUID.value,
+            selectionUUID: selectionUUID.value,
+            mode: String(mode.value),
         };
     });
     watch(
@@ -237,12 +243,14 @@
             deep: true,
         }
     );
-    onBeforeMount(() => {
+    onMounted(() => {
         const loaded = permanenceStore.getForUUID(props.lineUuid);
 
         if (loaded != null) {
-            outputOperator.value = loaded.operator;
             childLineUUID.value = loaded.childUUID;
+            selectOperator(loaded.selectionUUID);
+            outputOperator.value = loaded.operator;
+            mode.value = loaded.mode as unknown as MODES;
         }
     });
 </script>

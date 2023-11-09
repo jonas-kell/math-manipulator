@@ -4,11 +4,15 @@ import { Operator } from "./../exporter";
 export interface PersistentLineStorage {
     operator: Operator | null;
     childUUID: string;
+    selectionUUID: string;
+    mode: string;
 }
 
 interface ExportablePersistedLineStorage {
     operator: string | null;
     childUUID: string;
+    selectionUUID: string;
+    mode: string;
 }
 
 interface StoreType {}
@@ -22,6 +26,8 @@ export const usePermanenceStore = defineStore("permanence", {
             const toStore: ExportablePersistedLineStorage = {
                 operator: values.operator == null ? null : values.operator.getSerializedStructure(),
                 childUUID: values.childUUID,
+                selectionUUID: values.selectionUUID,
+                mode: values.mode,
             };
             sessionStorage.setItem(uuid, JSON.stringify(toStore));
         },
@@ -34,6 +40,8 @@ export const usePermanenceStore = defineStore("permanence", {
                 res = {
                     childUUID: loadedObject.childUUID,
                     operator: loadedObject.operator == null ? null : Operator.generateStructure(loadedObject.operator, true),
+                    selectionUUID: loadedObject.selectionUUID,
+                    mode: loadedObject.mode,
                 } as PersistentLineStorage;
             }
 
