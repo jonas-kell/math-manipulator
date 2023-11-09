@@ -7,6 +7,7 @@
     import { v4 as uuidv4 } from "uuid";
     import { PersistentLineStorage, usePermanenceStore } from "./functions";
 
+    const skipParsedEffect = ref(false);
     const parsedOperator = ref(null as Operator | null);
     const firstLineUuid = ref(uuidv4());
     const operatorParserUUID = ref(uuidv4());
@@ -48,7 +49,14 @@
     <p>Try:</p>
     <pre>sum((n = 0); 100; int(-inf; inf; (123+(A*4)/100); x))</pre>
     <InputToOperatorParser
-        @parsed="(a: Operator) => {parsedOperator = a}"
+        @parsed="(a: Operator) => {
+            if (skipParsedEffect) {
+                skipParsedEffect = false;
+            } else {
+                parsedOperator = a;
+            }
+        }"
+        @loading-value="skipParsedEffect = true"
         style="width: 100%; min-height: 4em"
         :uuid="operatorParserUUID"
     />

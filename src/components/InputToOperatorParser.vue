@@ -13,8 +13,7 @@
             required: true,
         },
     });
-
-    const emit = defineEmits(["parsed"]);
+    const emit = defineEmits(["parsed", "loadingValue"]);
     const variablesStore = useVariablesStore();
 
     const text = ref("");
@@ -46,6 +45,7 @@
             :style="($attrs.style as any)"
             :type="props.textarea ? 'textarea' : 'input'"
             :uuid="props.uuid"
+            @loading-value="emit('loadingValue')"
         />
         {{ error }}
     </div>
