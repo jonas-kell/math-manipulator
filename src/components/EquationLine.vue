@@ -1,10 +1,10 @@
 <script setup lang="ts">
-    import { computed, ref, watch } from "vue";
+    import { computed, onBeforeMount, ref, watch } from "vue";
     import { Operator, EmptyArgument, BracketedSum, BracketedMultiplication } from "../functions";
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
     import { v4 as uuidv4 } from "uuid";
-    import { useSelectFunctionStore, useVariablesStore } from "../functions";
+    import { useSelectFunctionStore, useVariablesStore, usePermanenceStore, PersistentLineStorage } from "../functions";
     const VITE_MODE = import.meta.env.MODE;
 
     interface EffectMeasure {
@@ -15,6 +15,7 @@
     const rendererUUID = ref(uuidv4());
     const selectFunctionStore = useSelectFunctionStore();
     const variablesStore = useVariablesStore();
+    const permanenceStore = usePermanenceStore();
 
     // input to the equation line
     const props = defineProps<{
@@ -206,50 +207,44 @@
     };
     const showLatexExportButtonAction = () => {
         resetControlPanel();
+        outputOperator.value = selectedOperator.value;
         mode.value = MODES.SHOW_LATEX;
     };
     const showExportStructureButtonAction = () => {
         resetControlPanel();
+        outputOperator.value = selectedOperator.value;
         mode.value = MODES.SHOW_STRUCTURE;
     };
     const showExportStructureWithUUIDsButtonAction = () => {
         resetControlPanel();
+        outputOperator.value = selectedOperator.value;
         mode.value = MODES.SHOW_STRUCTURE_WITH_UUIDS;
     };
 
-    // STATE AND EXPORT
-    const lineStateAllocation = computed(() => {
+    // STATE AND IMPORT/EXPORT
+    const lineStateAllocation = computed((): PersistentLineStorage => {
         return {
-            outOperator: outputOperator.value != null ? outputOperator.value.getExportFormulaString() : null,
-            childLineUUID: childLineUUID.value,
-            mode: mode.value,
+            operator: outputOperator.value as Operator | null,
+            childUUID: childLineUUID.value,
         };
     });
     watch(
         lineStateAllocation,
         (newVal) => {
-            localStorage.setItem("storage_" + props.lineUuid, JSON.stringify(newVal));
+            permanenceStore.storeForUUID(props.lineUuid, newVal);
         },
         {
             deep: true,
         }
     );
-    // LOAD
-    const loadedState = localStorage.getItem("storage_" + props.lineUuid);
-    // console.log(props.lineUuid);
-    if (loadedState && loadedState != null && loadedState != undefined) {
-        // console.log("loaded");
-        // const loadedObject = JSON.parse(loadedState) as {
-        //     outOperator: string | null;
-        //     childLineUUID: string;
-        //     mode: MODES;
-        // };
-        // if (loadedObject.outOperator != null) {
-        //     outputOperator.value = Operator.generateStructure(loadedObject.outOperator);
-        // }
-        // mode.value = loadedObject.mode;
-        // childLineUUID.value = loadedObject.childLineUUID;
-    }
+    onBeforeMount(() => {
+        const loaded = permanenceStore.getForUUID(props.lineUuid);
+
+        if (loaded != null) {
+            outputOperator.value = loaded.operator;
+            childLineUUID.value = loaded.childUUID;
+        }
+    });
 </script>
 
 <template>
@@ -295,20 +290,22 @@
             v-model="variableDefinitionName"
             style="margin-top: 0.5em; width: 100%"
         />
+    </template>
+
+    <template v-if="outputOperator != null">
         <pre v-if="mode == MODES.SHOW_STRUCTURE || mode == MODES.SHOW_STRUCTURE_WITH_UUIDS">{{
-            JSON.parse(selectedOperator.getSerializedStructure(mode == MODES.SHOW_STRUCTURE_WITH_UUIDS))
+            JSON.parse(outputOperator.getSerializedStructure(mode == MODES.SHOW_STRUCTURE_WITH_UUIDS))
         }}</pre>
-        <template v-if="mode == MODES.SHOW_LATEX">
-            <pre>{{ selectedOperator.getExportFormulaString() }}</pre>
+        <template v-else-if="mode == MODES.SHOW_LATEX">
+            <pre>{{ outputOperator.getExportFormulaString() }}</pre>
             <pre v-if="mode == MODES.SHOW_LATEX && VITE_MODE == 'development'">{{
                 {
-                    latexPasteableToJs: selectedOperator.getExportFormulaString(),
+                    latexPasteableToJs: outputOperator.getExportFormulaString(),
                 }
             }}</pre>
         </template>
+        <div v-else style="margin-top: 0.1em; width: 100%">
+            <EquationLine :operator="(outputOperator as Operator)" :line-uuid="childLineUUID" />
+        </div>
     </template>
-
-    <div style="margin-top: 0.1em; width: 100%">
-        <EquationLine v-if="outputOperator != null" :operator="(outputOperator as Operator)" :line-uuid="childLineUUID" />
-    </div>
 </template>
