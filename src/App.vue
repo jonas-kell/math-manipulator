@@ -27,14 +27,14 @@
     watch(
         lineStateAllocation,
         (newVal) => {
-            permanenceStore.storeForUUID(mainUUID, newVal);
+            permanenceStore.storeLineForUUID(mainUUID, newVal);
         },
         {
             deep: true,
         }
     );
     onBeforeMount(() => {
-        const loaded = permanenceStore.getForUUID(mainUUID);
+        const loaded = permanenceStore.getLineForUUID(mainUUID);
 
         if (loaded != null) {
             operatorParserUUID.value = loaded.operatorParserUUID;
