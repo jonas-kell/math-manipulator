@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test, jest } from "@jest/globals";
+jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
 import { Numerical, Operator, Variable } from "../functions";
 
