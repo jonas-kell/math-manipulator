@@ -242,14 +242,14 @@
     watch(
         lineStateAllocation,
         (newVal) => {
-            permanenceStore.storeForUUID(props.lineUuid, newVal);
+            permanenceStore.storeLineForUUID(props.lineUuid, newVal);
         },
         {
             deep: true,
         }
     );
     onMounted(() => {
-        const loaded = permanenceStore.getForUUID(props.lineUuid);
+        const loaded = permanenceStore.getLineForUUID(props.lineUuid);
 
         if (loaded != null) {
             childLineUUID.value = loaded.childUUID;
