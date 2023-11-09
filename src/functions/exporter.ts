@@ -4,10 +4,9 @@
 // files in this folder MUST import from "./exporter"
 // files outside of this folder MUST import from "index.ts" (just import the `functions` folder)
 
-export * from "./stores/selectors"; // store uses no operator dependency
-
-export * from "./typeLists";
+export * from "./stores/selectors"; // store uses no external dependency
+export * from "./typeLists"; // by design uses no dependency
 export * from "./operator";
-export * from "./stores/variables"; // store uses Operator dependency
 export * from "./implementedOperators";
 export * from "./parser";
+export * from "./stores/variables"; // store uses operator.ts and parser.ts dependency. Is required by implementedOperators.ts, but only on runtime as it calls the useStore function, so this NEEDS to be after parser.ts and luckily may be also after implementedOperators.ts

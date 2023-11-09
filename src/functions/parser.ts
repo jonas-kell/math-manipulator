@@ -109,6 +109,14 @@ const AllowedStructuralKeywordMapping = {
 } as { [key: string]: OperatorType };
 const AllowedStructuralKeywords = Object.keys(AllowedStructuralKeywordMapping);
 
+export const wordsParserConsidersReserved: string[] = [
+    ...Object.values(ReservedWord),
+    "**",
+    ...AllowedFunctionKeywords,
+    ...AllowedConstantKeywords,
+    ...AllowedStructuralKeywords,
+];
+
 interface Token {
     type: TokenType;
     content: string;
