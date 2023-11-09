@@ -12,6 +12,7 @@
     const firstLineUuid = ref(uuidv4());
     const operatorParserUUID = ref(uuidv4());
     const mainUUID = "MAIN_UUID";
+    const variableListUUID = "MAIN_VARIABLE_LIST_UUID";
 
     // STATE AND IMPORT/EXPORT
     const permanenceStore = usePermanenceStore();
@@ -61,7 +62,7 @@
         :uuid="operatorParserUUID"
     />
     <EquationLine v-if="parsedOperator" :operator="(parsedOperator as Operator)" :line-uuid="firstLineUuid" />
-    <VariableList style="margin-top: 3em" />
+    <VariableList style="margin-top: 3em" :uuid="variableListUUID" />
     <div style="width: 100%; min-height: 40vh"></div>
 </template>
 

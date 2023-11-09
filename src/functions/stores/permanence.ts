@@ -24,6 +24,24 @@ export interface PersistentInputStorage {
     textValue: string;
 }
 
+interface PersistentVariable {
+    op: Operator | null;
+    created: number;
+    uuid: string;
+}
+export interface PersistentVariablesStoreStorage {
+    variables: { [key: string]: PersistentVariable };
+}
+
+interface ExportableVariable {
+    op: string | null;
+    created: number;
+    uuid: string;
+}
+interface ExportablePersistentVariablesStoreStorage {
+    variables: { [key: string]: ExportableVariable };
+}
+
 interface StoreType {}
 
 export const usePermanenceStore = defineStore("permanence", {
@@ -33,7 +51,7 @@ export const usePermanenceStore = defineStore("permanence", {
     actions: {
         storeLineForUUID(uuid: string, values: PersistentLineStorage) {
             const toStore: ExportablePersistedLineStorage = {
-                operator: values.operator == null ? null : values.operator.getSerializedStructure(),
+                operator: values.operator == null ? null : values.operator.getSerializedStructure(true),
                 childUUID: values.childUUID,
                 selectionUUID: values.selectionUUID,
                 operatorParserUUID: values.operatorParserUUID,
@@ -89,6 +107,56 @@ export const usePermanenceStore = defineStore("permanence", {
                     textValue:
                         loadedObject.textValue != null && loadedObject.textValue != undefined ? loadedObject.textValue : "",
                 } as PersistentInputStorage;
+            }
+
+            return res;
+        },
+        storeVariablesStoreForUUID(uuid: string, values: PersistentVariablesStoreStorage) {
+            let variables = {} as { [key: string]: ExportableVariable };
+
+            for (const key in values.variables) {
+                const element = values.variables[key];
+
+                if (element != null && element != undefined) {
+                    variables[key] = {
+                        uuid: element.uuid,
+                        created: element.created,
+                        op: element.op != null && element.op != undefined ? element.op.getSerializedStructure(true) : null,
+                    } as ExportableVariable;
+                }
+            }
+
+            const toStore: ExportablePersistentVariablesStoreStorage = {
+                variables: variables,
+            };
+            sessionStorage.setItem(uuid, JSON.stringify(toStore));
+        },
+        getVariablesStoreForUUID(uuid: string): PersistentVariablesStoreStorage | null {
+            const loadedState = sessionStorage.getItem(uuid);
+
+            let res = null;
+            if (loadedState && loadedState != null && loadedState != undefined) {
+                const loadedObject = JSON.parse(loadedState) as ExportablePersistentVariablesStoreStorage;
+
+                let variables = {} as { [key: string]: PersistentVariable };
+                for (const key in loadedObject.variables) {
+                    const element = loadedObject.variables[key];
+
+                    if (element != null && element != undefined) {
+                        variables[key] = {
+                            uuid: element.uuid != null && element.uuid != undefined ? element.uuid : uuidv4(),
+                            created: element.created != null && element.created != undefined ? element.created : Date.now(),
+                            op:
+                                element.op != null && element.op != undefined
+                                    ? Operator.generateStructure(element.op, true)
+                                    : null,
+                        } as PersistentVariable;
+                    }
+                }
+
+                res = {
+                    variables: variables,
+                } as PersistentVariablesStoreStorage;
             }
 
             return res;
