@@ -4,7 +4,7 @@
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
     import { v4 as uuidv4 } from "uuid";
-    import { useSelectFunctionStore } from "../functions";
+    import { useSelectFunctionStore, useVariablesStore } from "../functions";
     const VITE_MODE = import.meta.env.MODE;
 
     interface EffectMeasure {
@@ -14,6 +14,7 @@
     }
     const rendererUUID = ref(uuidv4());
     const selectFunctionStore = useSelectFunctionStore();
+    const variablesStore = useVariablesStore();
 
     // input to the equation line
     const props = defineProps<{
@@ -102,6 +103,9 @@
                 variableDefinitionName.value,
                 selectionUUID.value
             );
+
+            // trigger typing debounce cleanup
+            variablesStore.purgeLastElementsWithNamesLeadingUpToThis(variableDefinitionName.value);
         }
     };
     const actionsHaveAnyEffectAndTheirResults = computed(() => {
@@ -232,9 +236,9 @@
     );
     // LOAD
     const loadedState = localStorage.getItem("storage_" + props.lineUuid);
-    console.log(props.lineUuid);
+    // console.log(props.lineUuid);
     if (loadedState && loadedState != null && loadedState != undefined) {
-        console.log("loaded");
+        // console.log("loaded");
         // const loadedObject = JSON.parse(loadedState) as {
         //     outOperator: string | null;
         //     childLineUUID: string;

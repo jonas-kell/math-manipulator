@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { operatorFromString } from "../functions";
+    import { operatorFromString, useVariablesStore } from "../functions";
     import { ref, watch } from "vue";
 
     const props = defineProps({
@@ -10,6 +10,7 @@
     });
 
     const emit = defineEmits(["parsed"]);
+    const variablesStore = useVariablesStore();
 
     const text = ref("");
     const error = ref("");
@@ -26,8 +27,10 @@
                 error.value = String(err);
             }
         }
-
         emit("parsed", res);
+
+        // trigger typing debounce cleanup
+        variablesStore.purgeLastElementsWithNamesLeadingUpToThis(text.value);
     });
 </script>
 
