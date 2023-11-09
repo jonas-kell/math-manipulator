@@ -24,7 +24,8 @@
         name: string;
         renderOperator: boolean;
         katex: string;
-        uuid: string;
+        parserUUID: string;
+        rendererUUID: string;
     }[];
     const updated = ref(Date.now());
     const drawSource = computed((): Draw => {
@@ -45,7 +46,8 @@
                 name: name,
                 renderOperator: hasOp,
                 katex: katex,
-                uuid: uuidv4(),
+                parserUUID: uuidv4(), // TODO this needs to be persistent
+                rendererUUID: uuidv4(),
             };
 
             res.push(newElem);
@@ -69,19 +71,20 @@
                         <InputToOperatorParser
                             @parsed="(a: Operator | null) => setOperator(draw.name, a)"
                             :textarea="false"
-                            :key="draw.name"
+                            :key="draw.parserUUID"
+                            :uuid="draw.parserUUID"
                         />
                     </td>
                     <td>
                         <button class="delete-button" @click="removeVariableReference(draw.name)">x</button>
                     </td>
-                    <td :key="draw.uuid">
+                    <td :key="draw.rendererUUID">
                         <KatexRenderer
                             v-if="draw.renderOperator"
                             :katex-input="draw.katex"
                             :uuid-refs-to-process="[]"
                             @selected="() => {}"
-                            :renderer-uuid="draw.uuid"
+                            :renderer-uuid="draw.rendererUUID"
                         />
                     </td>
                 </tr>

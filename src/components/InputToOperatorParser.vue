@@ -1,11 +1,16 @@
 <script setup lang="ts">
     import { operatorFromString, useVariablesStore } from "../functions";
     import { ref, watch } from "vue";
+    import PermanenceInterfacingInput from "./PermanenceInterfacingInput.vue";
 
     const props = defineProps({
         textarea: {
             type: Boolean,
             default: true,
+        },
+        uuid: {
+            type: String,
+            required: true,
         },
     });
 
@@ -36,8 +41,12 @@
 
 <template>
     <div>
-        <textarea v-model="text" :style="($attrs.style as any)" v-if="props.textarea"></textarea>
-        <input v-model="text" :style="($attrs.style as any)" v-else />
+        <PermanenceInterfacingInput
+            v-model="text"
+            :style="($attrs.style as any)"
+            :type="props.textarea ? 'textarea' : 'input'"
+            :uuid="props.uuid"
+        />
         {{ error }}
     </div>
 </template>
