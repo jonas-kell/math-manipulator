@@ -5,6 +5,7 @@
     import InputToOperatorParser from "./InputToOperatorParser.vue";
     import { v4 as uuidv4 } from "uuid";
     import { useSelectFunctionStore, useVariablesStore, usePermanenceStore, PersistentLineStorage } from "../functions";
+    import PermanenceInterfacingInput from "./PermanenceInterfacingInput.vue";
     const VITE_MODE = import.meta.env.MODE;
 
     interface EffectMeasure {
@@ -23,6 +24,8 @@
         lineUuid: string;
     }>();
     const childLineUUID = ref(uuidv4());
+    const operatorParserUUID = ref(uuidv4());
+    const variableNameInputUUID = ref(uuidv4());
     const katexInput = computed(() => {
         return props.operator.getFormulaString();
     });
@@ -231,6 +234,8 @@
             operator: outputOperator.value as Operator | null,
             childUUID: childLineUUID.value,
             selectionUUID: selectionUUID.value,
+            operatorParserUUID: operatorParserUUID.value,
+            variableNameInputUUID: variableNameInputUUID.value,
             mode: String(mode.value),
         };
     });
@@ -248,6 +253,8 @@
 
         if (loaded != null) {
             childLineUUID.value = loaded.childUUID;
+            operatorParserUUID.value = loaded.operatorParserUUID;
+            variableNameInputUUID.value = loaded.variableNameInputUUID;
             selectOperator(loaded.selectionUUID);
             outputOperator.value = loaded.operator;
             mode.value = loaded.mode as unknown as MODES;
@@ -291,12 +298,14 @@
                 replaceWithCallback() 
             }"
             style="margin-top: 0.5em; width: 100%; min-height: 2em"
+            :uuid="operatorParserUUID"
         />
-        <input
+        <PermanenceInterfacingInput
             v-show="mode == MODES.STRUCTURAL_VARIABLE_DEFINITION"
-            type="text"
             v-model="variableDefinitionName"
             style="margin-top: 0.5em; width: 100%"
+            :type="'input'"
+            :uuid="variableNameInputUUID"
         />
     </template>
 

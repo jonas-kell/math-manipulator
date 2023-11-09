@@ -9,6 +9,7 @@
 
     const parsedOperator = ref(null as Operator | null);
     const firstLineUuid = ref(uuidv4());
+    const operatorParserUUID = ref(uuidv4());
     const mainUUID = "MAIN_UUID";
 
     // STATE AND IMPORT/EXPORT
@@ -18,6 +19,8 @@
             operator: parsedOperator.value as Operator | null,
             childUUID: firstLineUuid.value,
             selectionUUID: "",
+            operatorParserUUID: operatorParserUUID.value,
+            variableNameInputUUID: "",
             mode: "",
         };
     });
@@ -34,6 +37,7 @@
         const loaded = permanenceStore.getForUUID(mainUUID);
 
         if (loaded != null) {
+            operatorParserUUID.value = loaded.operatorParserUUID;
             parsedOperator.value = loaded.operator;
             firstLineUuid.value = loaded.childUUID;
         }
@@ -43,7 +47,11 @@
 <template>
     <p>Try:</p>
     <pre>sum((n = 0); 100; int(-inf; inf; (123+(A*4)/100); x))</pre>
-    <InputToOperatorParser @parsed="(a: Operator) => {parsedOperator = a}" style="width: 100%; min-height: 4em" />
+    <InputToOperatorParser
+        @parsed="(a: Operator) => {parsedOperator = a}"
+        style="width: 100%; min-height: 4em"
+        :uuid="operatorParserUUID"
+    />
     <EquationLine v-if="parsedOperator" :operator="(parsedOperator as Operator)" :line-uuid="firstLineUuid" />
     <VariableList style="margin-top: 3em" />
     <div style="width: 100%; min-height: 40vh"></div>
