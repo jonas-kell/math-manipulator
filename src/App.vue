@@ -3,12 +3,39 @@
     import VariableList from "./components/VariableList.vue";
     import InputToOperatorParser from "./components/InputToOperatorParser.vue";
     import { Operator } from "./functions";
-    import { ref } from "vue";
+    import { computed, onBeforeMount, ref, watch } from "vue";
     import { v4 as uuidv4 } from "uuid";
+    import { PersistentLineStorage, usePermanenceStore } from "./functions";
 
     const parsedOperator = ref(null as Operator | null);
     const firstLineUuid = ref(uuidv4());
-    firstLineUuid.value = "3935295c-069c-48a4-a4d0-235ec8fd70fa"; // TODO should later be generated from the router path
+    const mainUUID = "MAIN_UUID";
+
+    // STATE AND IMPORT/EXPORT
+    const permanenceStore = usePermanenceStore();
+    const lineStateAllocation = computed((): PersistentLineStorage => {
+        return {
+            operator: parsedOperator.value as Operator | null,
+            childUUID: firstLineUuid.value,
+        };
+    });
+    watch(
+        lineStateAllocation,
+        (newVal) => {
+            permanenceStore.storeForUUID(mainUUID, newVal);
+        },
+        {
+            deep: true,
+        }
+    );
+    onBeforeMount(() => {
+        const loaded = permanenceStore.getForUUID(mainUUID);
+
+        if (loaded != null) {
+            parsedOperator.value = loaded.operator;
+            firstLineUuid.value = loaded.childUUID;
+        }
+    });
 </script>
 
 <template>
