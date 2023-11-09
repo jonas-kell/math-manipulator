@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed, onBeforeMount, watch } from "vue";
+    import { computed, onMounted, watch } from "vue";
     import { PersistentInputStorage, usePermanenceStore } from "./../functions";
 
     const props = defineProps<{
@@ -7,7 +7,7 @@
         uuid: string;
         type: "input" | "textarea";
     }>();
-    const emit = defineEmits(["update:modelValue"]);
+    const emit = defineEmits(["update:modelValue", "loadingValue"]);
 
     const localValue = computed({
         get: () => props.modelValue,
@@ -32,10 +32,11 @@
             deep: true,
         }
     );
-    onBeforeMount(() => {
+    onMounted(() => {
         const loaded = permanenceStore.getInputForUUID(props.uuid);
 
         if (loaded != null) {
+            emit("loadingValue");
             localValue.value = loaded.textValue;
         }
     });

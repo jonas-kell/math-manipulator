@@ -89,11 +89,20 @@
         replaceWithCallback();
     };
     const replaceWithOperator = ref(null as Operator | null);
+    const skipReplaceWithEffect = ref(false);
     const replaceWithCallback = () => {
-        if (replaceWithOperator.value == null) {
-            outputOperator.value = props.operator.getCopyWithReplaced(selectionUUID.value, new EmptyArgument());
+        if (skipReplaceWithEffect.value) {
+            skipReplaceWithEffect.value = false;
         } else {
-            outputOperator.value = props.operator.getCopyWithReplaced(selectionUUID.value, replaceWithOperator.value as Operator);
+            // real implementation >>
+            if (replaceWithOperator.value == null) {
+                outputOperator.value = props.operator.getCopyWithReplaced(selectionUUID.value, new EmptyArgument());
+            } else {
+                outputOperator.value = props.operator.getCopyWithReplaced(
+                    selectionUUID.value,
+                    replaceWithOperator.value as Operator
+                );
+            }
         }
     };
     const variableDefinitionButtonAction = () => {
@@ -105,15 +114,21 @@
     watch(variableDefinitionName, () => {
         variableDefinitionWithCallback();
     });
+    const skipVariableNameEffect = ref(false);
     const variableDefinitionWithCallback = () => {
-        if (variableDefinitionName.value != "") {
-            outputOperator.value = props.operator.getCopyWithPackedIntoVariable(
-                variableDefinitionName.value,
-                selectionUUID.value
-            );
+        if (skipVariableNameEffect.value) {
+            skipVariableNameEffect.value = false;
+        } else {
+            // real implementation >>
+            if (variableDefinitionName.value != "") {
+                outputOperator.value = props.operator.getCopyWithPackedIntoVariable(
+                    variableDefinitionName.value,
+                    selectionUUID.value
+                );
 
-            // trigger typing debounce cleanup
-            variablesStore.purgeLastElementsWithNamesLeadingUpToThis(variableDefinitionName.value);
+                // trigger typing debounce cleanup
+                variablesStore.purgeLastElementsWithNamesLeadingUpToThis(variableDefinitionName.value);
+            }
         }
     };
     const actionsHaveAnyEffectAndTheirResults = computed(() => {
@@ -229,6 +244,7 @@
     };
 
     // STATE AND IMPORT/EXPORT
+    const loadingComplete = ref(false);
     const lineStateAllocation = computed((): PersistentLineStorage => {
         return {
             operator: outputOperator.value as Operator | null,
@@ -242,7 +258,10 @@
     watch(
         lineStateAllocation,
         (newVal) => {
-            permanenceStore.storeLineForUUID(props.lineUuid, newVal);
+            // only overwrite with new stuff after fully loaded (can be sure to be a real change)
+            if (loadingComplete.value) {
+                permanenceStore.storeLineForUUID(props.lineUuid, newVal);
+            }
         },
         {
             deep: true,
@@ -259,6 +278,7 @@
             outputOperator.value = loaded.operator;
             mode.value = loaded.mode as unknown as MODES;
         }
+        loadingComplete.value = true;
     });
 </script>
 
@@ -294,9 +314,10 @@
         <InputToOperatorParser
             v-show="mode == MODES.REPLACEMENT"
             @parsed="(a: Operator | null) => { 
-                replaceWithOperator = a; 
+                replaceWithOperator = a;
                 replaceWithCallback() 
             }"
+            @loading-value="() => (skipReplaceWithEffect = true)"
             style="margin-top: 0.5em; width: 100%; min-height: 2em"
             :uuid="operatorParserUUID"
         />
@@ -306,6 +327,7 @@
             style="margin-top: 0.5em; width: 100%"
             :type="'input'"
             :uuid="variableNameInputUUID"
+            @loading-value="() => (skipVariableNameEffect = true)"
         />
     </template>
 
