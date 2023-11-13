@@ -22,6 +22,7 @@
     const props = defineProps<{
         operator: Operator;
         lineUuid: string;
+        isBase: boolean;
     }>();
     const childLineUUID = ref(uuidv4());
     const operatorParserUUID = ref(uuidv4());
@@ -81,6 +82,7 @@
     );
 
     // modification triggers to the current line
+    const skipBaseParserEffect = ref(false);
     const selectParentAction = () => {
         const UUIDref = selectedOperatorsParentOperator.value?.getUUIDRef() ?? null;
         if (UUIDref != null) {
@@ -295,7 +297,21 @@
         :renderer-uuid="rendererUUID"
     />
 
-    <template v-if="selectionUUID != '' && selectedOperator != null">
+    <InputToOperatorParser
+        v-if="isBase"
+        @parsed="(a: Operator | null) => { 
+                if (skipBaseParserEffect) {
+                    skipBaseParserEffect = false;
+                } else {
+                    outputOperator = a;
+                }
+            }"
+        @loading-value="() => (skipBaseParserEffect = true)"
+        style="margin-top: 0.5em; width: 100%; min-height: 4em"
+        :uuid="operatorParserUUID"
+    />
+
+    <template v-if="selectionUUID != '' && selectedOperator != null && !isBase">
         <button @click="selectParentAction" style="margin-right: 0.2em" :disabled="selectedOperatorsParentOperator == null">
             Sel. Parent
         </button>
@@ -349,7 +365,7 @@
             }}</pre>
         </template>
         <div v-else style="margin-top: 0.1em; width: 100%">
-            <EquationLine :operator="(outputOperator as Operator)" :line-uuid="childLineUUID" />
+            <EquationLine :operator="(outputOperator as Operator)" :line-uuid="childLineUUID" :is-base="false" />
         </div>
     </template>
 </template>

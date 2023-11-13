@@ -41,6 +41,7 @@
 <template>
     <div>
         <PermanenceInterfacingInput
+            :key="props.uuid"
             v-model="text"
             :style="($attrs.style as any)"
             :type="props.textarea ? 'textarea' : 'input'"
