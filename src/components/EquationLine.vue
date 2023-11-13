@@ -80,6 +80,16 @@
         },
         { deep: true }
     );
+    watch(outputOperator, (newVal, oldVal) => {
+        if (oldVal != null) {
+            if (newVal == null) {
+                // if output changes to null, make sure to change the uuid
+                // this is required, because if the outputOperator changes to null and later back, the child EquationLine WILL be freshly instantiated, causing a load operation
+                // we do NOT want it to load any previous values, because we now are SURE that it shouldn't contain info as we just observed the switch from hasInfo -> inputInfoIsNull
+                childLineUUID.value = uuidv4();
+            }
+        }
+    });
 
     // modification triggers to the current line
     const skipBaseParserEffect = ref(false);
@@ -291,6 +301,7 @@
 
 <template>
     <KatexRenderer
+        v-if="!isBase"
         :katex-input="katexInput"
         :uuid-refs-to-process="uuidRefsToProcess"
         @selected="selectOperator"
