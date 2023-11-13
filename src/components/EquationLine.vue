@@ -54,12 +54,12 @@
 
     // structure of the operations line
     enum MODES {
-        NONE,
-        REPLACEMENT,
-        STRUCTURAL_VARIABLE_DEFINITION,
-        SHOW_LATEX,
-        SHOW_STRUCTURE,
-        SHOW_STRUCTURE_WITH_UUIDS,
+        NONE = "none",
+        REPLACEMENT = "replacement",
+        VARIABLE_DEFINITION = "var_def",
+        SHOW_LATEX = "show_latex",
+        SHOW_STRUCTURE = "show_structure",
+        SHOW_STRUCTURE_WITH_UUIDS = "show_uuids",
     }
     const mode = ref(MODES.NONE);
 
@@ -123,7 +123,7 @@
     };
     const variableDefinitionButtonAction = () => {
         resetControlPanel();
-        mode.value = MODES.STRUCTURAL_VARIABLE_DEFINITION;
+        mode.value = MODES.VARIABLE_DEFINITION;
         variableDefinitionWithCallback();
     };
     const variableDefinitionName = ref("");
@@ -354,7 +354,7 @@
             :uuid="operatorParserUUID"
         />
         <PermanenceInterfacingInput
-            v-show="mode == MODES.STRUCTURAL_VARIABLE_DEFINITION"
+            v-show="mode == MODES.VARIABLE_DEFINITION"
             v-model="variableDefinitionName"
             style="margin-top: 0.5em; width: 100%"
             :type="'input'"
