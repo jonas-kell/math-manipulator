@@ -68,13 +68,17 @@
         outputOperator.value = null;
         mode.value = MODES.NONE;
     }
-    watch(props, () => {
-        resetControlPanel();
-        selectionUUID.value = "";
-        selectedOperatorsParentOperator.value = null;
-        selectedOperator.value = null;
-        replaceWithOperator.value = null;
-    });
+    watch(
+        props,
+        () => {
+            resetControlPanel();
+            selectionUUID.value = "";
+            selectedOperatorsParentOperator.value = null;
+            selectedOperator.value = null;
+            replaceWithOperator.value = null;
+        },
+        { deep: true }
+    );
 
     // modification triggers to the current line
     const selectParentAction = () => {
@@ -269,6 +273,7 @@
     );
     onMounted(() => {
         const loaded = permanenceStore.getLineForUUID(props.lineUuid);
+        resetControlPanel();
 
         if (loaded != null) {
             childLineUUID.value = loaded.childUUID;
