@@ -1,5 +1,11 @@
 import { defineStore } from "pinia";
-import { Operator, wordsParserConsidersReserved, PersistentVariablesStoreStorage, usePermanenceStore } from "./../exporter";
+import {
+    Operator,
+    wordsParserConsidersReserved,
+    PersistentVariablesStoreStorage,
+    usePermanenceStore,
+    PersistentVariable,
+} from "./../exporter";
 import { v4 as uuidv4 } from "uuid";
 
 interface StoreType {
@@ -112,22 +118,33 @@ export const useVariablesStore = defineStore("variables", {
             }
         },
         setUUIDForPersistence(uuid: string) {
-            // delete all variables
-            this.availableVariables.forEach((varName) => {
-                this.removeVariableFromStore(varName);
-            });
+            // delete all variables, while not using the access functions that remove the stored values
+            this.values = {};
 
-            // set new uuid
-            this.storeUUIDForPersistence = uuid;
+            // disable overwriting of things in the storage
+            this.storeUUIDForPersistence = null;
 
-            // re-import
-            const reimport = usePermanenceStore().getVariablesStoreForUUID(this.storeUUIDForPersistence);
+            // call all the constructors once and store results, to make sure that calling a variable constructor while creating another variable doesn't cause empty variable initialization later
+            const buffer = {} as { [key: string]: PersistentVariable };
+            const reimport = usePermanenceStore().getVariablesStoreForUUID(uuid);
             if (reimport && reimport != null) {
                 for (const key in reimport.variables) {
                     const reimportedVariable = reimport.variables[key];
-                    this.values[key] = reimportedVariable;
+                    buffer[key] = reimportedVariable;
                 }
             }
+
+            // clear the locally stored variables again, as they may contained faulty half-initialization, depending on
+            this.values = {};
+
+            // overwrite locally stored values
+            for (const key in buffer) {
+                const storage = buffer[key];
+                this.values[key] = storage;
+            }
+
+            // set the correct import target uuid
+            this.storeUUIDForPersistence = uuid;
         },
         storeValues() {
             if (this.storeUUIDForPersistence != null) {

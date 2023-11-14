@@ -24,7 +24,7 @@ export interface PersistentInputStorage {
     textValue: string;
 }
 
-interface PersistentVariable {
+export interface PersistentVariable {
     op: Operator | null;
     created: number;
     uuid: string;

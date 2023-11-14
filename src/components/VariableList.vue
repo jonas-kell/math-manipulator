@@ -60,6 +60,7 @@
         });
         return res;
     });
+    const skipEffect = ref(false);
 </script>
 
 <template>
@@ -75,7 +76,14 @@
                     </td>
                     <td>
                         <InputToOperatorParser
-                            @parsed="(a: Operator | null) => setOperator(draw.name, a)"
+                            @parsed="(a: Operator | null) => {
+                                if (skipEffect) {
+                                    skipEffect = false;
+                                } else {
+                                    setOperator(draw.name, a)
+                                }
+                            }"
+                            @loading-value="() => (skipEffect = true)"
                             :textarea="false"
                             :key="draw.parserUUID"
                             :uuid="draw.parserUUID"
