@@ -9,5 +9,5 @@ export default defineConfig({
         port: 3000,
         strictPort: true,
     },
-    base: "/math-manipulator",
+    base: process.env.VITE_BASE ?? "/math-manipulator",
 });
