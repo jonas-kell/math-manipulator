@@ -6,7 +6,10 @@ export function vscodeApiInstance(): ApiInstance | null {
     if (instance != null) {
         return instance;
     }
-    const vscode = (window as any).acquireVsCodeApi;
+    let vscode = undefined;
+    if ((process.env.VITE_PERMANENCE ?? "session") == "vscode") {
+        vscode = (window as any).acquireVsCodeApi;
+    }
     if (vscode != undefined) {
         const res = vscode();
         if (res != null && res != undefined) {
@@ -23,14 +26,16 @@ export function registerUpdateHandler(handler: () => void) {
     updateHandler = handler;
 }
 
-window.addEventListener("message", (event) => {
-    const message = event.data; // The json data that the extension sent
-    switch (message.type) {
-        case "update":
-            vscodeApiInstance()?.setState(message.content);
-            updateHandler(); // inform registered handler about changes
-            break;
-        default:
-            throw Error(`Handling for Message of type ${message.type} is not implemented.`);
-    }
-});
+if ((process.env.VITE_PERMANENCE ?? "session") == "vscode") {
+    window.addEventListener("message", (event) => {
+        const message = event.data; // The json data that the extension sent
+        switch (message.type) {
+            case "update":
+                vscodeApiInstance()?.setState(message.content);
+                updateHandler(); // inform registered handler about changes
+                break;
+            default:
+                throw Error(`Handling for Message of type ${message.type} is not implemented.`);
+        }
+    });
+}

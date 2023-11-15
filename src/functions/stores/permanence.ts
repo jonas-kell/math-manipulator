@@ -185,7 +185,7 @@ enum Modes {
 }
 
 function abstractStoreImplementationSet(uuid: string, content: string) {
-    const mode = Modes[(import.meta.env.VITE_PERMANENCE ?? "session") as Modes];
+    const mode = Modes[(process.env.VITE_PERMANENCE ?? "session") as Modes];
     switch (mode) {
         case Modes.session:
             sessionStorage.setItem(uuid, content);
@@ -200,7 +200,7 @@ function abstractStoreImplementationSet(uuid: string, content: string) {
 }
 
 function abstractStoreImplementationGet(uuid: string): string | null {
-    const mode = Modes[(import.meta.env.VITE_PERMANENCE ?? "session") as Modes];
+    const mode = Modes[(process.env.VITE_PERMANENCE ?? "session") as Modes];
     switch (mode) {
         case Modes.session:
             return sessionStorage.getItem(uuid);
