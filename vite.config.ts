@@ -10,4 +10,13 @@ export default defineConfig({
         strictPort: true,
     },
     base: process.env.VITE_BASE ?? "/math-manipulator",
+    build: {
+        manifest: true,
+        rollupOptions: {
+            // disable code splitting to allow for the import of single js files in VS-Code Extension ( //TODO maybe improve/make dependent)
+            output: {
+                manualChunks: {},
+            },
+        },
+    },
 });
