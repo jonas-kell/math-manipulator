@@ -109,12 +109,8 @@
 
 <style scoped>
     .delete-button {
-        background-color: #f2f2f2;
-        border: 1px solid #ccc;
         color: red;
         font-size: 0.8em;
-        border-radius: 10%;
-        box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
     }
 </style>
 <style>

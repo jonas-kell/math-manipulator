@@ -15,3 +15,18 @@
 .render-katex-custom span.border {
     border: blue 1px solid;
 }
+
+button {
+    border: 1px solid;
+    border-radius: 3px;
+}
+
+input {
+    border: 1px solid;
+    border-radius: 1px;
+}
+
+textarea {
+    border: 1px solid;
+    border-radius: 1px;
+}
