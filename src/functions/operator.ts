@@ -484,6 +484,11 @@ export abstract class Operator {
             op = op.EliminateCancelingTermsMODIFICATION();
         }
 
+        // combine unnecessary ComplexOperatorConstructs
+        if (op instanceof BracketedSum) {
+            op = op.CombineComplexNumbersMODIFICATION();
+        }
+
         return op;
     }
 }

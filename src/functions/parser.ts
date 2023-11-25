@@ -86,6 +86,7 @@ const AllowedFunctionKeywordMapping = {
     sin: OperatorType.Sin,
     cos: OperatorType.Cos,
     delta: OperatorType.KroneckerDelta,
+    complex: OperatorType.ComplexOperatorConstruct,
 } as { [key: string]: OperatorType };
 const AllowedFunctionKeywords = Object.keys(AllowedFunctionKeywordMapping);
 const functionsWithArgumentsConsideredStructural = [

@@ -12,8 +12,8 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             return new Fraction(childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.Numerical:
             return new Numerical(Number(value));
-        case OperatorType.ComplexNumerical:
-            return new ComplexNumerical(childrenReconstructed[0], childrenReconstructed[1]);
+        case OperatorType.ComplexOperatorConstruct:
+            return new ComplexOperatorConstruct(childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.Variable:
             return new Variable(value);
         case OperatorType.BigInt:
@@ -184,7 +184,7 @@ function implementsOrderableOperator(object: any): object is OrderableOperator &
 function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOperator & Operator): number {
     const orderClasses = [
         Numerical,
-        ComplexNumerical,
+        ComplexOperatorConstruct,
         Constant,
         Variable,
         FermionicAnnihilationOperator,
@@ -263,9 +263,9 @@ export class Numerical extends Operator implements MinusPulloutManagement, Order
     }
 }
 
-export class ComplexNumerical extends Operator implements MinusPulloutManagement, OrderableOperator {
+export class ComplexOperatorConstruct extends Operator implements MinusPulloutManagement, OrderableOperator {
     constructor(realPart: Operator, complexPart: Operator) {
-        super(OperatorType.ComplexNumerical, "", "", "", [realPart, complexPart], "");
+        super(OperatorType.ComplexOperatorConstruct, "", "", "", [realPart, complexPart], "");
     }
 
     public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
@@ -280,11 +280,24 @@ export class ComplexNumerical extends Operator implements MinusPulloutManagement
         return null;
     }
 
+    public getRealChild() {
+        return this._children[0];
+    }
+
+    public getImaginaryChild() {
+        return this._children[1];
+    }
+
     minusCanBePulledOut(): [boolean, Operator] {
         // must be BracketedSum and not the constructContainerOrFirstChild, because we need access to BracketedSum-specific behavior
         const helperSum = new BracketedSum([this._children[0], this._children[1]]);
 
-        return helperSum.minusCanBePulledOut();
+        const temp = helperSum.minusCanBePulledOut();
+        const boolRes = temp[0];
+        // We are sure, this stays a BracketedSum, so this is fine even though it uses constructContainerOrFirstChild
+        const newChildren = (temp[1] as BracketedSum).getChildren();
+
+        return [boolRes, new ComplexOperatorConstruct(newChildren[0], newChildren[1])];
     }
 
     PullOutMinusMODIFICATION(): Operator {
@@ -305,24 +318,45 @@ export class ComplexNumerical extends Operator implements MinusPulloutManagement
         return [[false, [commuteWith, this]]];
     }
 
-    protected innerFormulaString(renderChildrenHtmlIds: boolean, renderImpliedSymbols: boolean) {
-        const realChild = this._children[0];
-        const imaginaryChild = this._children[1];
-
+    public hasRealPart(): boolean {
         const res = this.childrenNumericalValues(false);
         const realChildValue = res[1][0];
+
+        const realChild = this.getRealChild();
+        return !(realChild instanceof Numerical && realChildValue != null && isBasicallyZero(realChildValue));
+    }
+
+    public hasImaginaryPart(): boolean {
+        const res = this.childrenNumericalValues(false);
         const complexChildValue = res[1][1];
+
+        const imaginaryChild = this.getImaginaryChild();
+        return !(imaginaryChild instanceof Numerical && complexChildValue != null && isBasicallyZero(complexChildValue));
+    }
+
+    public imaginaryPartIsOne(): boolean {
+        const res = this.childrenNumericalValues(false);
+        const complexChildValue = res[1][1];
+
+        const imaginaryChild = this.getImaginaryChild();
+        return imaginaryChild instanceof Numerical && complexChildValue != null && isBasicallyOne(complexChildValue);
+    }
+
+    protected innerFormulaString(renderChildrenHtmlIds: boolean, renderImpliedSymbols: boolean) {
+        const realChild = this.getRealChild();
+        const imaginaryChild = this.getImaginaryChild();
 
         let formula = "";
 
-        const doNotRenderReal = realChild instanceof Numerical && realChildValue != null && isBasicallyZero(realChildValue);
-        const renderReal = !doNotRenderReal;
-        const doNotRenderImaginary =
-            imaginaryChild instanceof Numerical && complexChildValue != null && isBasicallyZero(complexChildValue);
-        const renderImaginary = !doNotRenderImaginary;
-        const imaginaryPartIsOne =
-            imaginaryChild instanceof Numerical && complexChildValue != null && isBasicallyOne(complexChildValue);
+        const renderReal = this.hasRealPart();
+        const doNotRenderReal = !renderReal;
+        const renderImaginary = this.hasImaginaryPart();
+        const doNotRenderImaginary = !renderImaginary;
+        const imaginaryPartIsOne = this.imaginaryPartIsOne();
+
         const needsPlusAndBrackets = renderReal && renderImaginary;
+
+        // TODO Negations and negative Numerical render ugly: "complex(2 -3)"
 
         if (needsPlusAndBrackets) {
             formula += "\\left(";
@@ -353,13 +387,17 @@ export class ComplexNumerical extends Operator implements MinusPulloutManagement
             formula += "\\right)";
         }
 
+        if (doNotRenderReal && doNotRenderImaginary) {
+            formula += "0";
+        }
+
         return formula;
     }
 }
 
-export class ComplexIConstant extends ComplexNumerical {
+export class ComplexIConstant extends ComplexOperatorConstruct {
     constructor() {
-        // the constant directly generates to superclass. Only for convenient parsing
+        // the constant directly generates to superclass. Only for convenient parsing and usage
         super(new Numerical(0), new Numerical(1));
     }
 }
@@ -510,6 +548,35 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
         }
 
         return constructContainerOrFirstChild(OperatorType.BracketedSum, newChildren);
+    }
+
+    CombineComplexNumbersMODIFICATION(): Operator {
+        let realParts = [] as Operator[];
+        let complexParts = [] as Operator[];
+
+        let encounteredComplex = false;
+        this.getChildren().forEach((child) => {
+            if (child instanceof ComplexOperatorConstruct) {
+                encounteredComplex = true;
+                if (child.hasRealPart()) {
+                    realParts.push(child.getRealChild());
+                }
+                if (child.hasImaginaryPart()) {
+                    complexParts.push(child.getImaginaryChild());
+                }
+            } else {
+                realParts.push(child);
+            }
+        });
+
+        if (encounteredComplex) {
+            return new ComplexOperatorConstruct(
+                constructContainerOrFirstChild(OperatorType.BracketedSum, realParts).getCopyWithNumbersFolded(true),
+                constructContainerOrFirstChild(OperatorType.BracketedSum, complexParts).getCopyWithNumbersFolded(true)
+            );
+        }
+
+        return this;
     }
 
     protected midDisplayFormulaIsImplied(_firstChild: Operator, secondChild: Operator): boolean {

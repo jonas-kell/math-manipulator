@@ -2,7 +2,7 @@ export enum OperatorType {
     Fraction = "fraction",
     BracketedSum = "bracketed_sum",
     Numerical = "number",
-    ComplexNumerical = "complex_numerical",
+    ComplexOperatorConstruct = "complex_operator_construct",
     Variable = "variable",
     BigSum = "big_sum",
     BigInt = "big_int",
@@ -41,7 +41,7 @@ export enum OperatorType {
 const MAX_CHILDREN = 99999999;
 export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Numerical]: 0,
-    [OperatorType.ComplexNumerical]: 2,
+    [OperatorType.ComplexOperatorConstruct]: 2,
     [OperatorType.BracketedSum]: MAX_CHILDREN,
     [OperatorType.BracketedMultiplication]: MAX_CHILDREN,
     [OperatorType.Fraction]: 2,
@@ -81,7 +81,7 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Numerical]: 0,
-    [OperatorType.ComplexNumerical]: 2,
+    [OperatorType.ComplexOperatorConstruct]: 2,
     [OperatorType.BracketedSum]: 1, // on parsing from export, sums with only one element will remove themselves
     [OperatorType.BracketedMultiplication]: 1, // on parsing from export, products with only one element will remove themselves
     [OperatorType.Fraction]: 2,
