@@ -94,8 +94,10 @@ const functionsWithArgumentsConsideredStructural = [
     OperatorType.Ket,
 ] as OperatorType[];
 const AllowedConstantKeywordMapping = {
-    pi: OperatorType.Pi,
+    pi: OperatorType.PiConstant,
     inf: OperatorType.InfinityConstant,
+    e: OperatorType.EConstant,
+    sqrt2: OperatorType.Sqrt2Constant,
     psi: OperatorType.Psi,
     phi: OperatorType.Phi,
 } as { [key: string]: OperatorType };

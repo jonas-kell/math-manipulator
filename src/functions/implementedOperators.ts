@@ -25,8 +25,12 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             return new RawLatex(value);
         case OperatorType.Negation:
             return new Negation(childrenReconstructed[0]);
-        case OperatorType.Pi:
-            return new Pi();
+        case OperatorType.PiConstant:
+            return new PiConstant();
+        case OperatorType.EConstant:
+            return new EConstant();
+        case OperatorType.Sqrt2Constant:
+            return new Sqrt2Constant();
         case OperatorType.Phi:
             return new Phi();
         case OperatorType.Psi:
@@ -966,13 +970,33 @@ abstract class Constant extends Operator implements OrderableOperator {
     }
 }
 
-export class Pi extends Constant {
+export class PiConstant extends Constant {
     constructor() {
-        super(OperatorType.Pi, "\\pi");
+        super(OperatorType.PiConstant, "\\pi");
     }
 
     public getConstantValue(): number {
         return Math.PI;
+    }
+}
+
+export class EConstant extends Constant {
+    constructor() {
+        super(OperatorType.EConstant, "e");
+    }
+
+    public getConstantValue(): number {
+        return Math.E;
+    }
+}
+
+export class Sqrt2Constant extends Constant {
+    constructor() {
+        super(OperatorType.Sqrt2Constant, "\\sqrt{2}");
+    }
+
+    public getConstantValue(): number {
+        return Math.sqrt(2);
     }
 }
 
