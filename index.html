@@ -6,7 +6,14 @@
         <title>Math Manipulator</title>
     </head>
     <body>
-        <div id="app"></div>
+        <!-- <script>
+            // With injections here, we can control variables that are handed into Vue in /src/main.ts
+            // This is supposed to be used in extensions that integrate the whole project, like the
+            window.mainMode = "help";
+        </script> -->
+        <div id="app">
+            <router-view></router-view>
+        </div>
         <script type="module" src="/src/main.ts"></script>
     </body>
 </html>
