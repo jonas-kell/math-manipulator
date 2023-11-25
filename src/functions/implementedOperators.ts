@@ -12,6 +12,8 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             return new Fraction(childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.Numerical:
             return new Numerical(Number(value));
+        case OperatorType.ComplexNumerical:
+            return new ComplexNumerical(childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.Variable:
             return new Variable(value);
         case OperatorType.BigInt:
@@ -31,6 +33,8 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             return new EConstant();
         case OperatorType.Sqrt2Constant:
             return new Sqrt2Constant();
+        case OperatorType.ComplexIConstant:
+            return new ComplexIConstant();
         case OperatorType.Phi:
             return new Phi();
         case OperatorType.Psi:
@@ -180,6 +184,7 @@ function implementsOrderableOperator(object: any): object is OrderableOperator &
 function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOperator & Operator): number {
     const orderClasses = [
         Numerical,
+        ComplexNumerical,
         Constant,
         Variable,
         FermionicAnnihilationOperator,
@@ -219,7 +224,7 @@ export class Numerical extends Operator implements MinusPulloutManagement, Order
         super(OperatorType.Numerical, "", "", "", [], String(parseFloat(value.toFixed(4))));
     }
 
-    public getNumericalValue(_onlyReturnNumberIfMakesTermSimpler: boolean = false): number | null {
+    public getNumericalValue(_onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
         return Number(this._value);
     }
 
@@ -250,6 +255,113 @@ export class Numerical extends Operator implements MinusPulloutManagement, Order
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
     }
+
+    protected innerFormulaString(_renderChildrenHtmlIds: boolean, _renderImpliedSymbols: boolean) {
+        // Bugfix: still render Infinity as \infty, even after it has been converted to Infinity by foldNumbers
+        // Only visual, the _value must stay to allow calculations to be working properly
+        return this._value.replace("Infinity", "\\infty");
+    }
+}
+
+export class ComplexNumerical extends Operator implements MinusPulloutManagement, OrderableOperator {
+    constructor(realPart: Operator, complexPart: Operator) {
+        super(OperatorType.ComplexNumerical, "", "", "", [realPart, complexPart], "");
+    }
+
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
+        const realChildValue = res[1][0];
+        const complexChildValue = res[1][1];
+
+        if (complexChildValue != null && isBasicallyZero(complexChildValue)) {
+            return realChildValue;
+        }
+
+        return null;
+    }
+
+    minusCanBePulledOut(): [boolean, Operator] {
+        // must be BracketedSum and not the constructContainerOrFirstChild, because we need access to BracketedSum-specific behavior
+        const helperSum = new BracketedSum([this._children[0], this._children[1]]);
+
+        return helperSum.minusCanBePulledOut();
+    }
+
+    PullOutMinusMODIFICATION(): Operator {
+        const [evenNumberMinusPulledOut, resultingOperator] = this.minusCanBePulledOut();
+
+        if (evenNumberMinusPulledOut) {
+            return resultingOperator;
+        }
+
+        return new Negation(resultingOperator);
+    }
+
+    orderPriorityString() {
+        return this._children[0].getSerializedStructure(false) + this._children[1].getSerializedStructure(false);
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
+        return [[false, [commuteWith, this]]];
+    }
+
+    protected innerFormulaString(renderChildrenHtmlIds: boolean, renderImpliedSymbols: boolean) {
+        const realChild = this._children[0];
+        const imaginaryChild = this._children[1];
+
+        const res = this.childrenNumericalValues(false);
+        const realChildValue = res[1][0];
+        const complexChildValue = res[1][1];
+
+        let formula = "";
+
+        const doNotRenderReal = realChild instanceof Numerical && realChildValue != null && isBasicallyZero(realChildValue);
+        const renderReal = !doNotRenderReal;
+        const doNotRenderImaginary =
+            imaginaryChild instanceof Numerical && complexChildValue != null && isBasicallyZero(complexChildValue);
+        const renderImaginary = !doNotRenderImaginary;
+        const imaginaryPartIsOne =
+            imaginaryChild instanceof Numerical && complexChildValue != null && isBasicallyOne(complexChildValue);
+        const needsPlusAndBrackets = renderReal && renderImaginary;
+
+        if (needsPlusAndBrackets) {
+            formula += "\\left(";
+        }
+
+        if (renderReal) {
+            formula += realChild.assembleFormulaString(renderChildrenHtmlIds, renderImpliedSymbols);
+        }
+
+        if (needsPlusAndBrackets) {
+            formula += "+";
+        }
+
+        if (renderImaginary) {
+            const imaginaryChildFormula = imaginaryChild.assembleFormulaString(renderChildrenHtmlIds, renderImpliedSymbols);
+            if (imaginaryChild instanceof Numerical) {
+                if (!imaginaryPartIsOne) {
+                    formula += imaginaryChildFormula;
+                }
+                formula += "i";
+            } else {
+                formula += "i\\cdot ";
+                formula += imaginaryChildFormula;
+            }
+        }
+
+        if (needsPlusAndBrackets) {
+            formula += "\\right)";
+        }
+
+        return formula;
+    }
+}
+
+export class ComplexIConstant extends ComplexNumerical {
+    constructor() {
+        // the constant directly generates to superclass. Only for convenient parsing
+        super(new Numerical(0), new Numerical(1));
+    }
 }
 
 export class BracketedSum extends Operator implements MinusPulloutManagement {
@@ -270,7 +382,7 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
     }
 
     // special implementation to allow for partial folding
-    getCopyWithNumbersFolded(onlyFoldIfMakesTermSimpler: boolean = false): Operator {
+    getCopyWithNumbersFolded(onlyFoldIfMakesTermSimpler: boolean): Operator {
         const res = this.childrenNumericalValues(onlyFoldIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -399,6 +511,15 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
 
         return constructContainerOrFirstChild(OperatorType.BracketedSum, newChildren);
     }
+
+    protected midDisplayFormulaIsImplied(_firstChild: Operator, secondChild: Operator): boolean {
+        // 4 + -(1) ==> 4-1
+        if (secondChild instanceof Negation) {
+            return true;
+        }
+
+        return false;
+    }
 }
 
 export class BracketedMultiplication extends Operator implements MinusPulloutManagement {
@@ -431,7 +552,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
     }
 
     // special implementation to allow for partial folding
-    getCopyWithNumbersFolded(onlyFoldIfMakesTermSimpler: boolean = false): Operator {
+    getCopyWithNumbersFolded(onlyFoldIfMakesTermSimpler: boolean): Operator {
         const res = this.childrenNumericalValues(onlyFoldIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
@@ -604,6 +725,40 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         }
 
         return constructContainerOrFirstChild(OperatorType.BracketedMultiplication, newChildren);
+    }
+
+    protected midDisplayFormulaIsImplied(firstChild: Operator, secondChild: Operator): boolean {
+        // between fermionic/bosonic operators
+        if (
+            firstChild instanceof BosonicCreationOperator ||
+            firstChild instanceof BosonicAnnihilationOperator ||
+            firstChild instanceof FermionicCreationOperator ||
+            firstChild instanceof FermionicAnnihilationOperator
+        ) {
+            if (
+                secondChild instanceof BosonicCreationOperator ||
+                secondChild instanceof BosonicAnnihilationOperator ||
+                secondChild instanceof FermionicCreationOperator ||
+                secondChild instanceof FermionicAnnihilationOperator
+            ) {
+                return true;
+            }
+        }
+        // next to bra/ket
+        if (
+            firstChild instanceof Bra ||
+            firstChild instanceof Ket ||
+            firstChild instanceof Braket ||
+            firstChild instanceof Bracket ||
+            secondChild instanceof Bra ||
+            secondChild instanceof Ket ||
+            secondChild instanceof Braket ||
+            secondChild instanceof Bracket
+        ) {
+            return true;
+        }
+
+        return false;
     }
 }
 

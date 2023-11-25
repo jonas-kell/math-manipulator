@@ -14,14 +14,6 @@ import {
     Variable,
 } from "./exporter";
 
-const FERMIONIC_BOSONIC_OPERATORS = [
-    OperatorType.BosonicAnnihilationOperator,
-    OperatorType.FermionicAnnihilationOperator,
-    OperatorType.BosonicCreationOperator,
-    OperatorType.FermionicCreationOperator,
-];
-const BRA_C_KET_OPERATORS = [OperatorType.Bra, OperatorType.Ket, OperatorType.Braket, OperatorType.Bracket];
-
 export interface ExportOperatorContent {
     type: OperatorType;
     children: ExportOperatorContent[];
@@ -103,47 +95,47 @@ export abstract class Operator {
         this._uuid = uuid;
     }
 
-    private assembleFormulaString(renderHtmlIds: boolean, renderImpliedSymbols: boolean) {
+    /**
+     * THIS SHOULD ONLY BE CALLED FOR OPERATOR IMPLEMENTATIONS
+     *
+     * Use getExportFormulaString or getFormulaString instead of using this directly
+     *
+     * @param renderHtmlIds
+     * @param renderImpliedSymbols
+     */
+    public assembleFormulaString(renderHtmlIds: boolean, renderImpliedSymbols: boolean) {
         let formula = "";
 
         if (renderHtmlIds) {
             formula += `\\htmlId{${this.getUUIDRef()}}{`;
         }
 
-        let value = this._value;
-        if (this._type == OperatorType.Numerical) {
-            // Bugfix: still render Infinity as \infty, even after it has been converted to Infinity by foldNumbers
-            // Only visual, the _value must stay to allow calculations to be working properly
-            value = value.replace("Infinity", "\\infty");
+        formula += this.innerFormulaString(renderHtmlIds, renderImpliedSymbols);
+
+        if (renderHtmlIds) {
+            formula += "}"; //closing the second htmlID bracket
         }
+
+        return formula;
+    }
+
+    protected innerFormulaString(renderChildrenHtmlIds: boolean, renderImpliedSymbols: boolean) {
+        let formula = "";
+
+        let value = this._value;
 
         let anyMiddleDisplayRendered = false;
         let middleFormula = "";
         if (this._renderChildren) {
             this._children.forEach((child, index) => {
-                middleFormula += child.assembleFormulaString(renderHtmlIds, renderImpliedSymbols);
+                middleFormula += child.assembleFormulaString(renderChildrenHtmlIds, renderImpliedSymbols);
 
                 // Special Cases: skipping middle display stuff
                 if (!renderImpliedSymbols) {
                     const nextChild = this._children[index + 1];
                     if (nextChild && nextChild != undefined) {
-                        // 4 + -(1) ==> 4-1
-                        if (this._type == OperatorType.BracketedSum && nextChild._type == OperatorType.Negation) {
+                        if (this.midDisplayFormulaIsImplied(child, nextChild)) {
                             return;
-                        }
-                        // Hide multiplication
-                        if (this._type == OperatorType.BracketedMultiplication) {
-                            // between fermionic/bosonic operators
-                            if (
-                                FERMIONIC_BOSONIC_OPERATORS.includes(child._type) &&
-                                FERMIONIC_BOSONIC_OPERATORS.includes(nextChild._type)
-                            ) {
-                                return;
-                            }
-                            // next to bra/ket
-                            if (BRA_C_KET_OPERATORS.includes(child._type) || BRA_C_KET_OPERATORS.includes(nextChild._type)) {
-                                return;
-                            }
                         }
                     }
                 }
@@ -182,11 +174,11 @@ export abstract class Operator {
             formula += this._endDisplayFormula;
         }
 
-        if (renderHtmlIds) {
-            formula += "}"; //closing the second htmlID bracket
-        }
-
         return formula;
+    }
+
+    protected midDisplayFormulaIsImplied(_firstChild: Operator, _secondChild: Operator): boolean {
+        return false;
     }
 
     getFormulaString(renderImpliedSymbols: boolean = false) {

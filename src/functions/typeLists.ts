@@ -2,6 +2,7 @@ export enum OperatorType {
     Fraction = "fraction",
     BracketedSum = "bracketed_sum",
     Numerical = "number",
+    ComplexNumerical = "complex_numerical",
     Variable = "variable",
     BigSum = "big_sum",
     BigInt = "big_int",
@@ -11,6 +12,7 @@ export enum OperatorType {
     PiConstant = "constant_pi",
     EConstant = "constant_e",
     Sqrt2Constant = "constant_sqrt2",
+    ComplexIConstant = "constant_complex_i",
     InfinityConstant = "infinity",
     Psi = "constant_psi",
     Phi = "constant_phi",
@@ -39,6 +41,7 @@ export enum OperatorType {
 const MAX_CHILDREN = 99999999;
 export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Numerical]: 0,
+    [OperatorType.ComplexNumerical]: 2,
     [OperatorType.BracketedSum]: MAX_CHILDREN,
     [OperatorType.BracketedMultiplication]: MAX_CHILDREN,
     [OperatorType.Fraction]: 2,
@@ -51,6 +54,7 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.EConstant]: 0,
     [OperatorType.Sqrt2Constant]: 0,
     [OperatorType.InfinityConstant]: 0,
+    [OperatorType.ComplexIConstant]: 0,
     [OperatorType.Exp]: 1,
     [OperatorType.Power]: 2,
     [OperatorType.Psi]: 0,
@@ -77,6 +81,7 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Numerical]: 0,
+    [OperatorType.ComplexNumerical]: 2,
     [OperatorType.BracketedSum]: 1, // on parsing from export, sums with only one element will remove themselves
     [OperatorType.BracketedMultiplication]: 1, // on parsing from export, products with only one element will remove themselves
     [OperatorType.Fraction]: 2,
@@ -89,6 +94,7 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.EConstant]: 0,
     [OperatorType.Sqrt2Constant]: 0,
     [OperatorType.InfinityConstant]: 0,
+    [OperatorType.ComplexIConstant]: 0,
     [OperatorType.Exp]: 1,
     [OperatorType.Power]: 2,
     [OperatorType.Psi]: 0,

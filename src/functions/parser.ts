@@ -97,6 +97,7 @@ const AllowedConstantKeywordMapping = {
     pi: OperatorType.PiConstant,
     inf: OperatorType.InfinityConstant,
     e: OperatorType.EConstant,
+    i: OperatorType.ComplexIConstant,
     sqrt2: OperatorType.Sqrt2Constant,
     psi: OperatorType.Psi,
     phi: OperatorType.Phi,
