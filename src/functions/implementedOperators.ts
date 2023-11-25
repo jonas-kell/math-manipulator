@@ -274,12 +274,11 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
         const partialSum = childrenValues
             .filter((elem) => elem != null)
             .reduce((acc, current) => (acc as number) + (current as number), 0) as number;
-        const basicallyZero = partialSum < 1e-6 && partialSum > -1e-6;
 
         if (allNotNull) {
             return super.getCopyWithNumbersFolded();
         } else {
-            if (basicallyZero) {
+            if (isBasicallyZero(partialSum)) {
                 return super.numberFoldingInternalImplementation(true, null);
             } else {
                 return super.numberFoldingInternalImplementation(true, partialSum);
@@ -414,8 +413,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
             const value = childrenValues[i];
 
             if (value != null) {
-                const basicallyZero = value < 1e-6 && value > -1e-6;
-                if (basicallyZero) {
+                if (isBasicallyZero(value)) {
                     return 0;
                 }
             }
@@ -437,12 +435,11 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         const partialProduct = childrenValues
             .filter((elem) => elem != null)
             .reduce((acc, current) => (acc as number) * (current as number), 1) as number;
-        const basicallyOne = partialProduct - 1 < 1e-6 && partialProduct - 1 > -1e-6;
 
         if (allNotNull) {
             return super.getCopyWithNumbersFolded();
         } else {
-            if (basicallyOne) {
+            if (isBasicallyOne(partialProduct)) {
                 return super.numberFoldingInternalImplementation(true, null);
             } else {
                 return super.numberFoldingInternalImplementation(true, partialProduct);
@@ -1312,4 +1309,14 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
     }
+}
+
+function isBasicallyZero(num: number): boolean {
+    const basicallyZero = num < 1e-6 && num > -1e-6;
+    return basicallyZero;
+}
+
+function isBasicallyOne(num: number): boolean {
+    const basicallyOne = num - 1 < 1e-6 && num - 1 > -1e-6;
+    return basicallyOne;
 }
