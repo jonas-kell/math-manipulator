@@ -444,49 +444,10 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
         return this._children;
     }
 
-    /**
-     * Calculate the two cases, where a total minus was pulled out and where it wasn't
-     * @returns [allChildrenPulledOutOddNumber: boolean, newOperatorAfterNotPullingOut: Operator, newOperatorAfterPullingOut: Operator]
-     */
-    pullOutMinusHandler(): [boolean, Operator, Operator] {
-        let allChildrenPulledOutOddNumber = true;
-        let newChildrenNotPullingOut = [] as Operator[];
-        let newChildrenPullingOut = [] as Operator[];
-
-        this._children.forEach((child) => {
-            if (implementsMinusPulloutManagement(child)) {
-                const [childEvenNumberMinusPulledOut, childResultingOperator] = child.minusCanBePulledOut();
-
-                if (childEvenNumberMinusPulledOut) {
-                    allChildrenPulledOutOddNumber = false;
-                }
-
-                if (childEvenNumberMinusPulledOut) {
-                    newChildrenNotPullingOut.push(childResultingOperator);
-                    newChildrenPullingOut.push(new Negation(childResultingOperator));
-                } else {
-                    newChildrenNotPullingOut.push(new Negation(childResultingOperator));
-                    newChildrenPullingOut.push(childResultingOperator);
-                }
-            } else {
-                allChildrenPulledOutOddNumber = false;
-
-                newChildrenNotPullingOut.push(child);
-                newChildrenPullingOut.push(new Negation(child));
-            }
-        });
-
-        return [
-            allChildrenPulledOutOddNumber,
-            constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenNotPullingOut),
-            constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenPullingOut),
-        ];
-    }
-
     // TODO this could also deal with the special case, that it may be interesting to rearrange elements in the sum (2-3) -> -(3-2)
     minusCanBePulledOut(): [boolean, Operator] {
         const [allChildrenPulledOutOddNumber, newOperatorAfterNotPullingOut, newOperatorAfterPullingOut] =
-            this.pullOutMinusHandler();
+            sumLikePullOutMinusHandler(this.getChildren());
 
         if (allChildrenPulledOutOddNumber) {
             return [false, newOperatorAfterPullingOut];
@@ -496,7 +457,7 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
 
     PullOutMinusMODIFICATION(): Operator {
         const [_allChildrenPulledOutOddNumber, _newOperatorAfterNotPullingOut, newOperatorAfterPullingOut] =
-            this.pullOutMinusHandler();
+            sumLikePullOutMinusHandler(this.getChildren());
 
         return new Negation(newOperatorAfterPullingOut);
     }
@@ -587,6 +548,45 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
 
         return false;
     }
+}
+
+/**
+ * Calculate the two cases, where a total minus was pulled out and where it wasn't
+ * @returns [allChildrenPulledOutOddNumber: boolean, newOperatorAfterNotPullingOut: Operator, newOperatorAfterPullingOut: Operator]
+ */
+function sumLikePullOutMinusHandler(children: Operator[]): [boolean, Operator, Operator] {
+    let allChildrenPulledOutOddNumber = true;
+    let newChildrenNotPullingOut = [] as Operator[];
+    let newChildrenPullingOut = [] as Operator[];
+
+    children.forEach((child) => {
+        if (implementsMinusPulloutManagement(child)) {
+            const [childEvenNumberMinusPulledOut, childResultingOperator] = child.minusCanBePulledOut();
+
+            if (childEvenNumberMinusPulledOut) {
+                allChildrenPulledOutOddNumber = false;
+            }
+
+            if (childEvenNumberMinusPulledOut) {
+                newChildrenNotPullingOut.push(childResultingOperator);
+                newChildrenPullingOut.push(new Negation(childResultingOperator));
+            } else {
+                newChildrenNotPullingOut.push(new Negation(childResultingOperator));
+                newChildrenPullingOut.push(childResultingOperator);
+            }
+        } else {
+            allChildrenPulledOutOddNumber = false;
+
+            newChildrenNotPullingOut.push(child);
+            newChildrenPullingOut.push(new Negation(child));
+        }
+    });
+
+    return [
+        allChildrenPulledOutOddNumber,
+        constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenNotPullingOut),
+        constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenPullingOut),
+    ];
 }
 
 export class BracketedMultiplication extends Operator implements MinusPulloutManagement {
