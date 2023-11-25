@@ -289,25 +289,20 @@ export class ComplexOperatorConstruct extends Operator implements MinusPulloutMa
     }
 
     minusCanBePulledOut(): [boolean, Operator] {
-        // must be BracketedSum and not the constructContainerOrFirstChild, because we need access to BracketedSum-specific behavior
-        const helperSum = new BracketedSum([this._children[0], this._children[1]]);
+        const [allChildrenPulledOutOddNumber, newOperatorAfterNotPullingOut, newOperatorAfterPullingOut] =
+            complexOperatorLikePullOutMinusHandler(this.getRealChild(), this.getImaginaryChild());
 
-        const temp = helperSum.minusCanBePulledOut();
-        const boolRes = temp[0];
-        // We are sure, this stays a BracketedSum, so this is fine even though it uses constructContainerOrFirstChild
-        const newChildren = (temp[1] as BracketedSum).getChildren();
-
-        return [boolRes, new ComplexOperatorConstruct(newChildren[0], newChildren[1])];
+        if (allChildrenPulledOutOddNumber) {
+            return [false, newOperatorAfterPullingOut];
+        }
+        return [true, newOperatorAfterNotPullingOut];
     }
 
     PullOutMinusMODIFICATION(): Operator {
-        const [evenNumberMinusPulledOut, resultingOperator] = this.minusCanBePulledOut();
+        const [_allChildrenPulledOutOddNumber, _newOperatorAfterNotPullingOut, newOperatorAfterPullingOut] =
+            complexOperatorLikePullOutMinusHandler(this.getRealChild(), this.getImaginaryChild());
 
-        if (evenNumberMinusPulledOut) {
-            return resultingOperator;
-        }
-
-        return new Negation(resultingOperator);
+        return new Negation(newOperatorAfterPullingOut);
     }
 
     orderPriorityString() {
@@ -551,42 +546,84 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
 }
 
 /**
- * Calculate the two cases, where a total minus was pulled out and where it wasn't
- * @returns [allChildrenPulledOutOddNumber: boolean, newOperatorAfterNotPullingOut: Operator, newOperatorAfterPullingOut: Operator]
+ * @inheritdoc generalPullOutMinusHandler
  */
 function sumLikePullOutMinusHandler(children: Operator[]): [boolean, Operator, Operator] {
-    let allChildrenPulledOutOddNumber = true;
-    let newChildrenNotPullingOut = [] as Operator[];
-    let newChildrenPullingOut = [] as Operator[];
-
-    children.forEach((child) => {
-        if (implementsMinusPulloutManagement(child)) {
-            const [childEvenNumberMinusPulledOut, childResultingOperator] = child.minusCanBePulledOut();
-
-            if (childEvenNumberMinusPulledOut) {
-                allChildrenPulledOutOddNumber = false;
-            }
-
-            if (childEvenNumberMinusPulledOut) {
-                newChildrenNotPullingOut.push(childResultingOperator);
-                newChildrenPullingOut.push(new Negation(childResultingOperator));
-            } else {
-                newChildrenNotPullingOut.push(new Negation(childResultingOperator));
-                newChildrenPullingOut.push(childResultingOperator);
-            }
-        } else {
-            allChildrenPulledOutOddNumber = false;
-
-            newChildrenNotPullingOut.push(child);
-            newChildrenPullingOut.push(new Negation(child));
-        }
-    });
+    const [allChildrenPulledOutOddNumber, [newChildrenNotPullingOut], [newChildrenPullingOut]] = generalPullOutMinusHandler([
+        children,
+    ]);
 
     return [
         allChildrenPulledOutOddNumber,
         constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenNotPullingOut),
         constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenPullingOut),
     ];
+}
+
+/**
+ * @inheritdoc generalPullOutMinusHandler
+ */
+function complexOperatorLikePullOutMinusHandler(realChild: Operator, imaginaryChild: Operator): [boolean, Operator, Operator] {
+    const [
+        allChildrenPulledOutOddNumber,
+        [newChildrenRealNotPullingOut, newChildrenImaginaryNotPullingOut],
+        [newChildrenRealPullingOut, newChildrenImaginaryPullingOut],
+    ] = generalPullOutMinusHandler([[realChild], [imaginaryChild]]);
+
+    return [
+        allChildrenPulledOutOddNumber,
+        new ComplexOperatorConstruct(
+            constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenRealNotPullingOut),
+            constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenImaginaryNotPullingOut)
+        ),
+        new ComplexOperatorConstruct(
+            constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenRealPullingOut),
+            constructContainerOrFirstChild(OperatorType.BracketedSum, newChildrenImaginaryPullingOut)
+        ),
+    ];
+}
+
+/**
+ * Calculate the two cases, where a total minus was pulled out and where it wasn't
+ * @returns [allChildrenPulledOutOddNumber: boolean, newOperatorAfterNotPullingOut: Operator, newOperatorAfterPullingOut: Operator]
+ */
+function generalPullOutMinusHandler(childrenArrayArray: Operator[][]): [boolean, Operator[][], Operator[][]] {
+    let allChildrenPulledOutOddNumber = true;
+    let newChildrenNotPullingOut = [] as Operator[][];
+    let newChildrenPullingOut = [] as Operator[][];
+
+    childrenArrayArray.forEach((childArray) => {
+        let newChildrenNotPullingOutInner = [] as Operator[];
+        let newChildrenPullingOutInner = [] as Operator[];
+
+        childArray.forEach((child) => {
+            if (implementsMinusPulloutManagement(child)) {
+                const [childEvenNumberMinusPulledOut, childResultingOperator] = child.minusCanBePulledOut();
+
+                if (childEvenNumberMinusPulledOut) {
+                    allChildrenPulledOutOddNumber = false;
+                }
+
+                if (childEvenNumberMinusPulledOut) {
+                    newChildrenNotPullingOutInner.push(childResultingOperator);
+                    newChildrenPullingOutInner.push(new Negation(childResultingOperator));
+                } else {
+                    newChildrenNotPullingOutInner.push(new Negation(childResultingOperator));
+                    newChildrenPullingOutInner.push(childResultingOperator);
+                }
+            } else {
+                allChildrenPulledOutOddNumber = false;
+
+                newChildrenNotPullingOutInner.push(child);
+                newChildrenPullingOutInner.push(new Negation(child));
+            }
+        });
+
+        newChildrenNotPullingOut.push(newChildrenNotPullingOutInner);
+        newChildrenPullingOut.push(newChildrenPullingOutInner);
+    });
+
+    return [allChildrenPulledOutOddNumber, newChildrenNotPullingOut, newChildrenPullingOut];
 }
 
 export class BracketedMultiplication extends Operator implements MinusPulloutManagement {
