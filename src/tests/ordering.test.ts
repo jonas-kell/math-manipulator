@@ -537,7 +537,17 @@ describe("operator module - ordering of operators", () => {
                     children: [
                         {
                             type: "number",
-                            value: "29.6088",
+                            value: "3",
+                            children: [],
+                        },
+                        {
+                            type: "constant_pi",
+                            value: "",
+                            children: [],
+                        },
+                        {
+                            type: "constant_pi",
+                            value: "",
                             children: [],
                         },
                         {
@@ -579,7 +589,17 @@ describe("operator module - ordering of operators", () => {
                             children: [
                                 {
                                     type: "number",
-                                    value: "29.6088",
+                                    value: "3",
+                                    children: [],
+                                },
+                                {
+                                    type: "constant_pi",
+                                    value: "",
+                                    children: [],
+                                },
+                                {
+                                    type: "constant_pi",
+                                    value: "",
                                     children: [],
                                 },
                                 {
@@ -637,8 +657,8 @@ describe("operator module - ordering of operators", () => {
                     value: "",
                     children: [
                         {
-                            type: "number",
-                            value: "3.1416",
+                            type: "constant_pi",
+                            value: "",
                             children: [],
                         },
                         {
@@ -674,8 +694,8 @@ describe("operator module - ordering of operators", () => {
                     value: "",
                     children: [
                         {
-                            type: "number",
-                            value: "3.1416",
+                            type: "constant_pi",
+                            value: "",
                             children: [],
                         },
                         {

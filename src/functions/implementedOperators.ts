@@ -215,12 +215,12 @@ export class Numerical extends Operator implements MinusPulloutManagement, Order
         super(OperatorType.Numerical, "", "", "", [], String(parseFloat(value.toFixed(4))));
     }
 
-    public getNumericalValue(): number | null {
+    public getNumericalValue(_onlyReturnNumberIfMakesTermSimpler: boolean = false): number | null {
         return Number(this._value);
     }
 
     minusCanBePulledOut(): [boolean, Operator] {
-        const value = this.getNumericalValue() as number;
+        const value = this.getNumericalValue(false) as number;
 
         if (value < 0) {
             return [false, new Numerical(-1 * value)];
@@ -253,8 +253,8 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
         super(OperatorType.BracketedSum, "\\left(", "+", "\\right)", summands, "");
     }
 
-    public getNumericalValue(): number | null {
-        const res = this.childrenNumericalValues();
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
 
@@ -266,8 +266,8 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
     }
 
     // special implementation to allow for partial folding
-    getCopyWithNumbersFolded(): Operator {
-        const res = this.childrenNumericalValues();
+    getCopyWithNumbersFolded(onlyFoldIfMakesTermSimpler: boolean = false): Operator {
+        const res = this.childrenNumericalValues(onlyFoldIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
 
@@ -276,12 +276,12 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             .reduce((acc, current) => (acc as number) + (current as number), 0) as number;
 
         if (allNotNull) {
-            return super.getCopyWithNumbersFolded();
+            return super.getCopyWithNumbersFolded(onlyFoldIfMakesTermSimpler);
         } else {
             if (isBasicallyZero(partialSum)) {
-                return super.numberFoldingInternalImplementation(true, null);
+                return super.numberFoldingInternalImplementation(true, null, onlyFoldIfMakesTermSimpler);
             } else {
-                return super.numberFoldingInternalImplementation(true, partialSum);
+                return super.numberFoldingInternalImplementation(true, partialSum, onlyFoldIfMakesTermSimpler);
             }
         }
     }
@@ -402,8 +402,8 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         super(OperatorType.BracketedMultiplication, "\\left(", " \\cdot ", "\\right)", multiplicators, "");
     }
 
-    public getNumericalValue(): number | null {
-        const res = this.childrenNumericalValues();
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
 
@@ -427,8 +427,8 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
     }
 
     // special implementation to allow for partial folding
-    getCopyWithNumbersFolded(): Operator {
-        const res = this.childrenNumericalValues();
+    getCopyWithNumbersFolded(onlyFoldIfMakesTermSimpler: boolean = false): Operator {
+        const res = this.childrenNumericalValues(onlyFoldIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
 
@@ -437,12 +437,12 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
             .reduce((acc, current) => (acc as number) * (current as number), 1) as number;
 
         if (allNotNull) {
-            return super.getCopyWithNumbersFolded();
+            return super.getCopyWithNumbersFolded(onlyFoldIfMakesTermSimpler);
         } else {
             if (isBasicallyOne(partialProduct)) {
-                return super.numberFoldingInternalImplementation(true, null);
+                return super.numberFoldingInternalImplementation(true, null, onlyFoldIfMakesTermSimpler);
             } else {
-                return super.numberFoldingInternalImplementation(true, partialProduct);
+                return super.numberFoldingInternalImplementation(true, partialProduct, onlyFoldIfMakesTermSimpler);
             }
         }
     }
@@ -728,8 +728,8 @@ export class Fraction extends Operator implements MinusPulloutManagement {
         super(OperatorType.Fraction, "\\frac{", "}{", "}", [dividend, divisor], "");
     }
 
-    public getNumericalValue(): number | null {
-        const res = this.childrenNumericalValues();
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
         const enumerator = childrenValues[0] as number;
@@ -860,10 +860,10 @@ export class Variable extends Operator implements OrderableOperator {
         super(OperatorType.Variable, "{", "", "}", [], name);
     }
 
-    public getNumericalValue(): number | null {
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
         const stored = useVariablesStore().getVariableContent(this._value);
         if (stored && stored != null) {
-            return stored.getNumericalValue();
+            return stored.getNumericalValue(onlyReturnNumberIfMakesTermSimpler);
         }
 
         return null;
@@ -903,8 +903,8 @@ export class Negation extends Operator implements MinusPulloutManagement {
         super(OperatorType.Negation, "-", "", "", [content], "");
     }
 
-    public getNumericalValue(): number | null {
-        const res = this.childrenNumericalValues();
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
 
@@ -951,6 +951,16 @@ abstract class Constant extends Operator implements OrderableOperator {
         return this._startDisplayFormula;
     }
 
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        if (onlyReturnNumberIfMakesTermSimpler) {
+            return null;
+        } else {
+            return this.getConstantValue();
+        }
+    }
+
+    public abstract getConstantValue(): number;
+
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
     }
@@ -961,7 +971,7 @@ export class Pi extends Constant {
         super(OperatorType.Pi, "\\pi");
     }
 
-    public getNumericalValue(): number | null {
+    public getConstantValue(): number {
         return Math.PI;
     }
 }
@@ -971,7 +981,7 @@ export class InfinityConstant extends Constant {
         super(OperatorType.InfinityConstant, "\\infty");
     }
 
-    public getNumericalValue(): number | null {
+    public getConstantValue(): number {
         return Infinity;
     }
 }
@@ -981,8 +991,8 @@ export class Exp extends Operator {
         super(OperatorType.Exp, "\\mathrm{e}^{", "", "}", [exponent], "");
     }
 
-    public getNumericalValue(): number | null {
-        const res = this.childrenNumericalValues();
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
 
@@ -999,8 +1009,8 @@ export class Power extends Operator {
         super(OperatorType.Power, "{", "}^{", "}", [base, exponent], "");
     }
 
-    public getNumericalValue(): number | null {
-        const res = this.childrenNumericalValues();
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
         const base = childrenValues[0] as number;
@@ -1074,7 +1084,7 @@ export class Braket extends Operator {
             const equivalent = Operator.assertOperatorsEquivalent(braChild, ketChild);
 
             // helper instance to access getNumericalValue
-            const [allNotNull, _] = new Braket(braChild, ketChild).childrenNumericalValues();
+            const [allNotNull, _] = new Braket(braChild, ketChild).childrenNumericalValues(false);
 
             if (equivalent) {
                 // this is fine, still overlaps
@@ -1212,8 +1222,8 @@ export class Sin extends Operator {
         super(OperatorType.Sin, "\\mathrm{sin}\\left(", "", "\\right)", [content], "");
     }
 
-    public getNumericalValue(): number | null {
-        const res = this.childrenNumericalValues();
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
 
@@ -1230,8 +1240,8 @@ export class Cos extends Operator {
         super(OperatorType.Cos, "\\mathrm{cos}\\left(", "", "\\right)", [content], "");
     }
 
-    public getNumericalValue(): number | null {
-        const res = this.childrenNumericalValues();
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
         const allNotNull = res[0];
         const childrenValues = res[1];
 
@@ -1282,8 +1292,8 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
         super(OperatorType.KroneckerDelta, "\\delta_{", ",", "}", [firstArg, secondArg], "");
     }
 
-    public getNumericalValue(): number | null {
-        const res = this.childrenNumericalValues();
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
         const allNotNull = res[0];
         const equivalent = Operator.assertOperatorsEquivalent(this._children[0], this._children[1]);
 

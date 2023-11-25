@@ -285,11 +285,11 @@ export abstract class Operator {
     /**
      * [boolean: all not null, (number | null)[]: number if calculable or null]
      */
-    protected childrenNumericalValues(): [boolean, (number | null)[]] {
+    protected childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler: boolean): [boolean, (number | null)[]] {
         let res = [] as (number | null)[];
         let allNull = true;
         this._children.forEach((child) => {
-            const val = child.getNumericalValue();
+            const val = child.getNumericalValue(onlyReturnNumberIfMakesTermSimpler);
             if (val == null) {
                 allNull = false;
             }
@@ -299,13 +299,14 @@ export abstract class Operator {
         return [allNull, res];
     }
 
-    public getNumericalValue(): number | null {
+    public getNumericalValue(_onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
         return null;
     }
 
     protected numberFoldingInternalImplementation(
         dropElementsThatAreNotNull: boolean,
-        insertExtraAtStart: number | null
+        insertExtraAtStart: number | null,
+        onlyFoldIfMakesTermSimpler: boolean = false
     ): Operator {
         let newChildren = [] as ExportOperatorContent[];
         // for folding of parts of the structure (custom implementations only)
@@ -318,15 +319,17 @@ export abstract class Operator {
             } as ExportOperatorContent);
         }
 
-        const ownNumericalValueOrNull = this.getNumericalValue();
+        const ownNumericalValueOrNull = this.getNumericalValue(onlyFoldIfMakesTermSimpler);
         if (ownNumericalValueOrNull == null) {
             // create a copy and fold the contained children one for one if possible without changing the amount or position
             this._children.forEach((child) => {
-                const childNumericalOrNullValue = child.getNumericalValue();
+                const childNumericalOrNullValue = child.getNumericalValue(onlyFoldIfMakesTermSimpler);
 
                 if (childNumericalOrNullValue == null) {
                     // no defined numerical value, just put the child
-                    newChildren.push(child.getCopyWithNumbersFolded().getSerializedStructureRecursive());
+                    newChildren.push(
+                        child.getCopyWithNumbersFolded(onlyFoldIfMakesTermSimpler).getSerializedStructureRecursive()
+                    );
                 } else {
                     // Omit if only parts of the structure should be folded
                     if (!dropElementsThatAreNotNull) {
@@ -355,8 +358,8 @@ export abstract class Operator {
         }
     }
 
-    getCopyWithNumbersFolded(): Operator {
-        return this.numberFoldingInternalImplementation(false, null);
+    getCopyWithNumbersFolded(onlyFoldIfMakesTermSimpler: boolean = false): Operator {
+        return this.numberFoldingInternalImplementation(false, null, onlyFoldIfMakesTermSimpler);
     }
 
     getCopyWithReplaced(uuid: string, replacement: Operator) {
@@ -401,8 +404,8 @@ export abstract class Operator {
 
     static assertOperatorsEquivalent(a: Operator, b: Operator, treatSameNumericalValueAsEquivalent: boolean = true): boolean {
         if (treatSameNumericalValueAsEquivalent) {
-            const valA = a.getNumericalValue();
-            const valB = b.getNumericalValue();
+            const valA = a.getNumericalValue(false);
+            const valB = b.getNumericalValue(false);
 
             if (valA != null) {
                 if (valB != null) {
@@ -467,9 +470,8 @@ export abstract class Operator {
         return new Braket(bra._children[0], ket._children[0]);
     }
 
-    // TODO I would find it nicer, if this didn't collapse constant values to numbers.
     getCopyWithGottenRidOfUnnecessaryTerms() {
-        let copy = this.getCopyWithNumbersFolded(); // directly eliminate all unnecessary delta, 0, 1, etc.
+        let copy = this.getCopyWithNumbersFolded(true); // directly eliminate all unnecessary delta, 0, 1, etc.
         copy = Operator.handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(copy);
         return copy;
     }
