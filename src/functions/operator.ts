@@ -12,6 +12,7 @@ import {
     Negation,
     BracketedSum,
     Variable,
+    ComplexOperatorConstruct,
 } from "./exporter";
 
 export interface ExportOperatorContent {
@@ -487,6 +488,13 @@ export abstract class Operator {
         // combine unnecessary ComplexOperatorConstructs
         if (op instanceof BracketedSum) {
             op = op.CombineComplexNumbersMODIFICATION();
+        }
+
+        // if complex without imaginary part, return only real part
+        if (op instanceof ComplexOperatorConstruct) {
+            if (!op.hasImaginaryPart()) {
+                op = op.getRealChild();
+            }
         }
 
         return op;

@@ -390,6 +390,85 @@ export class ComplexOperatorConstruct extends Operator implements MinusPulloutMa
     }
 }
 
+/**
+ * Supports multiplication for exactly two operators.
+ * Of whom one or both may be complex
+ */
+function multiplyOperatorsHandleComplexOperatorConstruct(firstOperator: Operator, secondOperator: Operator): Operator {
+    let realElementsNormal = [new Numerical(0)] as Operator[];
+    let realElementsISquared = [new Numerical(0)] as Operator[];
+    let complexElementsRealTimesComplex = [new Numerical(0)] as Operator[];
+    let complexElementsComplexTimesReal = [new Numerical(0)] as Operator[];
+
+    if (firstOperator instanceof ComplexOperatorConstruct) {
+        if (secondOperator instanceof ComplexOperatorConstruct) {
+            // complex times complex
+            realElementsNormal = [firstOperator.getRealChild(), secondOperator.getRealChild()];
+            realElementsISquared = [firstOperator.getImaginaryChild(), secondOperator.getImaginaryChild()];
+            complexElementsRealTimesComplex = [firstOperator.getRealChild(), secondOperator.getImaginaryChild()];
+            complexElementsComplexTimesReal = [firstOperator.getImaginaryChild(), secondOperator.getRealChild()];
+        } else {
+            // complex times not complex
+            realElementsNormal = [firstOperator.getRealChild(), secondOperator];
+            complexElementsComplexTimesReal = [firstOperator.getImaginaryChild(), secondOperator];
+        }
+    } else {
+        if (secondOperator instanceof ComplexOperatorConstruct) {
+            // not complex times complex
+            realElementsNormal = [firstOperator, secondOperator.getRealChild()];
+            complexElementsComplexTimesReal = [firstOperator, secondOperator.getImaginaryChild()];
+        } else {
+            // not complex times not complex
+            realElementsNormal = [firstOperator, secondOperator];
+        }
+    }
+
+    // Elements that are generated from constructContainerOrFirstChild can't be a sum, so no trouble of pulling of unwanted (create mor minus than intended by mistake)
+    // they must contain 0 or more than two elements (two for exactly two and more if one or both got spread)
+    // But they can NOT contain one element. So we are save to execute PullOutMinusMODIFICATION
+    // !! PART A
+    let realPartMulNormal = constructContainerOrFirstChild(OperatorType.BracketedMultiplication, realElementsNormal);
+    if (implementsMinusPulloutManagement(realPartMulNormal)) {
+        realPartMulNormal = realPartMulNormal.PullOutMinusMODIFICATION();
+    }
+    // !! PART B
+    let realPartISquared = constructContainerOrFirstChild(OperatorType.BracketedMultiplication, realElementsISquared);
+    // make sure to add the minus from i*i in
+    realPartISquared = new Negation(realPartISquared).PullOutMinusMODIFICATION();
+    // !! PART C
+    let complexPartRealTimesComplex = constructContainerOrFirstChild(
+        OperatorType.BracketedMultiplication,
+        complexElementsRealTimesComplex
+    );
+    if (implementsMinusPulloutManagement(complexPartRealTimesComplex)) {
+        complexPartRealTimesComplex = complexPartRealTimesComplex.PullOutMinusMODIFICATION();
+    }
+    // !! PART D
+    let complexPartComplexTimesReal = constructContainerOrFirstChild(
+        OperatorType.BracketedMultiplication,
+        complexElementsComplexTimesReal
+    );
+    if (implementsMinusPulloutManagement(complexPartComplexTimesReal)) {
+        complexPartComplexTimesReal = complexPartComplexTimesReal.PullOutMinusMODIFICATION();
+    }
+
+    // all non touched parts will get filtered, because initialization with [Numerical(0)]
+    const filter = (o: Operator) => {
+        return !isBasicallyZero(o.getNumericalValue(false) ?? 4);
+    };
+
+    const realSum = constructContainerOrFirstChild(
+        OperatorType.BracketedSum,
+        [realPartMulNormal, realPartISquared].filter(filter)
+    );
+    const imaginarySum = constructContainerOrFirstChild(
+        OperatorType.BracketedSum,
+        [complexPartRealTimesComplex, complexPartComplexTimesReal].filter(filter)
+    );
+
+    return new ComplexOperatorConstruct(realSum, imaginarySum).getCopyWithGottenRidOfUnnecessaryTerms();
+}
+
 export class ComplexIConstant extends ComplexOperatorConstruct {
     constructor() {
         // the constant directly generates to superclass. Only for convenient parsing and usage
@@ -716,6 +795,24 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
                 // because of typing do not use `constructContainerOrFirstChild` here. We know there are enough elements because of assertion
                 return new BracketedSum(newSummands);
             }
+        }
+
+        return this;
+    }
+
+    MultiplyComplexNumbersMODIFICATION(): Operator {
+        let children = this.getChildren();
+
+        if (children.length >= 2) {
+            let running = children[0];
+
+            for (let i = 1; i < children.length; i++) {
+                const child = children[i];
+
+                running = multiplyOperatorsHandleComplexOperatorConstruct(running, child);
+            }
+
+            return running;
         }
 
         return this;
