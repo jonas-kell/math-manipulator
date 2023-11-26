@@ -44,9 +44,20 @@ interface ExportablePersistentVariablesStoreStorage {
     variables: { [key: string]: ExportableVariable };
 }
 
+export enum PermanenceStorageModes {
+    session = "session",
+    vscode = "vscode",
+    memory = "memory",
+}
+
 export const usePermanenceStore = defineStore("permanence", () => {
     const permanenceHasUpdatedHandlers = ref([] as (() => void)[]);
+    const mode = ref(PermanenceStorageModes[(process.env.VITE_PERMANENCE ?? "session") as PermanenceStorageModes]);
+    const memoryStorage = ref({} as { [key: string]: string });
 
+    function setStorageModeTo(val: PermanenceStorageModes) {
+        mode.value = val;
+    }
     function storeLineForUUID(uuid: string, values: PersistentLineStorage) {
         const toStore: ExportablePersistedLineStorage = {
             operator: values.operator == null ? null : values.operator.getSerializedStructure(true),
@@ -168,6 +179,70 @@ export const usePermanenceStore = defineStore("permanence", () => {
         triggerPermanenceHasUpdatedHandlers();
     });
 
+    function abstractStoreImplementationSet(uuid: string, content: string) {
+        switch (mode.value) {
+            case PermanenceStorageModes.session:
+                sessionStorage.setItem(uuid, content);
+                break;
+            case PermanenceStorageModes.memory:
+                memoryStorage.value[uuid] = content;
+                break;
+            case PermanenceStorageModes.vscode:
+                vscodeApiInstance()?.postMessage({ type: "change", uuid: uuid, content: content });
+                break;
+            default:
+                throw Error(`Permanence mode ${mode} not implemented`);
+        }
+    }
+    function abstractStoreImplementationGet(uuid: string): string | null {
+        switch (mode.value) {
+            case PermanenceStorageModes.session:
+                return sessionStorage.getItem(uuid);
+            case PermanenceStorageModes.memory:
+                const val = memoryStorage.value[uuid];
+                if (val != undefined) {
+                    return val;
+                }
+                return null;
+            case PermanenceStorageModes.vscode:
+                const comm = vscodeApiInstance()?.getState();
+                if (comm != undefined) {
+                    const selection = comm[uuid];
+                    if (selection != undefined) {
+                        return selection as string;
+                    }
+                }
+                return null;
+            default:
+                throw Error(`Permanence mode ${mode} not implemented`);
+        }
+    }
+    function dumpSessionStorageObjectToString(mainUuid: string, variablesUuid: string): string {
+        const keys = Object.keys(sessionStorage);
+
+        // Create an object to store all key-value pairs from sessionStorage
+        const sessionData = {} as { [key: string]: string };
+
+        // Iterate through the keys and store corresponding values in sessionData
+        keys.forEach((key) => {
+            sessionData[key] = sessionStorage.getItem(key) as string;
+        });
+
+        const newMainUuid = uuidv4();
+        const newVariablesUuid = uuidv4();
+
+        return JSON.stringify({
+            title: "",
+            description: "",
+            storage: sessionData,
+            showVariables: false,
+            mainUuid: newMainUuid,
+            variablesUuid: newVariablesUuid,
+        })
+            .replace(mainUuid, newMainUuid)
+            .replace(variablesUuid, newVariablesUuid);
+    }
+
     return {
         storeLineForUUID,
         storeInputForUUID,
@@ -176,44 +251,8 @@ export const usePermanenceStore = defineStore("permanence", () => {
         getInputForUUID,
         getVariablesStoreForUUID,
         addPermanenceHasUpdatedHandler,
+        setStorageModeTo,
+        abstractStoreImplementationSet,
+        dumpSessionStorageObjectToString,
     };
 });
-
-enum Modes {
-    session = "session",
-    vscode = "vscode",
-}
-
-function abstractStoreImplementationSet(uuid: string, content: string) {
-    const mode = Modes[(process.env.VITE_PERMANENCE ?? "session") as Modes];
-    switch (mode) {
-        case Modes.session:
-            sessionStorage.setItem(uuid, content);
-            break;
-        case Modes.vscode:
-            vscodeApiInstance()?.postMessage({ type: "change", uuid: uuid, content: content });
-            break;
-
-        default:
-            throw Error(`Permanence mode ${mode} not implemented`);
-    }
-}
-
-function abstractStoreImplementationGet(uuid: string): string | null {
-    const mode = Modes[(process.env.VITE_PERMANENCE ?? "session") as Modes];
-    switch (mode) {
-        case Modes.session:
-            return sessionStorage.getItem(uuid);
-        case Modes.vscode:
-            const comm = vscodeApiInstance()?.getState();
-            if (comm != undefined) {
-                const selection = comm[uuid];
-                if (selection != undefined) {
-                    return selection as string;
-                }
-            }
-            return null;
-        default:
-            throw Error(`Permanence mode ${mode} not implemented`);
-    }
-}

@@ -1,8 +1,7 @@
 <script setup lang="ts">
-    import EquationLine from "./../components/EquationLine.vue";
-    import VariableList from "./../components/VariableList.vue";
-    import { EmptyArgument, Operator, usePermanenceStore } from "./../functions";
-    import { nextTick, ref } from "vue";
+    import EquationUtility from "./../components/EquationUtility.vue";
+    import { usePermanenceStore } from "./../functions";
+    const VITE_MODE = import.meta.env.MODE;
 
     const props = defineProps({
         showHints: {
@@ -19,16 +18,19 @@
         },
     });
 
-    const emptyOperator = ref(new EmptyArgument());
-    const showMainElements = ref(true);
+    const permanenceStore = usePermanenceStore();
+    const copySessionStorageToClipboard = () => {
+        let text = permanenceStore.dumpSessionStorageObjectToString(props.firstLineUuid, props.variableListUuid);
 
-    // update EVERYTHING if permanence has been forcefully rewritten
-    usePermanenceStore().addPermanenceHasUpdatedHandler(() => {
-        showMainElements.value = false;
-        nextTick(() => {
-            showMainElements.value = true;
-        });
-    });
+        navigator.clipboard
+            .writeText(text)
+            .then(() => {
+                console.log("Session Storage copied to clipboard");
+            })
+            .catch((err) => {
+                console.error("Could not copy text: ", err);
+            });
+    };
 </script>
 
 <template>
@@ -37,14 +39,10 @@
         <pre>sum((n = 0); 100; int(-inf; inf; (123+(A*4)/100); x))</pre>
         <p>(You can click parts of the rendered function to invoke actions)</p>
     </template>
-    <template v-if="showMainElements">
-        <EquationLine
-            v-if="emptyOperator"
-            :operator="(emptyOperator as Operator)"
-            :line-uuid="props.firstLineUuid"
-            :is-base="true"
-        />
-        <VariableList style="margin-top: 3em" :uuid="props.variableListUuid" />
-    </template>
-    <div style="width: 100%; min-height: 40vh"></div>
+    <EquationUtility :first-line-uuid="props.firstLineUuid" :variable-list-uuid="props.variableListUuid" />
+    <div style="width: 100%; min-height: 40vh">
+        <button @click="copySessionStorageToClipboard" style="float: right" v-if="VITE_MODE == 'development'">
+            Session storage to Clipboard
+        </button>
+    </div>
 </template>

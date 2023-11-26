@@ -1,0 +1,14 @@
+[
+    {
+        "title": "Simple Example",
+        "description": "Multiplication between most variables is implied. Operator precedence is taken into account when generating syntax tree.",
+        "storage": {
+            "b1bd2854-4aa8-4724-b496-980f7c0d3a7d": "{\"operator\":\"{\\\"type\\\":\\\"bracketed_sum\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"bracketed_multiplication\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"x\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"678930cd-55a2-4724-9f21-e1be10c15c4c\\\"},{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"y\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"ef78ded3-6d9c-4818-b830-0e2cd538799c\\\"}],\\\"uuid\\\":\\\"5e6fabaa-9c00-43ec-b55a-9fb04ad5e9c5\\\"},{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"0eadc710-7ca1-4fc1-8661-7d9bb8a7fac6\\\"}],\\\"uuid\\\":\\\"aac5e11c-d412-43e6-bf1f-2ed4ac509313\\\"}\",\"childUUID\":\"130331a0-f195-4371-a1d1-e08937a37724\",\"selectionUUID\":\"\",\"operatorParserUUID\":\"e5c2ea42-b9bd-4230-83ba-dd361ea7e71f\",\"variableNameInputUUID\":\"62a2b3ee-3eea-4297-8ee3-c48ab511a95b\",\"mode\":\"none\"}",
+            "93439fb6-b686-4c43-9026-bc71e274cf12": "{\"variables\":{\"x\":{\"uuid\":\"f56e0c7c-c960-44f5-8bba-ea1dd5566873\",\"created\":1700957106975,\"op\":null},\"y\":{\"uuid\":\"af031cec-54e8-4ca3-8093-8956ae4ffb44\",\"created\":1700957106977,\"op\":null}}}",
+            "e5c2ea42-b9bd-4230-83ba-dd361ea7e71f": "{\"textValue\":\"x y + 2\"}"
+        },
+        "showVariables": false,
+        "mainUuid": "b1bd2854-4aa8-4724-b496-980f7c0d3a7d",
+        "variablesUuid": "93439fb6-b686-4c43-9026-bc71e274cf12"
+    }
+]
