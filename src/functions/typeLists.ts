@@ -38,6 +38,8 @@ export enum OperatorType {
     NotEquals = "not_equals",
     Iff = "iff",
     KroneckerDelta = "kronecker_delta",
+    Commutator = "commutator_minus",
+    AntiCommutator = "commutator_plus",
 }
 
 const MAX_CHILDREN = 99999999;
@@ -81,6 +83,8 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.NotEquals]: 0,
     [OperatorType.Iff]: 0,
     [OperatorType.KroneckerDelta]: 2,
+    [OperatorType.Commutator]: 2,
+    [OperatorType.AntiCommutator]: 2,
 };
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
@@ -123,4 +127,6 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.NotEquals]: 0,
     [OperatorType.Iff]: 0,
     [OperatorType.KroneckerDelta]: 2,
+    [OperatorType.Commutator]: 2,
+    [OperatorType.AntiCommutator]: 2,
 };

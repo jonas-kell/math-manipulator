@@ -83,6 +83,10 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             return new Iff();
         case OperatorType.KroneckerDelta:
             return new KroneckerDelta(childrenReconstructed[0], childrenReconstructed[1]);
+        case OperatorType.Commutator:
+            return new Commutator(childrenReconstructed[0], childrenReconstructed[1]);
+        case OperatorType.AntiCommutator:
+            return new AntiCommutator(childrenReconstructed[0], childrenReconstructed[1]);
         default:
             throw Error(`type ${type} could not be parsed to an implemented Operator`);
     }
@@ -1741,4 +1745,33 @@ function isBasicallyZero(num: number): boolean {
 function isBasicallyOne(num: number): boolean {
     const basicallyOne = num - 1 < 1e-6 && num - 1 > -1e-6;
     return basicallyOne;
+}
+
+export class Commutator extends Operator {
+    constructor(first: Operator, second: Operator) {
+        super(OperatorType.Commutator, "\\left[", ",", "\\right]", [first, second], "");
+    }
+
+    WriteOutCommutatorMODIFICATION(): Operator {
+        const first = this._children[0];
+        const second = this._children[1];
+
+        return new BracketedSum([
+            new BracketedMultiplication([first, second]),
+            new Negation(new BracketedMultiplication([second, first])),
+        ]);
+    }
+}
+
+export class AntiCommutator extends Operator {
+    constructor(first: Operator, second: Operator) {
+        super(OperatorType.AntiCommutator, "\\left\\{", ",", "\\right\\}", [first, second], "");
+    }
+
+    WriteOutAntiCommutatorMODIFICATION(): Operator {
+        const first = this._children[0];
+        const second = this._children[1];
+
+        return new BracketedSum([new BracketedMultiplication([first, second]), new BracketedMultiplication([second, first])]);
+    }
 }
