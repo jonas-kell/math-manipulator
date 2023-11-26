@@ -10,7 +10,7 @@ export default defineConfig({
         port: 3000,
         strictPort: true,
     },
-    base: process.env.VITE_BASE ?? "/math-manipulator",
+    base: process.env.VITE_BASE ?? "/math-manipulator/",
     build: {
         manifest: true,
         rollupOptions: {
