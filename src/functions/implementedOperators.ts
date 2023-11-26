@@ -1394,6 +1394,32 @@ export class Exp extends Operator {
             return null;
         }
     }
+
+    WriteAsSeriesMODIFICATION(): Operator {
+        const argument = this._children[0];
+
+        return new BigSum(
+            new StructuralContainer([new Variable("n"), new Equals(), new Numerical(0)]),
+            new InfinityConstant(),
+            new Fraction(new Power(argument, new Variable("n")), new Faculty(new Variable("n")))
+        );
+    }
+
+    UseEulersFormulaMODIFICATION(): Operator {
+        const argument = this._children[0];
+
+        if (argument instanceof ComplexOperatorConstruct) {
+            if (!argument.hasRealPart()) {
+                if (argument.hasImaginaryPart()) {
+                    const imag = argument.getImaginaryChild();
+
+                    return new BracketedSum([new Cos(imag), new ComplexOperatorConstruct(new Numerical(0), new Sin(imag))]);
+                }
+            }
+        }
+
+        return this;
+    }
 }
 
 export class Power extends Operator {
