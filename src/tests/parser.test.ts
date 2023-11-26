@@ -102,12 +102,12 @@ describe("parser module end-to-end", () => {
                     children: [],
                 },
                 {
-                    type: "constant_psi",
+                    type: "op_psi",
                     value: "",
                     children: [],
                 },
                 {
-                    type: "constant_phi",
+                    type: "op_phi",
                     value: "",
                     children: [],
                 },
@@ -254,12 +254,12 @@ describe("parser module end-to-end", () => {
             value: "",
             children: [
                 {
-                    type: "constant_psi",
+                    type: "op_psi",
                     value: "",
                     children: [],
                 },
                 {
-                    type: "constant_phi",
+                    type: "op_phi",
                     value: "",
                     children: [],
                 },

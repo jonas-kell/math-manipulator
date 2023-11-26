@@ -112,10 +112,11 @@ const AllowedConstantKeywordMapping = {
     down: OperatorType.Down,
 } as { [key: string]: OperatorType };
 const AllowedConstantKeywords = Object.keys(AllowedConstantKeywordMapping);
+const NotEqualsSign = "$NEQSIGN$";
 const AllowedStructuralKeywordMapping = {
     "{}": OperatorType.EmptyArgument,
     "=": OperatorType.Equals,
-    "!=": OperatorType.NotEquals,
+    [NotEqualsSign]: OperatorType.NotEquals, // actually != is used, but this doesn't work, because ! is already a reserved word. Therefore special pre-processing in @see tokenize
     "<=>": OperatorType.Iff,
     iff: OperatorType.Iff,
 } as { [key: string]: OperatorType };
@@ -124,6 +125,7 @@ const AllowedStructuralKeywords = Object.keys(AllowedStructuralKeywordMapping);
 export const wordsParserConsidersReserved: string[] = [
     ...Object.values(ReservedWord),
     "**",
+    "!=",
     ...AllowedFunctionKeywords,
     ...AllowedConstantKeywords,
     ...AllowedStructuralKeywords,
@@ -138,7 +140,8 @@ function tokenize(input: string): Token[] {
     // make sure, that before all reserved words is at least one space
     // ! Functions are exempt from this. To not split longer words/latex commands by mistake
     let spacesIntroduced = input;
-    spacesIntroduced = spacesIntroduced.replaceAll("**", ReservedWord.PowerSign); // special pre-processing, because * is already a reserved word, which disallows **
+    spacesIntroduced = spacesIntroduced.replaceAll("**", " " + ReservedWord.PowerSign + " "); // special pre-processing, because * is already a reserved word, which disallows **
+    spacesIntroduced = spacesIntroduced.replaceAll("!=", " " + NotEqualsSign + " "); // special pre-processing, because ! is already a reserved word, which disallows !=
     Object.values(ReservedWord).forEach((word) => {
         spacesIntroduced = spacesIntroduced.replaceAll(word, " " + word + " ");
     });
