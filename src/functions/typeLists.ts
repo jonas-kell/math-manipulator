@@ -40,6 +40,8 @@ export enum OperatorType {
     KroneckerDelta = "kronecker_delta",
     Commutator = "commutator_minus",
     AntiCommutator = "commutator_plus",
+    Faculty = "faculty",
+    Percent = "percent",
 }
 
 const MAX_CHILDREN = 99999999;
@@ -85,6 +87,8 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.KroneckerDelta]: 2,
     [OperatorType.Commutator]: 2,
     [OperatorType.AntiCommutator]: 2,
+    [OperatorType.Faculty]: 1,
+    [OperatorType.Percent]: 1,
 };
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
@@ -129,4 +133,6 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.KroneckerDelta]: 2,
     [OperatorType.Commutator]: 2,
     [OperatorType.AntiCommutator]: 2,
+    [OperatorType.Faculty]: 1,
+    [OperatorType.Percent]: 1,
 };

@@ -81,6 +81,10 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             return new NotEquals();
         case OperatorType.Iff:
             return new Iff();
+        case OperatorType.Faculty:
+            return new Faculty(childrenReconstructed[0]);
+        case OperatorType.Percent:
+            return new Percent(childrenReconstructed[0]);
         case OperatorType.KroneckerDelta:
             return new KroneckerDelta(childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.Commutator:
@@ -1773,5 +1777,63 @@ export class AntiCommutator extends Operator {
         const second = this._children[1];
 
         return new BracketedSum([new BracketedMultiplication([first, second]), new BracketedMultiplication([second, first])]);
+    }
+}
+
+export class Faculty extends Operator {
+    constructor(argument: Operator) {
+        super(OperatorType.Faculty, "", "", "!", [argument], "");
+    }
+
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const childNumericalValue = this._children[0].getNumericalValue(true);
+
+        if (!onlyReturnNumberIfMakesTermSimpler) {
+            if (childNumericalValue != null) {
+                if (isBasicallyZero(Math.round(childNumericalValue) - childNumericalValue)) {
+                    const num = Math.round(childNumericalValue);
+
+                    if (num >= 0) {
+                        if (num < 171) {
+                            return calculateFactorial(num);
+                        } else {
+                            return Infinity; // will get evaluated to infinity anyway by js...
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+}
+
+function calculateFactorial(num: number) {
+    if (num === 0 || num === 1) {
+        return 1;
+    } else {
+        let factorial = 1;
+        for (let i = 2; i <= num; i++) {
+            factorial *= i;
+        }
+        return factorial;
+    }
+}
+
+export class Percent extends Operator {
+    constructor(argument: Operator) {
+        super(OperatorType.Percent, "", "", "\\%", [argument], "");
+    }
+
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const childNumericalValue = this._children[0].getNumericalValue(true);
+
+        if (!onlyReturnNumberIfMakesTermSimpler) {
+            if (childNumericalValue != null) {
+                return childNumericalValue * 0.01;
+            }
+        }
+
+        return null;
     }
 }

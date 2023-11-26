@@ -55,6 +55,8 @@ enum TokenType {
     Constant = "Constant",
     Number = "Number",
     Other = "Other",
+    Faculty = "Faculty",
+    Percent = "Percent",
 }
 
 enum ReservedWord {
@@ -67,6 +69,8 @@ enum ReservedWord {
     DivisionSign2 = ":",
     OpenParenSign = "(",
     CloseParenSign = ")",
+    FacultySign = "!",
+    PercentSign = "%",
 }
 
 const AllowedFunctionKeywordMapping = {
@@ -184,6 +188,14 @@ function tokenize(input: string): Token[] {
                     break;
                 case ReservedWord.PowerSign:
                     tokens.push({ type: TokenType.Power, content: "" });
+                    wordFound = true;
+                    break;
+                case ReservedWord.FacultySign:
+                    tokens.push({ type: TokenType.Faculty, content: "" });
+                    wordFound = true;
+                    break;
+                case ReservedWord.PercentSign:
+                    tokens.push({ type: TokenType.Percent, content: "" });
                     wordFound = true;
                     break;
                 case ReservedWord.OpenParenSign:
@@ -522,6 +534,8 @@ type tokenTypesWithOperatorCharacterType =
     | TokenType.Plus
     | TokenType.Minus
     | TokenType.Multiplicate
+    | TokenType.Faculty
+    | TokenType.Percent
     | TokenType.Divide
     | TokenType.Power
     | TokenType.Function
@@ -558,6 +572,16 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
         precedence: 500,
         takesNrArgumentsBefore: 0,
         takesNrArgumentsAfter: 1,
+    },
+    [TokenType.Faculty]: {
+        precedence: 550,
+        takesNrArgumentsBefore: 1,
+        takesNrArgumentsAfter: 0,
+    },
+    [TokenType.Percent]: {
+        precedence: 555,
+        takesNrArgumentsBefore: 1,
+        takesNrArgumentsAfter: 0,
     },
     [TokenType.Function]: {
         precedence: 1000,
@@ -889,6 +913,20 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
                     type: OperatorType.Power,
                     value: "",
                     children: [children[0], children[1]],
+                    uuid: "",
+                } as ExportOperatorContent;
+            case TokenType.Faculty:
+                return {
+                    type: OperatorType.Faculty,
+                    value: "",
+                    children: [children[0]],
+                    uuid: "",
+                } as ExportOperatorContent;
+            case TokenType.Percent:
+                return {
+                    type: OperatorType.Percent,
+                    value: "",
+                    children: [children[0]],
                     uuid: "",
                 } as ExportOperatorContent;
             case TokenType.Function:
