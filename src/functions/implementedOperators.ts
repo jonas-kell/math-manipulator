@@ -39,6 +39,10 @@ export function operatorConstructorSwitch(type: OperatorType, value: string, chi
             return new Phi();
         case OperatorType.Psi:
             return new Psi();
+        case OperatorType.Up:
+            return new Up();
+        case OperatorType.Down:
+            return new Down();
         case OperatorType.InfinityConstant:
             return new InfinityConstant();
         case OperatorType.Exp:
@@ -1413,6 +1417,34 @@ export class Psi extends Operator {
 export class Phi extends Operator {
     constructor() {
         super(OperatorType.Phi, "\\Phi", "", "", [], "");
+    }
+}
+
+export class Up extends Operator {
+    constructor() {
+        super(OperatorType.Up, "\\uparrow", "", "", [], "");
+    }
+
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        if (onlyReturnNumberIfMakesTermSimpler) {
+            return null;
+        } else {
+            return 1;
+        }
+    }
+}
+
+export class Down extends Operator {
+    constructor() {
+        super(OperatorType.Down, "\\downarrow", "", "", [], "");
+    }
+
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        if (onlyReturnNumberIfMakesTermSimpler) {
+            return null;
+        } else {
+            return -1;
+        }
     }
 }
 

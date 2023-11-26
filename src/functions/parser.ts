@@ -102,6 +102,8 @@ const AllowedConstantKeywordMapping = {
     sqrt2: OperatorType.Sqrt2Constant,
     psi: OperatorType.Psi,
     phi: OperatorType.Phi,
+    up: OperatorType.Up,
+    down: OperatorType.Down,
 } as { [key: string]: OperatorType };
 const AllowedConstantKeywords = Object.keys(AllowedConstantKeywordMapping);
 const AllowedStructuralKeywordMapping = {
