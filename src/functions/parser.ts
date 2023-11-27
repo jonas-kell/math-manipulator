@@ -60,20 +60,35 @@ enum TokenType {
     Percent = "Percent",
 }
 
-enum ReservedWord {
-    StructuralSeparationSign = ";",
-    PlusSign = "+",
-    MinusSign = "-",
-    MultiplicationSign = "*",
-    PowerSign = "$POWER$", // actually ** is used, but this doesn't work, because * is already a reserved word. Therefore special pre-processing in @see tokenize
-    DivisionSign1 = "/",
-    DivisionSign2 = ":",
-    OpenParenSign = "(",
-    CloseParenSign = ")",
-    FacultySign = "!",
-    PercentSign = "%",
-}
+// ! Reserved Symbols with own token
+const PowerSignSymbol = "$POWERSIGN$";
+const AllowedReservedSymbolsMapping = {
+    ";": TokenType.StructuralSeparation,
+    "+": TokenType.Plus,
+    "-": TokenType.Minus,
+    "*": TokenType.Multiplicate,
+    [PowerSignSymbol]: TokenType.Power, // actually ** is used, but this doesn't work, because * is already a reserved word. Therefore special pre-processing with WordPreProcessingMap
+    "/": TokenType.Divide,
+    ":": TokenType.Divide,
+    "(": TokenType.OpenParen,
+    ")": TokenType.CloseParen,
+    "!": TokenType.Faculty,
+    "%": TokenType.Percent,
+} as { [key: string]: TokenType };
+const AllowedReservedSymbols = Object.keys(AllowedReservedSymbolsMapping);
 
+// ! Structural Operators
+const NotEqualsSignSymbol = "$NEQSIGN$";
+const IffSignSymbol = "$IFFSIGN$";
+const AllowedStructuralKeywordMapping = {
+    "{}": OperatorType.EmptyArgument,
+    "=": OperatorType.Equals,
+    [NotEqualsSignSymbol]: OperatorType.NotEquals, // actually != is used, but this doesn't work, because ! and = is already a reserved word. Therefore special pre-processing with WordPreProcessingMap
+    [IffSignSymbol]: OperatorType.Iff, // actually <=> is used, but this doesn't work, because = is already a reserved word. Therefore special pre-processing with WordPreProcessingMap
+} as { [key: string]: OperatorType };
+const AllowedStructuralKeywords = Object.keys(AllowedStructuralKeywordMapping);
+
+// ! Pre-defined Functions
 const AllowedFunctionKeywordMapping = {
     sum: OperatorType.BigSum,
     int: OperatorType.BigInt,
@@ -95,12 +110,14 @@ const AllowedFunctionKeywordMapping = {
     comm: OperatorType.Commutator,
     acomm: OperatorType.AntiCommutator,
 } as { [key: string]: OperatorType };
-const AllowedFunctionKeywords = Object.keys(AllowedFunctionKeywordMapping);
 const functionsWithArgumentsConsideredStructural = [
     // only makes a difference for functions that take more than exactly one argument
     OperatorType.Bra,
     OperatorType.Ket,
 ] as OperatorType[];
+const AllowedFunctionKeywords = Object.keys(AllowedFunctionKeywordMapping);
+
+// ! Pre-defined Constants
 const AllowedConstantKeywordMapping = {
     pi: OperatorType.PiConstant,
     inf: OperatorType.InfinityConstant,
@@ -113,23 +130,24 @@ const AllowedConstantKeywordMapping = {
     down: OperatorType.Down,
 } as { [key: string]: OperatorType };
 const AllowedConstantKeywords = Object.keys(AllowedConstantKeywordMapping);
-const NotEqualsSign = "$NEQSIGN$";
-const AllowedStructuralKeywordMapping = {
-    "{}": OperatorType.EmptyArgument,
-    "=": OperatorType.Equals,
-    [NotEqualsSign]: OperatorType.NotEquals, // actually != is used, but this doesn't work, because ! is already a reserved word. Therefore special pre-processing in @see tokenize
-    "<=>": OperatorType.Iff,
-    iff: OperatorType.Iff,
-} as { [key: string]: OperatorType };
-const AllowedStructuralKeywords = Object.keys(AllowedStructuralKeywordMapping);
 
+// ! Pre-Processing Section
+const WordPreProcessingMap = {
+    "**": [PowerSignSymbol],
+    "!=": [NotEqualsSignSymbol],
+    "<=>": [IffSignSymbol],
+};
+const WordsThatNeedPreProcessing = Object.keys(WordPreProcessingMap);
+
+// ! Exports of reserved Words
 export const wordsParserConsidersReserved: string[] = [
-    ...Object.values(ReservedWord),
-    "**",
-    "!=",
+    ...AllowedReservedSymbols,
+    ...AllowedStructuralKeywords,
+    ...WordsThatNeedPreProcessing,
+];
+export const wordsParserConsidersReservedIfWhitespaceSurrounded: string[] = [
     ...AllowedFunctionKeywords,
     ...AllowedConstantKeywords,
-    ...AllowedStructuralKeywords,
 ];
 
 interface Token {
@@ -137,20 +155,29 @@ interface Token {
     content: string;
 }
 
-function tokenize(input: string): Token[] {
+export function preProcessInputString(inp: string): string {
     // make sure, that before all reserved words is at least one space
     // ! Functions are exempt from this. To not split longer words/latex commands by mistake
-    let spacesIntroduced = input;
-    spacesIntroduced = spacesIntroduced.replaceAll("**", " " + ReservedWord.PowerSign + " "); // special pre-processing, because * is already a reserved word, which disallows **
-    spacesIntroduced = spacesIntroduced.replaceAll("!=", " " + NotEqualsSign + " "); // special pre-processing, because ! is already a reserved word, which disallows !=
-    Object.values(ReservedWord).forEach((word) => {
+    let spacesIntroduced = inp;
+    // special pre-processing, because e.g. * is already a reserved word, which disallows **
+    WordsThatNeedPreProcessing.forEach((word) => {
+        spacesIntroduced = spacesIntroduced.replaceAll(word, " " + (WordPreProcessingMap as any)[word] + " ");
+    });
+    // surround the reserved words with spaces where intended
+    wordsParserConsidersReserved.forEach((word) => {
         spacesIntroduced = spacesIntroduced.replaceAll(word, " " + word + " ");
     });
-    spacesIntroduced += " "; // make sure to terminate with space
+    spacesIntroduced = " " + spacesIntroduced + " "; // make sure to start and terminate with space
 
     // remove all multiple spaces, newlines and so on
     const whitespaceSanitized = spacesIntroduced.replaceAll(/\s+/g, " ");
-    const length = whitespaceSanitized.length;
+
+    return whitespaceSanitized;
+}
+
+function tokenize(input: string): Token[] {
+    const stringToProcess = preProcessInputString(input);
+    const length = stringToProcess.length;
 
     let tokens = [] as Token[];
 
@@ -159,7 +186,7 @@ function tokenize(input: string): Token[] {
     let startIndex = 0;
     let endIndex = 1;
     while (true) {
-        currentBuf = whitespaceSanitized.substring(startIndex, endIndex).trimStart();
+        currentBuf = stringToProcess.substring(startIndex, endIndex).trimStart();
 
         // test if is reserved word
         let wordFound = false;
@@ -168,48 +195,15 @@ function tokenize(input: string): Token[] {
         if (currentBuf.endsWith(" ")) {
             const currentBufWord = currentBuf.substring(0, currentBuf.length - 1); // remove space at the end
 
-            switch (currentBufWord) {
-                case ReservedWord.StructuralSeparationSign:
-                    tokens.push({ type: TokenType.StructuralSeparation, content: "" });
+            for (let i = 0; i < AllowedReservedSymbols.length; i++) {
+                if (currentBufWord == AllowedReservedSymbols[i]) {
+                    tokens.push({
+                        type: AllowedReservedSymbolsMapping[AllowedReservedSymbols[i]],
+                        content: "",
+                    });
                     wordFound = true;
                     break;
-                case ReservedWord.PlusSign:
-                    tokens.push({ type: TokenType.Plus, content: "" });
-                    wordFound = true;
-                    break;
-                case ReservedWord.MinusSign:
-                    tokens.push({ type: TokenType.Minus, content: "" });
-                    wordFound = true;
-                    break;
-                case ReservedWord.MultiplicationSign:
-                    tokens.push({ type: TokenType.Multiplicate, content: "" });
-                    wordFound = true;
-                    break;
-                case ReservedWord.DivisionSign1:
-                case ReservedWord.DivisionSign2:
-                    tokens.push({ type: TokenType.Divide, content: "" });
-                    wordFound = true;
-                    break;
-                case ReservedWord.PowerSign:
-                    tokens.push({ type: TokenType.Power, content: "" });
-                    wordFound = true;
-                    break;
-                case ReservedWord.FacultySign:
-                    tokens.push({ type: TokenType.Faculty, content: "" });
-                    wordFound = true;
-                    break;
-                case ReservedWord.PercentSign:
-                    tokens.push({ type: TokenType.Percent, content: "" });
-                    wordFound = true;
-                    break;
-                case ReservedWord.OpenParenSign:
-                    tokens.push({ type: TokenType.OpenParen, content: "" });
-                    wordFound = true;
-                    break;
-                case ReservedWord.CloseParenSign:
-                    tokens.push({ type: TokenType.CloseParen, content: "" });
-                    wordFound = true;
-                    break;
+                }
             }
             for (let i = 0; i < AllowedFunctionKeywords.length; i++) {
                 if (currentBufWord == AllowedFunctionKeywords[i]) {

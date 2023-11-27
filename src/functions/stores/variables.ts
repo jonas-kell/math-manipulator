@@ -2,10 +2,12 @@ import { defineStore } from "pinia";
 import {
     Operator,
     OperatorConfig,
-    wordsParserConsidersReserved,
     PersistentVariablesStoreStorage,
     usePermanenceStore,
     PersistentVariable,
+    preProcessInputString,
+    wordsParserConsidersReserved,
+    wordsParserConsidersReservedIfWhitespaceSurrounded,
 } from "./../exporter";
 import { v4 as uuidv4 } from "uuid";
 
@@ -205,25 +207,32 @@ export const useVariablesStore = defineStore("variables", {
 });
 
 function getLastStringSegment(inputString: string): string {
-    const whiteSpacesRemoved = inputString.replace(/\s/g, "");
-    const whiteSpacesToSpaces = inputString.replace(/\s/g, " ");
+    if (inputString.endsWith(" ")) {
+        return "";
+    }
+
+    // surrounds all "wordsParserConsidersReserved" with white-spaces for us
+    const processedInput = preProcessInputString(inputString);
 
     let lastIndex = -1;
-    for (const delimiter of [...wordsParserConsidersReserved, " "]) {
-        // if ends with reserved word, this may be returned
-        if (whiteSpacesRemoved.endsWith(delimiter)) {
+    for (const delimiter of [...wordsParserConsidersReservedIfWhitespaceSurrounded, ...wordsParserConsidersReserved]) {
+        const surroundedDelimiter = " " + delimiter + " ";
+
+        // if ends with reserved delimiter, this may be returned
+        if (processedInput.endsWith(surroundedDelimiter)) {
             return delimiter;
         }
 
         // Find the last occurrence of any delimiter
-        const index = whiteSpacesToSpaces.lastIndexOf(delimiter);
-        if (index > lastIndex) {
-            lastIndex = index;
+        const index = processedInput.lastIndexOf(surroundedDelimiter);
+        // equals, because last " " matched before could now be first " " and in this case we need to make sure to add the length
+        if (index >= lastIndex && index != -1) {
+            lastIndex = index + surroundedDelimiter.length - 1;
         }
     }
 
     // Extract the substring from the last delimiter to the end
-    const lastElement = whiteSpacesToSpaces.substring(lastIndex + 1).replace(/\s/g, "");
+    const lastElement = processedInput.substring(lastIndex).replace(/\s/g, "");
 
     return lastElement;
 }
