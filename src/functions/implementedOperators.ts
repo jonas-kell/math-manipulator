@@ -1272,13 +1272,13 @@ export class BigInt extends Operator {
 
 export class Variable extends Operator implements OrderableOperator {
     constructor(config: OperatorConfig, name: string) {
-        useVariablesStore().makeSureVariableAvailable(name);
+        useVariablesStore().makeSureVariableAvailable(config, name);
 
         super(config, OperatorType.Variable, "{", "", "}", [], name);
     }
 
     public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
-        const stored = useVariablesStore().getVariableContent(this._value);
+        const stored = useVariablesStore().getVariableContent(this.getOwnConfig(), this._value);
         if (stored && stored != null) {
             return stored.getNumericalValue(onlyReturnNumberIfMakesTermSimpler);
         }
@@ -1287,11 +1287,11 @@ export class Variable extends Operator implements OrderableOperator {
     }
 
     public setOperatorStoredHere(op: Operator | null) {
-        useVariablesStore().setOperatorForVariable(this._value, op);
+        useVariablesStore().setOperatorForVariable(this.getOwnConfig(), this._value, op);
     }
 
     UnpackMODIFICATION(): Operator {
-        const stored = useVariablesStore().getVariableContent(this._value);
+        const stored = useVariablesStore().getVariableContent(this.getOwnConfig(), this._value);
 
         if (stored && stored != null) {
             return stored;
