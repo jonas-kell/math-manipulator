@@ -11,18 +11,21 @@
     }>();
 
     const names = computed(() => {
-        return variablesStore.availableVariables;
+        // access this to force re-computation
+        variablesStore.lastUpdate;
+
+        return variablesStore.availableVariables(props.config);
     });
 
     function setOperator(varName: string, op: Operator | null) {
         // set value:
-        variablesStore.setOperatorForVariable(varName, op);
+        variablesStore.setOperatorForVariable(props.config, varName, op);
 
         // bust cache
         updated.value = Date.now();
     }
     function removeVariableReference(varName: string) {
-        variablesStore.removeVariableFromStore(varName);
+        variablesStore.removeVariableFromStore(props.config, varName);
     }
     type Draw = {
         name: string;
@@ -38,8 +41,8 @@
 
         let res = [] as Draw;
         names.value.forEach((name) => {
-            const op = variablesStore.getVariableContent(name);
-            const variableUUID = variablesStore.getVariableUUID(name) ?? ""; // must always be set, otherwise worse things fail
+            const op = variablesStore.getVariableContent(props.config, name);
+            const variableUUID = variablesStore.getVariableUUID(props.config, name) ?? ""; // must always be set, otherwise worse things fail
             let hasOp = !!op && op != null && op != undefined;
             let katex = hasOp ? (op as unknown as Operator).getFormulaString() : "";
             if (op && op != null && op != undefined) {

@@ -144,7 +144,7 @@
                 );
 
                 // trigger typing debounce cleanup
-                variablesStore.purgeLastElementsWithNamesLeadingUpToThis(variableDefinitionName.value);
+                variablesStore.purgeLastElementsWithNamesLeadingUpToThis(props.config, variableDefinitionName.value);
             }
         }
     };

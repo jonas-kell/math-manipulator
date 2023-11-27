@@ -29,7 +29,7 @@
         emit("parsed", res);
 
         // trigger typing debounce cleanup
-        variablesStore.purgeLastElementsWithNamesLeadingUpToThis(text.value);
+        variablesStore.purgeLastElementsWithNamesLeadingUpToThis(props.config, text.value);
     });
 </script>
 
