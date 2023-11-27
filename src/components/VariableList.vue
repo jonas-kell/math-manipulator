@@ -54,7 +54,7 @@
                 name: name,
                 renderOperator: hasOp,
                 katex: katex,
-                parserUUID: variableUUID, // TODO this needs to be persistent
+                parserUUID: variableUUID,
                 rendererUUID: uuidv4(),
             };
 

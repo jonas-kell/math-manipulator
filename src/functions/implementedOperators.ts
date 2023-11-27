@@ -765,7 +765,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         const childrenValues = res[1];
 
         // product is 0 if one element is 0
-        // TODO theoretically if one element is Infinity, this fails...
+        // TODO theoretically if one element is Infinity, this is not mathematically correct...
         for (let i = 0; i < childrenValues.length; i++) {
             const value = childrenValues[i];
 
