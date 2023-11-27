@@ -1,15 +1,17 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { Numerical, Operator, Variable } from "../functions";
+import { Numerical, Operator, Variable, generateOperatorConfig } from "../functions";
 
 describe("operator module - replace operator feature", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     const testOp = () =>
         Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "exp_function",
                 value: "",
@@ -49,7 +51,10 @@ describe("operator module - replace operator feature", () => {
         expect(
             JSON.parse(
                 testOp()
-                    .getCopyWithReplaced(Operator.UUIDFromUUIDRef("ref_f7f98f57-4211-4cc4-9182-dfb0fd5ed470"), new Numerical(5))
+                    .getCopyWithReplaced(
+                        Operator.UUIDFromUUIDRef("ref_f7f98f57-4211-4cc4-9182-dfb0fd5ed470"),
+                        new Numerical(testConfig, 5)
+                    )
                     .getSerializedStructure()
             )
         ).toMatchObject({
@@ -140,6 +145,7 @@ describe("operator module - replace operator feature", () => {
             JSON.parse(
                 (
                     Operator.generateStructure(
+                        testConfig,
                         JSON.stringify({
                             type: "exp_function",
                             value: "",

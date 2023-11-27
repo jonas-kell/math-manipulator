@@ -1,15 +1,14 @@
 <script setup lang="ts">
     import InputToOperatorParser from "./InputToOperatorParser.vue";
     import KatexRenderer from "./KatexRenderer.vue";
-    import { Operator, useVariablesStore } from "./../functions";
+    import { Operator, OperatorConfig, useVariablesStore } from "./../functions";
     import { v4 as uuidv4 } from "uuid";
     import { computed, ref } from "vue";
     const variablesStore = useVariablesStore();
 
     const props = defineProps<{
-        uuid: string;
+        config: OperatorConfig;
     }>();
-    variablesStore.setUUIDForPersistence(props.uuid);
 
     const names = computed(() => {
         return variablesStore.availableVariables;
@@ -76,6 +75,7 @@
                     </td>
                     <td>
                         <InputToOperatorParser
+                            :config="props.config"
                             @parsed="(a: Operator | null) => {
                                 if (skipEffect) {
                                     skipEffect = false;

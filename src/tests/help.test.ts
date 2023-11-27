@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { Operator } from "../functions";
+import { Operator, generateOperatorConfig } from "../functions";
 import helpDatabaseImport from "./../pages/helpDatabase.json";
 import { HelpElement } from "./../pages/helpElement";
 
@@ -11,6 +11,7 @@ describe("Test-Page initial render", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     helpDatabase.forEach((elem) => {
         for (const uuid in elem.storage) {
@@ -21,7 +22,7 @@ describe("Test-Page initial render", () => {
                     // Don't test for text blocks and variables //TODO do separately
                     if (value.variables == undefined && value.textValue == undefined && value.operator != undefined) {
                         const structure = JSON.parse(value.operator);
-                        expect(() => Operator.generateStructure(JSON.stringify(structure), true)).not.toThrow();
+                        expect(() => Operator.generateStructure(testConfig, JSON.stringify(structure), true)).not.toThrow();
                     }
                 }
             });

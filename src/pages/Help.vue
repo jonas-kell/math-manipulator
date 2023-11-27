@@ -5,17 +5,30 @@
     const helpDatabase = helpDatabaseImport as HelpElement[];
 
     // import the examples into memory storage
-    import { PermanenceStorageModes, usePermanenceStore } from "./../functions";
+    import { OperatorConfig, PermanenceStorageModes, generateOperatorConfig, usePermanenceStore } from "./../functions";
+    import { computed } from "vue";
     const permanenceStore = usePermanenceStore();
     permanenceStore.setStorageModeTo(PermanenceStorageModes.memory);
 
-    helpDatabase.forEach((elem) => {
-        for (const uuid in elem.storage) {
-            const value = elem.storage[uuid];
-            if (value != undefined) {
-                permanenceStore.abstractStoreImplementationSet(uuid, value);
+    const elements = computed((): { element: HelpElement; config: OperatorConfig }[] => {
+        let outArray: { element: HelpElement; config: OperatorConfig }[] = [];
+
+        // normally un-nice to do in computed, but this only is executed once, because the only input is a json import
+        helpDatabase.forEach((elem) => {
+            for (const uuid in elem.storage) {
+                const value = elem.storage[uuid];
+                if (value != undefined) {
+                    permanenceStore.abstractStoreImplementationSet(uuid, value);
+                }
             }
-        }
+
+            outArray.push({
+                config: generateOperatorConfig(),
+                element: elem,
+            });
+        });
+
+        return outArray;
     });
 
     const VITE_RENDER_ROUTER_LINKS = import.meta.env.VITE_RENDER_ROUTER_LINKS != "0";
@@ -30,14 +43,10 @@
     <p>The help is interactive. Feel free to make changes and experiment at any point.</p>
     <p>Help can be reset with refreshing the page</p>
 
-    <template v-for="elem in helpDatabase">
-        <h3>{{ elem.title }}</h3>
-        <p style="white-space: pre-line">{{ elem.description }}</p>
-        <EquationUtility
-            :first-line-uuid="elem.mainUuid"
-            :variable-list-uuid="elem.variablesUuid"
-            :show-variables="elem.showVariables"
-        />
+    <template v-for="elem in elements">
+        <h3>{{ elem.element.title }}</h3>
+        <p style="white-space: pre-line">{{ elem.element.description }}</p>
+        <EquationUtility :config="elem.config" :show-variables="elem.element.showVariables" />
     </template>
     <div style="width: 100%; min-height: 40vh"></div>
 </template>

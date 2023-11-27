@@ -1,15 +1,18 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { operatorFromString, Numerical, StructuralContainer, Variable, BracketedSum } from "../functions";
+import { operatorFromString, Numerical, StructuralContainer, Variable, BracketedSum, generateOperatorConfig } from "../functions";
 
 describe("operator module - numerical folding feature", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     test("default sum folding", () => {
-        expect(JSON.parse(operatorFromString("2+3+4").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse(operatorFromString(testConfig, "2+3+4").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({
             type: "number",
             value: "9",
             children: [],
@@ -17,7 +20,9 @@ describe("operator module - numerical folding feature", () => {
     });
 
     test("default multiplication folding", () => {
-        expect(JSON.parse(operatorFromString("1 2 3").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse(operatorFromString(testConfig, "1 2 3").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({
             type: "number",
             value: "6",
             children: [],
@@ -25,16 +30,18 @@ describe("operator module - numerical folding feature", () => {
     });
 
     test("Unfoldable stuff does not get folded", () => {
-        expect(JSON.parse(operatorFromString("x").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
-            type: "variable",
-            value: "x",
-            children: [],
-        });
+        expect(JSON.parse(operatorFromString(testConfig, "x").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject(
+            {
+                type: "variable",
+                value: "x",
+                children: [],
+            }
+        );
     });
 
     test("Multi level Fold", () => {
         expect(
-            JSON.parse(operatorFromString("1+8/2+3*2**(1+1)").getCopyWithNumbersFolded().getSerializedStructure())
+            JSON.parse(operatorFromString(testConfig, "1+8/2+3*2**(1+1)").getCopyWithNumbersFolded().getSerializedStructure())
         ).toMatchObject({
             type: "number",
             value: "17",
@@ -44,7 +51,7 @@ describe("operator module - numerical folding feature", () => {
 
     test("Partial folding on unfoldable", () => {
         expect(
-            JSON.parse(operatorFromString("1+8/2+3*x**(1+1)").getCopyWithNumbersFolded().getSerializedStructure())
+            JSON.parse(operatorFromString(testConfig, "1+8/2+3*x**(1+1)").getCopyWithNumbersFolded().getSerializedStructure())
         ).toMatchObject({
             type: "bracketed_sum",
             value: "",
@@ -86,7 +93,9 @@ describe("operator module - numerical folding feature", () => {
     });
 
     test("Rest of the implemented calculation options", () => {
-        expect(JSON.parse(operatorFromString("1/y-2-z+1").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse(operatorFromString(testConfig, "1/y-2-z+1").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({
             type: "bracketed_sum",
             value: "",
             children: [
@@ -124,7 +133,9 @@ describe("operator module - numerical folding feature", () => {
                 },
             ],
         });
-        expect(JSON.parse(operatorFromString("1/y-2-z+1").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse(operatorFromString(testConfig, "1/y-2-z+1").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({
             type: "bracketed_sum",
             value: "",
             children: [
@@ -164,7 +175,7 @@ describe("operator module - numerical folding feature", () => {
         });
         expect(
             JSON.parse(
-                operatorFromString("exp(-inf)+exp(z)+sin(pi)+sin(x)+cos(pi)+cos(y)")
+                operatorFromString(testConfig, "exp(-inf)+exp(z)+sin(pi)+sin(x)+cos(pi)+cos(y)")
                     .getCopyWithNumbersFolded()
                     .getSerializedStructure()
             )
@@ -214,7 +225,10 @@ describe("operator module - numerical folding feature", () => {
         });
         expect(
             JSON.parse(
-                new StructuralContainer([new Variable("x"), new BracketedSum([new Numerical(1), new Numerical(0)])])
+                new StructuralContainer(testConfig, [
+                    new Variable(testConfig, "x"),
+                    new BracketedSum(testConfig, [new Numerical(testConfig, 1), new Numerical(testConfig, 0)]),
+                ])
                     .getCopyWithNumbersFolded()
                     .getSerializedStructure()
             )
@@ -239,7 +253,7 @@ describe("operator module - numerical folding feature", () => {
     test("Rendering of folded infinity", () => {
         expect(
             // ; in input required, this is wanted
-            JSON.parse(operatorFromString("int (inf ;-inf 0 0 )").getCopyWithNumbersFolded().getSerializedStructure())
+            JSON.parse(operatorFromString(testConfig, "int (inf ;-inf 0 0 )").getCopyWithNumbersFolded().getSerializedStructure())
         ).toMatchObject({
             type: "big_int",
             value: "",
@@ -266,13 +280,15 @@ describe("operator module - numerical folding feature", () => {
                 },
             ],
         });
-        expect(operatorFromString("int (inf; -inf 0 0 )").getCopyWithNumbersFolded().getExportFormulaString()).toEqual(
-            "\\int\\limits_{\\infty}^{-\\infty}0\\mathrm{d}0"
-        );
+        expect(
+            operatorFromString(testConfig, "int (inf; -inf 0 0 )").getCopyWithNumbersFolded().getExportFormulaString()
+        ).toEqual("\\int\\limits_{\\infty}^{-\\infty}0\\mathrm{d}0");
     });
 
     test("Sum folding omit zero", () => {
-        expect(JSON.parse(operatorFromString("0+x+0+x").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse(operatorFromString(testConfig, "0+x+0+x").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({
             type: "bracketed_sum",
             value: "",
             children: [
@@ -288,7 +304,9 @@ describe("operator module - numerical folding feature", () => {
                 },
             ],
         });
-        expect(JSON.parse(operatorFromString("1+x-1").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse(operatorFromString(testConfig, "1+x-1").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({
             type: "variable",
             value: "x",
             children: [],
@@ -296,7 +314,9 @@ describe("operator module - numerical folding feature", () => {
     });
 
     test("Product folding omit one", () => {
-        expect(JSON.parse(operatorFromString("0.5 x 2 x").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse(operatorFromString(testConfig, "0.5 x 2 x").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({
             type: "bracketed_multiplication",
             value: "",
             children: [
@@ -312,7 +332,9 @@ describe("operator module - numerical folding feature", () => {
                 },
             ],
         });
-        expect(JSON.parse(operatorFromString("x*1").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse(operatorFromString(testConfig, "x*1").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({
             type: "variable",
             value: "x",
             children: [],

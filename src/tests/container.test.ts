@@ -1,35 +1,49 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { constructContainerOrFirstChild, OperatorType, EmptyArgument, operatorFromString } from "../functions";
+import {
+    constructContainerOrFirstChild,
+    OperatorType,
+    EmptyArgument,
+    operatorFromString,
+    generateOperatorConfig,
+} from "../functions";
 
 describe("operator module - create container function", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     test("Not implemented type", () => {
-        expect(() => constructContainerOrFirstChild(OperatorType.BigInt as any, [])).toThrow();
+        expect(() => constructContainerOrFirstChild(testConfig, OperatorType.BigInt as any, [])).toThrow();
         expect(() =>
-            constructContainerOrFirstChild(OperatorType.BigInt as any, [new EmptyArgument(), new EmptyArgument()])
+            constructContainerOrFirstChild(testConfig, OperatorType.BigInt as any, [
+                new EmptyArgument(testConfig),
+                new EmptyArgument(testConfig),
+            ])
         ).toThrow();
     });
 
     test("Default initialization", () => {
-        expect(JSON.parse(constructContainerOrFirstChild(OperatorType.BracketedSum, []).getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse(constructContainerOrFirstChild(testConfig, OperatorType.BracketedSum, []).getSerializedStructure())
+        ).toMatchObject({
             type: "number",
             value: "0",
             children: [],
         });
         expect(
-            JSON.parse(constructContainerOrFirstChild(OperatorType.BracketedMultiplication, []).getSerializedStructure())
+            JSON.parse(
+                constructContainerOrFirstChild(testConfig, OperatorType.BracketedMultiplication, []).getSerializedStructure()
+            )
         ).toMatchObject({
             type: "number",
             value: "1",
             children: [],
         });
         expect(
-            JSON.parse(constructContainerOrFirstChild(OperatorType.StructuralContainer, []).getSerializedStructure())
+            JSON.parse(constructContainerOrFirstChild(testConfig, OperatorType.StructuralContainer, []).getSerializedStructure())
         ).toMatchObject({
             type: "empty_argument",
             value: "",
@@ -38,7 +52,7 @@ describe("operator module - create container function", () => {
     });
 
     test("Associative bracket handling", () => {
-        expect(JSON.parse(operatorFromString("1+(2+3)-(2+3)").getSerializedStructure())).toMatchObject({
+        expect(JSON.parse(operatorFromString(testConfig, "1+(2+3)-(2+3)").getSerializedStructure())).toMatchObject({
             type: "bracketed_sum",
             value: "",
             children: [
@@ -81,7 +95,7 @@ describe("operator module - create container function", () => {
                 },
             ],
         });
-        expect(JSON.parse(operatorFromString("x*y*z*(2*pi)").getSerializedStructure())).toMatchObject({
+        expect(JSON.parse(operatorFromString(testConfig, "x*y*z*(2*pi)").getSerializedStructure())).toMatchObject({
             type: "bracketed_multiplication",
             value: "",
             children: [

@@ -4,9 +4,9 @@
 // files in this folder MUST import from "./exporter"
 // files outside of this folder MUST import from "index.ts" (just import the `functions` folder)
 
+export * from "./typeLists"; // by design uses no dependency
 export * from "./stores/selectors"; // store uses no external dependency
 export * from "./stores/route"; // store uses no external dependency
-export * from "./typeLists"; // by design uses no dependency
 export * from "./operator";
 export * from "./implementedOperators";
 export * from "./parser";
