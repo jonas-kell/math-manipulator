@@ -1,15 +1,18 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { operatorFromString, Fraction } from "../functions";
+import { operatorFromString, Fraction, generateOperatorConfig } from "../functions";
 
 describe("operator module - reduce fraction feature", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     test("Single Operator Inputs", () => {
-        expect(JSON.parse((operatorFromString("x/z") as Fraction).ReduceMODIFICATION().getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse((operatorFromString(testConfig, "x/z") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+        ).toMatchObject({
             type: "fraction",
             value: "",
             children: [
@@ -29,7 +32,9 @@ describe("operator module - reduce fraction feature", () => {
 
     test("Multiplication Inputs", () => {
         expect(
-            JSON.parse((operatorFromString("(x*x*x)/(z*z)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "(x*x*x)/(z*z)") as Fraction).ReduceMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "fraction",
             value: "",
@@ -77,7 +82,9 @@ describe("operator module - reduce fraction feature", () => {
 
     test("Outputs One (all reduced)", () => {
         expect(
-            JSON.parse((operatorFromString("(123*x)/(123*x)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "(123*x)/(123*x)") as Fraction).ReduceMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "number",
             value: "1",
@@ -87,7 +94,9 @@ describe("operator module - reduce fraction feature", () => {
 
     test("Outputs one element", () => {
         expect(
-            JSON.parse((operatorFromString("(123*x)/(123)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "(123*x)/(123)") as Fraction).ReduceMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "variable",
             value: "x",
@@ -97,7 +106,9 @@ describe("operator module - reduce fraction feature", () => {
 
     test("Outputs multiplication", () => {
         expect(
-            JSON.parse((operatorFromString("(y*x*z*a)/(x*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "(y*x*z*a)/(x*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "bracketed_multiplication",
             value: "",
@@ -118,7 +129,7 @@ describe("operator module - reduce fraction feature", () => {
 
     test("Outputs one over one element", () => {
         expect(
-            JSON.parse((operatorFromString("x/(x*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+            JSON.parse((operatorFromString(testConfig, "x/(x*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
         ).toMatchObject({
             type: "fraction",
             value: "",
@@ -139,7 +150,7 @@ describe("operator module - reduce fraction feature", () => {
 
     test("Outputs one element over one element", () => {
         expect(
-            JSON.parse((operatorFromString("(x*z)/(x*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+            JSON.parse((operatorFromString(testConfig, "(x*z)/(x*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
         ).toMatchObject({
             type: "fraction",
             value: "",
@@ -160,7 +171,9 @@ describe("operator module - reduce fraction feature", () => {
 
     test("Outputs multiplication over one element", () => {
         expect(
-            JSON.parse((operatorFromString("(a*x*z)/(x*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "(a*x*z)/(x*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "fraction",
             value: "",
@@ -192,7 +205,9 @@ describe("operator module - reduce fraction feature", () => {
 
     test("Outputs one over multiplication", () => {
         expect(
-            JSON.parse((operatorFromString("(z)/(z*(1+x)*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "(z)/(z*(1+x)*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "fraction",
             value: "",
@@ -235,7 +250,9 @@ describe("operator module - reduce fraction feature", () => {
 
     test("Outputs one element over multiplication", () => {
         expect(
-            JSON.parse((operatorFromString("(h)/((1+x)*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "(h)/((1+x)*y)") as Fraction).ReduceMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "fraction",
             value: "",
@@ -278,7 +295,7 @@ describe("operator module - reduce fraction feature", () => {
 
     test("Outputs multiplication over multiplication", () => {
         expect(
-            JSON.parse((operatorFromString("(n*m)/(l*k)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
+            JSON.parse((operatorFromString(testConfig, "(n*m)/(l*k)") as Fraction).ReduceMODIFICATION().getSerializedStructure())
         ).toMatchObject({
             type: "fraction",
             value: "",

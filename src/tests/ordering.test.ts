@@ -1,17 +1,18 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { BracketedMultiplication, operatorFromString } from "../functions";
+import { BracketedMultiplication, operatorFromString, generateOperatorConfig } from "../functions";
 
 describe("operator module - ordering of operators", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     test("Default implementation", () => {
         expect(
             JSON.parse(
-                (operatorFromString("sum({} {} {}) x sum({} {} {})") as BracketedMultiplication)
+                (operatorFromString(testConfig, "sum({} {} {}) x sum({} {} {})") as BracketedMultiplication)
                     .orderOperatorStrings()
                     .getCopyWithGottenRidOfUnnecessaryTerms()
                     .getSerializedStructure()
@@ -74,7 +75,7 @@ describe("operator module - ordering of operators", () => {
     test("Correct detection of substrings and local ordering", () => {
         expect(
             JSON.parse(
-                (operatorFromString("c#(0)c#(2)c#(1)sum({} {} {})c(2)c(0)c(1)") as BracketedMultiplication)
+                (operatorFromString(testConfig, "c#(0)c#(2)c#(1)sum({} {} {})c(2)c(0)c(1)") as BracketedMultiplication)
                     .orderOperatorStrings()
                     .getCopyWithGottenRidOfUnnecessaryTerms()
                     .getSerializedStructure()
@@ -183,7 +184,7 @@ describe("operator module - ordering of operators", () => {
     test("Complex ordering with different number of terms", () => {
         expect(
             JSON.parse(
-                (operatorFromString("c#(0)c#(2)c#(1)c(1)c(0)c(2)") as BracketedMultiplication)
+                (operatorFromString(testConfig, "c#(0)c#(2)c#(1)c(1)c(0)c(2)") as BracketedMultiplication)
                     .orderOperatorStrings()
                     .getCopyWithGottenRidOfUnnecessaryTerms()
                     .getSerializedStructure()
@@ -522,7 +523,7 @@ describe("operator module - ordering of operators", () => {
     test("More orderable types and getting type ordering correct", () => {
         expect(
             JSON.parse(
-                (operatorFromString("pi pi 3 c#(1)c(n)b(2) 1") as BracketedMultiplication)
+                (operatorFromString(testConfig, "pi pi 3 c#(1)c(n)b(2) 1") as BracketedMultiplication)
                     .orderOperatorStrings()
                     .getCopyWithGottenRidOfUnnecessaryTerms()
                     .getSerializedStructure()
@@ -643,7 +644,7 @@ describe("operator module - ordering of operators", () => {
         });
         expect(
             JSON.parse(
-                (operatorFromString("x y b#(n)b(2)pi") as BracketedMultiplication)
+                (operatorFromString(testConfig, "x y b#(n)b(2)pi") as BracketedMultiplication)
                     .orderOperatorStrings()
                     .getCopyWithGottenRidOfUnnecessaryTerms()
                     .getSerializedStructure()

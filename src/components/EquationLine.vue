@@ -1,6 +1,6 @@
 <script setup lang="ts">
     import { computed, onMounted, ref, watch } from "vue";
-    import { Operator, EmptyArgument, BracketedSum, BracketedMultiplication } from "../functions";
+    import { Operator, EmptyArgument, BracketedSum, BracketedMultiplication, OperatorConfig } from "../functions";
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
     import { v4 as uuidv4 } from "uuid";
@@ -22,6 +22,7 @@
     const props = defineProps<{
         operator: Operator;
         lineUuid: string;
+        config: OperatorConfig;
         isBase: boolean;
     }>();
     const childLineUUID = ref(uuidv4());
@@ -112,7 +113,7 @@
         } else {
             // real implementation >>
             if (replaceWithOperator.value == null) {
-                outputOperator.value = props.operator.getCopyWithReplaced(selectionUUID.value, new EmptyArgument());
+                outputOperator.value = props.operator.getCopyWithReplaced(selectionUUID.value, new EmptyArgument(props.config));
             } else {
                 outputOperator.value = props.operator.getCopyWithReplaced(
                     selectionUUID.value,
@@ -284,7 +285,7 @@
         }
     );
     onMounted(() => {
-        const loaded = permanenceStore.getLineForUUID(props.lineUuid);
+        const loaded = permanenceStore.getLineForUUID(props.config, props.lineUuid);
         resetControlPanel();
 
         if (loaded != null) {
@@ -310,6 +311,8 @@
 
     <InputToOperatorParser
         v-if="isBase"
+        :textarea="true"
+        :config="config"
         @parsed="(a: Operator | null) => { 
                 if (skipBaseParserEffect) {
                     skipBaseParserEffect = false;
@@ -344,6 +347,8 @@
         </button>
         <div style="margin-bottom: 0.5em; width: 100%">&nbsp;</div>
         <InputToOperatorParser
+            :textarea="true"
+            :config="config"
             v-show="mode == MODES.REPLACEMENT"
             @parsed="(a: Operator | null) => { 
                 replaceWithOperator = a;
@@ -376,7 +381,12 @@
             }}</pre>
         </template>
         <div v-else style="margin-top: 0.1em; width: 100%">
-            <EquationLine :operator="(outputOperator as Operator)" :line-uuid="childLineUUID" :is-base="false" />
+            <EquationLine
+                :operator="(outputOperator as Operator)"
+                :line-uuid="childLineUUID"
+                :is-base="false"
+                :config="props.config"
+            />
         </div>
     </template>
 </template>

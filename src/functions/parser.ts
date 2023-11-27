@@ -4,14 +4,15 @@ import {
     OperatorType,
     MAX_CHILDREN_SPECIFICATIONS,
     MIN_CHILDREN_SPECIFICATIONS,
+    OperatorConfig,
 } from "./exporter";
 
 /**
  * @throws Error on failing to tokenize/parse
  */
-export function operatorFromString(input: string): Operator {
+export function operatorFromString(config: OperatorConfig, input: string): Operator {
     const parsedExport = parseStringToExportOperatorContent(input);
-    const generatedStructure = Operator.generateStructure(JSON.stringify(parsedExport), false);
+    const generatedStructure = Operator.generateStructure(config, JSON.stringify(parsedExport), false);
 
     return generatedStructure;
 }

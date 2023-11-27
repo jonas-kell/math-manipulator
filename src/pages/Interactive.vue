@@ -1,26 +1,16 @@
 <script setup lang="ts">
     import EquationUtility from "./../components/EquationUtility.vue";
-    import { usePermanenceStore } from "./../functions";
+    import { OperatorConfig, usePermanenceStore } from "./../functions";
     const VITE_MODE = import.meta.env.MODE;
 
-    const props = defineProps({
-        showHints: {
-            type: Boolean,
-            default: false,
-        },
-        firstLineUuid: {
-            type: String,
-            required: true,
-        },
-        variableListUuid: {
-            type: String,
-            required: true,
-        },
-    });
+    const props = defineProps<{
+        showHints: boolean;
+        config: OperatorConfig;
+    }>();
 
     const permanenceStore = usePermanenceStore();
     const copySessionStorageToClipboard = () => {
-        let text = permanenceStore.dumpSessionStorageObjectToString(props.firstLineUuid, props.variableListUuid);
+        let text = permanenceStore.dumpSessionStorageObjectToString(props.config);
 
         navigator.clipboard
             .writeText(text)
@@ -39,7 +29,7 @@
         <pre>sum((n = 0); 100; int(-inf; inf; (123+(A*4)/100); x))</pre>
         <p>(You can click parts of the rendered function to invoke actions)</p>
     </template>
-    <EquationUtility :first-line-uuid="props.firstLineUuid" :variable-list-uuid="props.variableListUuid" />
+    <EquationUtility :config="config" :show-variables="true" />
     <div style="width: 100%; min-height: 40vh">
         <button @click="copySessionStorageToClipboard" style="float: right" v-if="VITE_MODE == 'development'">
             Session storage to Clipboard

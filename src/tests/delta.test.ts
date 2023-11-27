@@ -1,15 +1,16 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { operatorFromString } from "../functions";
+import { operatorFromString, generateOperatorConfig } from "../functions";
 
 describe("operator implementation delta", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     test("Parsing", () => {
-        expect(JSON.parse(operatorFromString("delta(1 2)").getSerializedStructure())).toMatchObject({
+        expect(JSON.parse(operatorFromString(testConfig, "delta(1 2)").getSerializedStructure())).toMatchObject({
             type: "kronecker_delta",
             value: "",
             children: [
@@ -28,24 +29,26 @@ describe("operator implementation delta", () => {
     });
 
     test("Rendering", () => {
-        expect(operatorFromString("delta(x y)").getExportFormulaString()).toEqual("\\delta_{{x},{y}}");
+        expect(operatorFromString(testConfig, "delta(x y)").getExportFormulaString()).toEqual("\\delta_{{x},{y}}");
     });
 
     test("Numerical Value", () => {
-        expect(JSON.parse(operatorFromString("delta(1 2)").getCopyWithNumbersFolded().getSerializedStructure())).toMatchObject({
+        expect(
+            JSON.parse(operatorFromString(testConfig, "delta(1 2)").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({
             type: "number",
             value: "0",
             children: [],
         });
         expect(
-            JSON.parse(operatorFromString("delta(2 (1+1))").getCopyWithNumbersFolded().getSerializedStructure())
+            JSON.parse(operatorFromString(testConfig, "delta(2 (1+1))").getCopyWithNumbersFolded().getSerializedStructure())
         ).toMatchObject({
             type: "number",
             value: "1",
             children: [],
         });
         expect(
-            JSON.parse(operatorFromString("delta(x (x+1))").getCopyWithNumbersFolded().getSerializedStructure())
+            JSON.parse(operatorFromString(testConfig, "delta(x (x+1))").getCopyWithNumbersFolded().getSerializedStructure())
         ).toMatchObject({
             type: "kronecker_delta",
             value: "",

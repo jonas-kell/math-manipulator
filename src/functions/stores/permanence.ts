@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { Operator } from "./../exporter";
+import { Operator, OperatorConfig } from "./../exporter";
 import { v4 as uuidv4 } from "uuid";
 import { vscodeApiInstance, registerUpdateHandler } from "./vscodeApi";
 import { ref } from "vue";
@@ -69,7 +69,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
         };
         abstractStoreImplementationSet(uuid, JSON.stringify(toStore));
     }
-    function getLineForUUID(uuid: string): PersistentLineStorage | null {
+    function getLineForUUID(config: OperatorConfig, uuid: string): PersistentLineStorage | null {
         const loadedState = abstractStoreImplementationGet(uuid);
 
         let res = null;
@@ -78,7 +78,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
             res = {
                 operator:
                     loadedObject.operator != null && loadedObject.operator != undefined
-                        ? Operator.generateStructure(loadedObject.operator, true)
+                        ? Operator.generateStructure(config, loadedObject.operator, true)
                         : null,
                 childUUID:
                     loadedObject.childUUID != null && loadedObject.childUUID != undefined ? loadedObject.childUUID : uuidv4(),
@@ -139,7 +139,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
         };
         abstractStoreImplementationSet(uuid, JSON.stringify(toStore));
     }
-    function getVariablesStoreForUUID(uuid: string): PersistentVariablesStoreStorage | null {
+    function getVariablesStoreForUUID(config: OperatorConfig, uuid: string): PersistentVariablesStoreStorage | null {
         const loadedState = abstractStoreImplementationGet(uuid);
 
         let res = null;
@@ -154,7 +154,10 @@ export const usePermanenceStore = defineStore("permanence", () => {
                     variables[key] = {
                         uuid: element.uuid != null && element.uuid != undefined ? element.uuid : uuidv4(),
                         created: element.created != null && element.created != undefined ? element.created : Date.now(),
-                        op: element.op != null && element.op != undefined ? Operator.generateStructure(element.op, true) : null,
+                        op:
+                            element.op != null && element.op != undefined
+                                ? Operator.generateStructure(config, element.op, true)
+                                : null,
                     } as PersistentVariable;
                 }
             }
@@ -217,7 +220,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
                 throw Error(`Permanence mode ${mode} not implemented`);
         }
     }
-    function dumpSessionStorageObjectToString(mainUuid: string, variablesUuid: string): string {
+    function dumpSessionStorageObjectToString(config: OperatorConfig): string {
         const keys = Object.keys(sessionStorage);
 
         // Create an object to store all key-value pairs from sessionStorage
@@ -239,8 +242,8 @@ export const usePermanenceStore = defineStore("permanence", () => {
             mainUuid: newMainUuid,
             variablesUuid: newVariablesUuid,
         })
-            .replace(mainUuid, newMainUuid)
-            .replace(variablesUuid, newVariablesUuid);
+            .replace(config.mainLineUuid, newMainUuid)
+            .replace(config.variablesListUuid, newVariablesUuid);
     }
 
     return {

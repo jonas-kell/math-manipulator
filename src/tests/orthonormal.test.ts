@@ -1,17 +1,18 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { BracketedMultiplication, Braket, operatorFromString } from "../functions";
+import { BracketedMultiplication, Braket, operatorFromString, generateOperatorConfig } from "../functions";
 
 describe("operator module - evaluate orthonormal BraKet", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     test("Merging: No BraKet", () => {
         expect(
             JSON.parse(
-                (operatorFromString("1*bra(a)") as BracketedMultiplication)
+                (operatorFromString(testConfig, "1*bra(a)") as BracketedMultiplication)
                     .MergeAndEvaluateBraKetMODIFICATION()
                     .getSerializedStructure()
             )
@@ -39,7 +40,7 @@ describe("operator module - evaluate orthonormal BraKet", () => {
         });
         expect(
             JSON.parse(
-                (operatorFromString("ket(a)bra(k)") as BracketedMultiplication)
+                (operatorFromString(testConfig, "ket(a)bra(k)") as BracketedMultiplication)
                     .MergeAndEvaluateBraKetMODIFICATION()
                     .getSerializedStructure()
             )
@@ -76,7 +77,7 @@ describe("operator module - evaluate orthonormal BraKet", () => {
     test("Merging: There is a BraKet", () => {
         expect(
             JSON.parse(
-                (operatorFromString("bra(k)ket(a)") as BracketedMultiplication)
+                (operatorFromString(testConfig, "bra(k)ket(a)") as BracketedMultiplication)
                     .MergeAndEvaluateBraKetMODIFICATION()
                     .getSerializedStructure()
             )
@@ -98,7 +99,7 @@ describe("operator module - evaluate orthonormal BraKet", () => {
         });
         expect(
             JSON.parse(
-                (operatorFromString("x*bra(k)ket(a)*2") as BracketedMultiplication)
+                (operatorFromString(testConfig, "x*bra(k)ket(a)*2") as BracketedMultiplication)
                     .MergeAndEvaluateBraKetMODIFICATION()
                     .getSerializedStructure()
             )
@@ -139,7 +140,7 @@ describe("operator module - evaluate orthonormal BraKet", () => {
     test("Evaluating: Merge and Evaluate", () => {
         expect(
             JSON.parse(
-                (operatorFromString("bra(1)ket(1)") as BracketedMultiplication)
+                (operatorFromString(testConfig, "bra(1)ket(1)") as BracketedMultiplication)
                     .MergeAndEvaluateBraKetMODIFICATION()
                     .getSerializedStructure()
             )
@@ -152,7 +153,9 @@ describe("operator module - evaluate orthonormal BraKet", () => {
 
     test("Evaluating: Evaluate to 1", () => {
         expect(
-            JSON.parse((operatorFromString("braket(0 0)") as Braket).OrthoNormalEvalMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "braket(0 0)") as Braket).OrthoNormalEvalMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "number",
             value: "1",
@@ -161,7 +164,7 @@ describe("operator module - evaluate orthonormal BraKet", () => {
 
         expect(
             JSON.parse(
-                (operatorFromString("braket((1; 2; 3) (1; 2; 3))") as Braket)
+                (operatorFromString(testConfig, "braket((1; 2; 3) (1; 2; 3))") as Braket)
                     .OrthoNormalEvalMODIFICATION()
                     .getSerializedStructure()
             )
@@ -174,7 +177,9 @@ describe("operator module - evaluate orthonormal BraKet", () => {
 
     test("Evaluating: Evaluate to 0", () => {
         expect(
-            JSON.parse((operatorFromString("braket(0 1)") as Braket).OrthoNormalEvalMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "braket(0 1)") as Braket).OrthoNormalEvalMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "number",
             value: "0",
@@ -183,7 +188,7 @@ describe("operator module - evaluate orthonormal BraKet", () => {
 
         expect(
             JSON.parse(
-                (operatorFromString("braket((1; 6; 3) (1; 2; 3))") as Braket)
+                (operatorFromString(testConfig, "braket((1; 6; 3) (1; 2; 3))") as Braket)
                     .OrthoNormalEvalMODIFICATION()
                     .getSerializedStructure()
             )
@@ -195,7 +200,9 @@ describe("operator module - evaluate orthonormal BraKet", () => {
 
         expect(
             JSON.parse(
-                (operatorFromString("braket((2); (3*1))") as Braket).OrthoNormalEvalMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "braket((2); (3*1))") as Braket)
+                    .OrthoNormalEvalMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "number",
@@ -207,7 +214,9 @@ describe("operator module - evaluate orthonormal BraKet", () => {
     test("Evaluating: unsure evaluation", () => {
         expect(
             JSON.parse(
-                (operatorFromString("braket((1; 2; 3); (1; 2))") as Braket).OrthoNormalEvalMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "braket((1; 2; 3); (1; 2))") as Braket)
+                    .OrthoNormalEvalMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "double_braket",
@@ -255,7 +264,9 @@ describe("operator module - evaluate orthonormal BraKet", () => {
 
         expect(
             JSON.parse(
-                (operatorFromString("braket((2); (3*x))") as Braket).OrthoNormalEvalMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "braket((2); (3*x))") as Braket)
+                    .OrthoNormalEvalMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "double_braket",

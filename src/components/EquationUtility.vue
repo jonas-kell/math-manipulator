@@ -1,25 +1,18 @@
 <script setup lang="ts">
     import EquationLine from "./../components/EquationLine.vue";
     import VariableList from "./../components/VariableList.vue";
-    import { EmptyArgument, Operator, usePermanenceStore } from "./../functions";
-    import { nextTick, ref } from "vue";
+    import { EmptyArgument, Operator, OperatorConfig, usePermanenceStore } from "./../functions";
+    import { computed, nextTick, ref } from "vue";
 
-    const props = defineProps({
-        firstLineUuid: {
-            type: String,
-            required: true,
-        },
-        variableListUuid: {
-            type: String,
-            required: true,
-        },
-        showVariables: {
-            type: Boolean,
-            default: true,
-        },
+    const props = defineProps<{
+        showVariables: boolean;
+        config: OperatorConfig;
+    }>();
+    const firstLineUuid = computed(() => {
+        return props.config.mainLineUuid;
     });
 
-    const emptyOperator = ref(new EmptyArgument());
+    const emptyOperator = ref(new EmptyArgument(props.config));
     const showMainElements = ref(true);
 
     // update EVERYTHING if permanence has been forcefully rewritten
@@ -36,9 +29,10 @@
         <EquationLine
             v-if="emptyOperator"
             :operator="(emptyOperator as Operator)"
-            :line-uuid="props.firstLineUuid"
+            :line-uuid="firstLineUuid"
             :is-base="true"
+            :config="config"
         />
-        <VariableList style="margin-top: 3em" :uuid="props.variableListUuid" v-if="props.showVariables" />
+        <VariableList style="margin-top: 3em" :config="config" v-if="props.showVariables" />
     </template>
 </template>

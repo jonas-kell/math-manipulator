@@ -1,17 +1,20 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { operatorFromString, BracketedSum } from "../functions";
+import { operatorFromString, BracketedSum, generateOperatorConfig } from "../functions";
 
 describe("operator module - cancel from sums feature", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     test("nothing to fold", () => {
         expect(
             JSON.parse(
-                (operatorFromString("x+--x") as BracketedSum).EliminateCancelingTermsMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "x+--x") as BracketedSum)
+                    .EliminateCancelingTermsMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "bracketed_sum",
@@ -46,7 +49,9 @@ describe("operator module - cancel from sums feature", () => {
     test("only fold one element if multiple are present", () => {
         expect(
             JSON.parse(
-                (operatorFromString("x-x+x") as BracketedSum).EliminateCancelingTermsMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "x-x+x") as BracketedSum)
+                    .EliminateCancelingTermsMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "variable",
@@ -58,7 +63,9 @@ describe("operator module - cancel from sums feature", () => {
     test("Different order and elements left", () => {
         expect(
             JSON.parse(
-                (operatorFromString("-x+z+y+x") as BracketedSum).EliminateCancelingTermsMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "-x+z+y+x") as BracketedSum)
+                    .EliminateCancelingTermsMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "bracketed_sum",
@@ -81,7 +88,7 @@ describe("operator module - cancel from sums feature", () => {
     test("More complex and pulls out minus smartly", () => {
         expect(
             JSON.parse(
-                (operatorFromString("x/(2-y)+zxa+(-x/(2-y))") as BracketedSum)
+                (operatorFromString(testConfig, "x/(2-y)+zxa+(-x/(2-y))") as BracketedSum)
                     .EliminateCancelingTermsMODIFICATION()
                     .getSerializedStructure()
             )

@@ -13,6 +13,7 @@ import {
     BracketedSum,
     Variable,
     ComplexOperatorConstruct,
+    OperatorConfig,
 } from "./exporter";
 
 export interface ExportOperatorContent {
@@ -23,6 +24,7 @@ export interface ExportOperatorContent {
 }
 
 export abstract class Operator {
+    private _config: OperatorConfig;
     protected _type: OperatorType;
     protected _startDisplayFormula: string;
     protected _midDisplayFormula: string;
@@ -35,6 +37,7 @@ export abstract class Operator {
     protected _renderChildren: boolean = true;
 
     constructor(
+        config: OperatorConfig,
         type: OperatorType,
         startDisplayFormula: string,
         midDisplayFormula: string,
@@ -44,6 +47,8 @@ export abstract class Operator {
         midDisplayOverwrite: string[] = [],
         renderChildren: boolean = true
     ) {
+        this._config = config;
+
         if (children.length < MIN_CHILDREN_SPECIFICATIONS[type]) {
             throw Error("Not enough children for Operator");
         }
@@ -70,6 +75,10 @@ export abstract class Operator {
         this._hasMidDisplayOverwrite = hasMidDisplayOverwrite;
         this._midDisplayOverwrite = midDisplayOverwrite;
         this._renderChildren = renderChildren;
+    }
+
+    getOwnConfig(): OperatorConfig {
+        return this._config;
     }
 
     getType() {
@@ -226,18 +235,22 @@ export abstract class Operator {
         return res as ExportOperatorContent;
     }
 
-    static generateStructure(input: string, keepUUIDs: boolean = false): Operator {
+    static generateStructure(config: OperatorConfig, input: string, keepUUIDs: boolean = false): Operator {
         const json: ExportOperatorContent = JSON.parse(input); // unsure if this is possible type-safe (this is too complicated https://dev.to/codeprototype/safely-parsing-json-to-a-typescript-interface-3lkj)
 
-        return Operator.generateStructureRecursive(json, keepUUIDs);
+        return Operator.generateStructureRecursive(config, json, keepUUIDs);
     }
 
-    private static generateStructureRecursive(input: ExportOperatorContent, keepUUIDs: boolean): Operator {
-        let res = new Numerical(0) as Operator;
+    private static generateStructureRecursive(
+        config: OperatorConfig,
+        input: ExportOperatorContent,
+        keepUUIDs: boolean
+    ): Operator {
+        let res = new Numerical(config, 0) as Operator;
 
         let childrenReconstructed = [] as Operator[];
         (input.children ?? []).forEach((childJson) => {
-            childrenReconstructed.push(Operator.generateStructureRecursive(childJson, keepUUIDs));
+            childrenReconstructed.push(Operator.generateStructureRecursive(config, childJson, keepUUIDs));
         });
 
         if (
@@ -251,7 +264,7 @@ export abstract class Operator {
             );
         }
 
-        res = operatorConstructorSwitch(input.type, input.value, childrenReconstructed);
+        res = operatorConstructorSwitch(config, input.type, input.value, childrenReconstructed);
 
         if (keepUUIDs) {
             res.manuallySetUUID(input.uuid);
@@ -337,6 +350,7 @@ export abstract class Operator {
                 }
             });
             let copy = Operator.generateStructureRecursive(
+                this.getOwnConfig(),
                 {
                     children: newChildren,
                     type: this._type,
@@ -347,7 +361,7 @@ export abstract class Operator {
             );
             return copy;
         } else {
-            return new Numerical(ownNumericalValueOrNull);
+            return new Numerical(this.getOwnConfig(), ownNumericalValueOrNull);
         }
     }
 
@@ -360,20 +374,20 @@ export abstract class Operator {
         const replacementValue = replacement.getSerializedStructureRecursive();
         copy = Operator.replaceRecursive(copy, uuid, (_a) => replacementValue);
 
-        return Operator.generateStructureRecursive(copy, false);
+        return Operator.generateStructureRecursive(this.getOwnConfig(), copy, false);
     }
 
     getCopyWithPackedIntoVariable(name: string, uuid: string) {
         let copy = this.getSerializedStructureRecursive();
         copy = Operator.replaceRecursive(copy, uuid, (a) => {
-            const variable = new Variable(name);
+            const variable = new Variable(this.getOwnConfig(), name);
             // store the replaced values
-            variable.setOperatorStoredHere(Operator.generateStructureRecursive(a, false));
+            variable.setOperatorStoredHere(Operator.generateStructureRecursive(this.getOwnConfig(), a, false));
 
             return variable.getSerializedStructureRecursive();
         });
 
-        return Operator.generateStructureRecursive(copy, false);
+        return Operator.generateStructureRecursive(this.getOwnConfig(), copy, false);
     }
 
     private static replaceRecursive(
@@ -459,25 +473,27 @@ export abstract class Operator {
         return null;
     }
 
-    static MergeBraKet(bra: Bra, ket: Ket) {
-        return new Braket(bra._children[0], ket._children[0]);
+    static MergeBraKet(config: OperatorConfig, bra: Bra, ket: Ket) {
+        return new Braket(config, bra._children[0], ket._children[0]);
     }
 
     getCopyWithGottenRidOfUnnecessaryTerms() {
         let copy = this.getCopyWithNumbersFolded(true); // directly eliminate all unnecessary delta, 0, 1, etc.
-        copy = Operator.handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(copy);
+        copy = Operator.handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(this.getOwnConfig(), copy);
         return copy;
     }
 
-    private static handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(op: Operator): Operator {
+    private static handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(config: OperatorConfig, op: Operator): Operator {
         // go into structures to treat their children
-        op._children = op._children.map((child) => Operator.handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(child));
+        op._children = op._children.map((child) =>
+            Operator.handleChildrenWithGottenRidOfUnnecessaryTermsRecursive(config, child)
+        );
 
         // make sure to pull out the minus if it was just included into a number
         // also eliminates Negation(Negation(stuff))
         if (implementsMinusPulloutManagement(op)) {
             const [evenNumberMinusPulledOut, resOp] = op.minusCanBePulledOut();
-            op = evenNumberMinusPulledOut ? resOp : new Negation(resOp);
+            op = evenNumberMinusPulledOut ? resOp : new Negation(config, resOp);
         }
 
         // Make sure to get rid of cancelling terms

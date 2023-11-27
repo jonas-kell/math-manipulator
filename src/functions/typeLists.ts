@@ -1,3 +1,18 @@
+export type OperatorConfig = {
+    mainLineUuid: string;
+    variablesListUuid: string;
+};
+
+export function generateOperatorConfig(
+    mainLineUuid: string = "MAIN_UUID",
+    variablesListUuid: string = "MAIN_VARIABLE_LIST_UUID"
+): OperatorConfig {
+    return {
+        mainLineUuid: mainLineUuid,
+        variablesListUuid: variablesListUuid,
+    };
+}
+
 export enum OperatorType {
     Fraction = "fraction",
     BracketedSum = "bracketed_sum",

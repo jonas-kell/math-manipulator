@@ -1,20 +1,29 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { operatorFromString, Numerical, BracketedMultiplication, Fraction, Negation, BracketedSum } from "../functions";
+import {
+    operatorFromString,
+    Numerical,
+    BracketedMultiplication,
+    Fraction,
+    Negation,
+    BracketedSum,
+    generateOperatorConfig,
+} from "../functions";
 
 describe("operator module - pull out minus feature", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     test("Pull out of number", () => {
-        expect(JSON.parse(new Numerical(101).PullOutMinusMODIFICATION().getSerializedStructure())).toMatchObject({
+        expect(JSON.parse(new Numerical(testConfig, 101).PullOutMinusMODIFICATION().getSerializedStructure())).toMatchObject({
             type: "number",
             value: "101",
             children: [],
         });
-        expect(JSON.parse(new Numerical(-101).PullOutMinusMODIFICATION().getSerializedStructure())).toMatchObject({
+        expect(JSON.parse(new Numerical(testConfig, -101).PullOutMinusMODIFICATION().getSerializedStructure())).toMatchObject({
             type: "negation",
             value: "",
             children: [
@@ -29,7 +38,11 @@ describe("operator module - pull out minus feature", () => {
 
     test("Pull out of multiplication", () => {
         expect(
-            JSON.parse((operatorFromString("x*y") as BracketedMultiplication).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "x*y") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
+            )
         ).toMatchObject({
             type: "bracketed_multiplication",
             value: "",
@@ -48,7 +61,9 @@ describe("operator module - pull out minus feature", () => {
         });
         expect(
             JSON.parse(
-                (operatorFromString("-x*y*z") as BracketedMultiplication).PullOutMinusMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "-x*y*z") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "negation",
@@ -79,7 +94,9 @@ describe("operator module - pull out minus feature", () => {
         });
         expect(
             JSON.parse(
-                (operatorFromString("x*y*-z") as BracketedMultiplication).PullOutMinusMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "x*y*-z") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "negation",
@@ -110,7 +127,9 @@ describe("operator module - pull out minus feature", () => {
         });
         expect(
             JSON.parse(
-                (operatorFromString("-x*-y*-z") as BracketedMultiplication).PullOutMinusMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "-x*-y*-z") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "negation",
@@ -141,7 +160,9 @@ describe("operator module - pull out minus feature", () => {
         });
         expect(
             JSON.parse(
-                (operatorFromString("-x*y*-z") as BracketedMultiplication).PullOutMinusMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "-x*y*-z") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "bracketed_multiplication",
@@ -168,7 +189,7 @@ describe("operator module - pull out minus feature", () => {
 
     test("Pull out of division", () => {
         expect(
-            JSON.parse((operatorFromString("-1/x") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse((operatorFromString(testConfig, "-1/x") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure())
         ).toMatchObject({
             type: "negation",
             value: "",
@@ -192,7 +213,7 @@ describe("operator module - pull out minus feature", () => {
             ],
         });
         expect(
-            JSON.parse((operatorFromString("1/-x") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse((operatorFromString(testConfig, "1/-x") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure())
         ).toMatchObject({
             type: "negation",
             value: "",
@@ -216,7 +237,7 @@ describe("operator module - pull out minus feature", () => {
             ],
         });
         expect(
-            JSON.parse((operatorFromString("1/x") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse((operatorFromString(testConfig, "1/x") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure())
         ).toMatchObject({
             type: "fraction",
             value: "",
@@ -234,7 +255,7 @@ describe("operator module - pull out minus feature", () => {
             ],
         });
         expect(
-            JSON.parse((operatorFromString("-1/-x") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse((operatorFromString(testConfig, "-1/-x") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure())
         ).toMatchObject({
             type: "fraction",
             value: "",
@@ -255,14 +276,18 @@ describe("operator module - pull out minus feature", () => {
 
     test("Pull out of negation", () => {
         expect(
-            JSON.parse((operatorFromString("--1") as Negation).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse((operatorFromString(testConfig, "--1") as Negation).PullOutMinusMODIFICATION().getSerializedStructure())
         ).toMatchObject({
             type: "number",
             value: "1",
             children: [],
         });
         expect(
-            JSON.parse((operatorFromString("-1") as BracketedMultiplication).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "-1") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
+            )
         ).toMatchObject({
             type: "negation",
             value: "",
@@ -276,7 +301,9 @@ describe("operator module - pull out minus feature", () => {
         });
         expect(
             JSON.parse(
-                (operatorFromString("---1") as BracketedMultiplication).PullOutMinusMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "---1") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "negation",
@@ -293,7 +320,9 @@ describe("operator module - pull out minus feature", () => {
 
     test("Pull out of sum: manually", () => {
         expect(
-            JSON.parse((operatorFromString("(-2-3)") as BracketedSum).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "(-2-3)") as BracketedSum).PullOutMinusMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "negation",
             value: "",
@@ -317,7 +346,9 @@ describe("operator module - pull out minus feature", () => {
             ],
         });
         expect(
-            JSON.parse((operatorFromString("(2-3)") as BracketedSum).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "(2-3)") as BracketedSum).PullOutMinusMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "negation",
             value: "",
@@ -348,7 +379,9 @@ describe("operator module - pull out minus feature", () => {
         });
         // Pulls out no matter what
         expect(
-            JSON.parse((operatorFromString("(2+3)") as BracketedSum).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "(2+3)") as BracketedSum).PullOutMinusMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "negation",
             value: "",
@@ -388,7 +421,9 @@ describe("operator module - pull out minus feature", () => {
     test("Pull out of sum: automatically", () => {
         expect(
             JSON.parse(
-                (operatorFromString("-1*(2+3)") as BracketedMultiplication).PullOutMinusMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "-1*(2+3)") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "negation",
@@ -426,7 +461,7 @@ describe("operator module - pull out minus feature", () => {
         // ALL minus in sum -> gets pulled out automatically
         expect(
             JSON.parse(
-                (operatorFromString("-1*(-2-33-11)") as BracketedMultiplication)
+                (operatorFromString(testConfig, "-1*(-2-33-11)") as BracketedMultiplication)
                     .PullOutMinusMODIFICATION()
                     .getSerializedStructure()
             )
@@ -465,7 +500,7 @@ describe("operator module - pull out minus feature", () => {
         // NOT all minus in sum -> gets NOT pulled out automatically
         expect(
             JSON.parse(
-                (operatorFromString("-1*(-2+33-11)") as BracketedMultiplication)
+                (operatorFromString(testConfig, "-1*(-2+33-11)") as BracketedMultiplication)
                     .PullOutMinusMODIFICATION()
                     .getSerializedStructure()
             )
@@ -523,7 +558,9 @@ describe("operator module - pull out minus feature", () => {
 
     test("Still works if children cannot pull out stuff", () => {
         expect(
-            JSON.parse((operatorFromString("exp(-1)/-1") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "exp(-1)/-1") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "negation",
             value: "",
@@ -559,7 +596,11 @@ describe("operator module - pull out minus feature", () => {
             ],
         });
         expect(
-            JSON.parse((operatorFromString("exp(-1)/exp(-2)") as Fraction).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "exp(-1)/exp(-2)") as Fraction)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
+            )
         ).toMatchObject({
             type: "fraction",
             value: "",
@@ -601,7 +642,9 @@ describe("operator module - pull out minus feature", () => {
             ],
         });
         expect(
-            JSON.parse((operatorFromString("-exp(22)") as Negation).PullOutMinusMODIFICATION().getSerializedStructure())
+            JSON.parse(
+                (operatorFromString(testConfig, "-exp(22)") as Negation).PullOutMinusMODIFICATION().getSerializedStructure()
+            )
         ).toMatchObject({
             type: "negation",
             value: "",
@@ -622,7 +665,9 @@ describe("operator module - pull out minus feature", () => {
 
         expect(
             JSON.parse(
-                (operatorFromString("exp(33)*1") as BracketedMultiplication).PullOutMinusMODIFICATION().getSerializedStructure()
+                (operatorFromString(testConfig, "exp(33)*1") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
             )
         ).toMatchObject({
             type: "bracketed_multiplication",
@@ -649,7 +694,7 @@ describe("operator module - pull out minus feature", () => {
 
         expect(
             JSON.parse(
-                (operatorFromString("-1*(exp(33)+exp(-2))") as BracketedMultiplication)
+                (operatorFromString(testConfig, "-1*(exp(33)+exp(-2))") as BracketedMultiplication)
                     .PullOutMinusMODIFICATION()
                     .getSerializedStructure()
             )
@@ -707,7 +752,7 @@ describe("operator module - pull out minus feature", () => {
 
         expect(
             JSON.parse(
-                (operatorFromString("-1*(-exp(33)+exp(-2))") as BracketedMultiplication)
+                (operatorFromString(testConfig, "-1*(-exp(33)+exp(-2))") as BracketedMultiplication)
                     .PullOutMinusMODIFICATION()
                     .getSerializedStructure()
             )
@@ -771,7 +816,7 @@ describe("operator module - pull out minus feature", () => {
 
         expect(
             JSON.parse(
-                (operatorFromString("-1*(-exp(33)-exp(-2))") as BracketedMultiplication)
+                (operatorFromString(testConfig, "-1*(-exp(33)-exp(-2))") as BracketedMultiplication)
                     .PullOutMinusMODIFICATION()
                     .getSerializedStructure()
             )
@@ -823,7 +868,7 @@ describe("operator module - pull out minus feature", () => {
 
         expect(
             JSON.parse(
-                (operatorFromString("exp(33)-exp(-2)") as BracketedMultiplication)
+                (operatorFromString(testConfig, "exp(33)-exp(-2)") as BracketedMultiplication)
                     .PullOutMinusMODIFICATION()
                     .getSerializedStructure()
             )

@@ -4,7 +4,7 @@ import {
     wordsParserConsidersReserved,
     PersistentVariablesStoreStorage,
     usePermanenceStore,
-    PersistentVariable,
+    // PersistentVariable,
 } from "./../exporter";
 import { v4 as uuidv4 } from "uuid";
 
@@ -117,35 +117,36 @@ export const useVariablesStore = defineStore("variables", {
                 return null;
             }
         },
-        setUUIDForPersistence(uuid: string) {
-            // delete all variables, while not using the access functions that remove the stored values
-            this.values = {};
+        // TODO migrate to new config-style
+        // setUUIDForPersistence(uuid: string) {
+        //     // delete all variables, while not using the access functions that remove the stored values
+        //     this.values = {};
 
-            // disable overwriting of things in the storage
-            this.storeUUIDForPersistence = null;
+        //     // disable overwriting of things in the storage
+        //     this.storeUUIDForPersistence = null;
 
-            // call all the constructors once and store results, to make sure that calling a variable constructor while creating another variable doesn't cause empty variable initialization later
-            const buffer = {} as { [key: string]: PersistentVariable };
-            const reimport = usePermanenceStore().getVariablesStoreForUUID(uuid);
-            if (reimport && reimport != null) {
-                for (const key in reimport.variables) {
-                    const reimportedVariable = reimport.variables[key];
-                    buffer[key] = reimportedVariable;
-                }
-            }
+        //     // call all the constructors once and store results, to make sure that calling a variable constructor while creating another variable doesn't cause empty variable initialization later
+        //     const buffer = {} as { [key: string]: PersistentVariable };
+        //     const reimport = usePermanenceStore().getVariablesStoreForUUID(uuid);
+        //     if (reimport && reimport != null) {
+        //         for (const key in reimport.variables) {
+        //             const reimportedVariable = reimport.variables[key];
+        //             buffer[key] = reimportedVariable;
+        //         }
+        //     }
 
-            // clear the locally stored variables again, as they may contained faulty half-initialization, depending on
-            this.values = {};
+        //     // clear the locally stored variables again, as they may contained faulty half-initialization, depending on
+        //     this.values = {};
 
-            // overwrite locally stored values
-            for (const key in buffer) {
-                const storage = buffer[key];
-                this.values[key] = storage;
-            }
+        //     // overwrite locally stored values
+        //     for (const key in buffer) {
+        //         const storage = buffer[key];
+        //         this.values[key] = storage;
+        //     }
 
-            // set the correct import target uuid
-            this.storeUUIDForPersistence = uuid;
-        },
+        //     // set the correct import target uuid
+        //     this.storeUUIDForPersistence = uuid;
+        // },
         storeValues() {
             if (this.storeUUIDForPersistence != null) {
                 let exp = { variables: {} } as PersistentVariablesStoreStorage;

@@ -1,15 +1,17 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { BracketedMultiplication, BracketedSum, Operator } from "../functions";
+import { BracketedMultiplication, BracketedSum, Operator, generateOperatorConfig } from "../functions";
 
 describe("operator module - commute with subsequent", () => {
     beforeEach(() => {
         mockPinia();
     });
+    const testConfig = generateOperatorConfig();
 
     test("Select right one from a longer string", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_sum",
                 value: "",
@@ -70,6 +72,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Select right one from a longer string", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -175,6 +178,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test fermionic annihilation commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -256,6 +260,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test fermionic annihilation to creation commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -359,6 +364,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test fermionic annihilation to number commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -421,6 +427,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test fermionic creation commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -502,6 +509,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test fermionic creation to annihilation commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -605,6 +613,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test fermionic creation to number commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -667,6 +676,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test bosonic annihilation commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -742,6 +752,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test bosonic annihilation to creation commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -839,6 +850,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test bosonic annihilation to number commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -901,6 +913,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test bosonic creation commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -976,6 +989,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test bosonic creation to annihilation commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -1073,6 +1087,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Test bosonic creation to number commutation", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
@@ -1135,6 +1150,7 @@ describe("operator module - commute with subsequent", () => {
 
     test("Force swap when element has no special logic attached", () => {
         const input = Operator.generateStructure(
+            testConfig,
             JSON.stringify({
                 type: "bracketed_multiplication",
                 value: "",
