@@ -151,7 +151,6 @@ export const useVariablesStore = defineStore("variables", {
 
             // is initialized, return it
             if (Object.keys(this.variableStashes).includes(variableStashUuid)) {
-                console.log("gotten", this.variableStashes[variableStashUuid]);
                 return this.variableStashes[variableStashUuid];
             }
 
