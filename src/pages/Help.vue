@@ -23,7 +23,7 @@
             }
 
             outArray.push({
-                config: generateOperatorConfig(),
+                config: generateOperatorConfig(elem.mainUuid, elem.variablesUuid),
                 element: elem,
             });
         });
