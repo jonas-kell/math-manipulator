@@ -87,7 +87,7 @@
     },
     {
         "title": "Variables - Definition and Usage",
-        "description": "When Variables are typed, they can be accessed at the bottom of the page (in help currently disabled, because Variable-storage would be shared..., need to fix.)\nIn the example the operations \"Define Variable\", \"Unpack\", \"Define Variable\", \"Fold Numbers\" have been used.\n(Fold Numbers and number based operations remain working, no matter how deep nested variables are.)\nRecursive or self-referencing variables break everything currently, so do not do it, I guess.",
+        "description": "When Variables are typed, they can be accessed at the bottom of the page (for space-reasons only displayed in this example)\nIn the example the operations \"Define Variable\", \"Unpack\", \"Define Variable\", \"Fold Numbers\" have been used.\n(Fold Numbers and number based operations remain working, no matter how deep nested variables are.)\nRecursive or self-referencing variables break everything currently, so do not do it, I guess.",
         "storage": {
             "86ea786d-de4c-4830-8100-89026f1d4aa0": "{\"operator\":\"{\\\"type\\\":\\\"bracketed_sum\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"318fb04d-b205-40fc-af98-167ae0be0421\\\"},{\\\"type\\\":\\\"bracketed_multiplication\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"3\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"7cc2df3c-1b7f-4ce3-9844-640fc38e13a5\\\"},{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"X\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"d6589d24-0115-4879-9014-0631fc341f4b\\\"}],\\\"uuid\\\":\\\"3fb3c43c-2799-4cc7-ad7b-fc20f12c0f43\\\"}],\\\"uuid\\\":\\\"6b539fe4-5837-4ffb-9632-f748f144f8c3\\\"}\",\"childUUID\":\"68ec67c2-a400-4037-8ba2-fefa8d0534bf\",\"selectionUUID\":\"36ec2ca1-7a6c-47ed-965b-42811b3f5ae7\",\"operatorParserUUID\":\"037a2beb-334c-43f7-8934-4f0a4d09be87\",\"variableNameInputUUID\":\"8130f0c3-f9b8-407d-8849-c9293fbef717\",\"mode\":\"var_def\"}",
             "00f76bcf-7942-4295-9767-03d543f948ad": "{\"textValue\":\"1+3 5\"}",
@@ -99,7 +99,7 @@
             "3f723bfb-f0ba-470c-8c39-3f4d734aebd3": "{\"textValue\":\"Y\"}",
             "f8ffd65b-2fe3-4f35-957a-3358b81e3c02": "{\"operator\":\"{\\\"type\\\":\\\"bracketed_sum\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"a248acf9-a2b5-4d3c-889c-5052d7427a18\\\"},{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"Y\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"3c5d80d4-740f-458e-8b9f-bcdd5d0495ad\\\"}],\\\"uuid\\\":\\\"1ded0bdb-893c-4afe-bbec-a4b60822deb5\\\"}\",\"childUUID\":\"b573838a-af7f-41ea-9f24-eb9ed60aecc3\",\"selectionUUID\":\"df804f25-369f-4bb6-9319-44cf3a953c08\",\"operatorParserUUID\":\"3b7f964f-b123-4ebc-aa62-9c3497638ae0\",\"variableNameInputUUID\":\"3f723bfb-f0ba-470c-8c39-3f4d734aebd3\",\"mode\":\"var_def\"}"
         },
-        "showVariables": false,
+        "showVariables": true,
         "mainUuid": "5c0534d1-4683-4c4e-8360-d6db45736737",
         "variablesUuid": "80dee28c-96c0-4970-b676-ddf545db718d"
     },
