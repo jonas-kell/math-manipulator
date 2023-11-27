@@ -14,7 +14,7 @@ export default defineConfig({
     build: {
         manifest: true,
         rollupOptions: {
-            // disable code splitting to allow for the import of single js files in VS-Code Extension ( //TODO maybe improve/make dependent)
+            // disable code splitting to allow for the import of single js files in VS-Code Extension ( //TODO maybe improve/make dependent )
             output: {
                 manualChunks: {},
             },

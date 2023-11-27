@@ -147,7 +147,6 @@ export const useVariablesStore = defineStore("variables", {
                 return null;
             }
         },
-        // TODO migrate to new config-style
         getVariableStash(config: OperatorConfig): VariableStash {
             const variableStashUuid = config.variablesListUuid;
 
@@ -187,7 +186,6 @@ export const useVariablesStore = defineStore("variables", {
             return newStash;
         },
         storeValues(config: OperatorConfig) {
-            // TODO chick if removed if is in fact needed
             let exp = { variables: {} } as PersistentVariablesStoreStorage;
 
             this.availableVariables(config).forEach((variableName) => {
