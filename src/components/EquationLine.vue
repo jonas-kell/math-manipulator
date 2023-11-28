@@ -142,10 +142,9 @@
                     variableDefinitionName.value,
                     selectionUUID.value
                 );
-
-                // trigger typing debounce cleanup
-                variablesStore.purgeLastElementsWithNamesLeadingUpToThis(props.config, variableDefinitionName.value);
             }
+            // trigger typing debounce cleanup (also when emptied again)
+            variablesStore.purgeLastElementsWithNamesLeadingUpToThis(props.config, variableDefinitionName.value);
         }
     };
     const actionsHaveAnyEffectAndTheirResults = computed(() => {

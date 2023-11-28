@@ -23,7 +23,6 @@ interface VariableStash {
 }
 
 const MAX_RECENT_LIFETIME = 1500;
-const MIN_RECENT_LIFETIME = 5;
 
 export const useVariablesStore = defineStore("variables", () => {
     const variableStashes = ref(
@@ -73,40 +72,37 @@ export const useVariablesStore = defineStore("variables", () => {
         const copyOfRecentlyCreated = getVariableStash(config).recentlyCreatedVariables;
 
         // this is debouncing typing actions. Therefore call this on keyUp with the new text. Then here a delay is introduced, to make sure, processing on the logic side is finished
-        setTimeout(() => {
-            // make sure to iterate over all possible names that were present at the time of queueing the cleanup and at the time of execution
-            [...new Set(copyOfRecentlyCreated.concat(getVariableStash(config).recentlyCreatedVariables))].forEach((iterName) => {
-                const storedObject = getVariableStash(config).values[iterName];
-                // check the variable is even stored
-                if (storedObject && storedObject != null && storedObject != undefined) {
-                    // check if the naming indicates typing related creation
-                    if (
-                        // normal typing (name gets longer)
-                        (extracted.startsWith(iterName) && extracted != iterName) ||
-                        // name gets shorter when deleting
-                        // most recent variable must not be deleted obviously. (Required, because this happens in timeout and this could cause de-sync for very fast following inputs)
-                        // therefore extra check so that the second-last character of a normally typed string doesn't delete the full name as it thinks it is a deleting motion
-                        (iterName.substring(0, iterName.length - 1) == extracted &&
-                            iterName != getVariableStash(config).mostRecentVariableName) ||
-                        // deleting single character variables
-                        (extracted == "" && iterName.length == 1)
-                    ) {
-                        // check if the age is still allowing to delete
-                        const age = Date.now() - storedObject.created;
-                        if (age < MAX_RECENT_LIFETIME) {
-                            // clear variable from store
-                            removeVariableFromStore(config, iterName);
-                            // clear possibly cleaning requirement
-                            getVariableStash(config).recentlyCreatedVariables = removeFromArray(
-                                getVariableStash(config).recentlyCreatedVariables,
-                                iterName
-                            );
-                            updateLastUpdateTimestamp();
-                        }
+        [...new Set(copyOfRecentlyCreated.concat(getVariableStash(config).recentlyCreatedVariables))].forEach((iterName) => {
+            const storedObject = getVariableStash(config).values[iterName];
+            // check the variable is even stored
+            if (storedObject && storedObject != null && storedObject != undefined) {
+                // check if the naming indicates typing related creation
+                if (
+                    // normal typing (name gets longer)
+                    (extracted.startsWith(iterName) && extracted != iterName) ||
+                    // name gets shorter when deleting
+                    // most recent variable must not be deleted obviously. (Required, because this happens in timeout and this could cause de-sync for very fast following inputs)
+                    // therefore extra check so that the second-last character of a normally typed string doesn't delete the full name as it thinks it is a deleting motion
+                    (iterName.substring(0, iterName.length - 1) == extracted &&
+                        iterName != getVariableStash(config).mostRecentVariableName) ||
+                    // deleting single character variables
+                    (extracted == "" && iterName.length == 1)
+                ) {
+                    // check if the age is still allowing to delete
+                    const age = Date.now() - storedObject.created;
+                    if (age < MAX_RECENT_LIFETIME) {
+                        // clear variable from store
+                        removeVariableFromStore(config, iterName);
+                        // clear possibly cleaning requirement
+                        getVariableStash(config).recentlyCreatedVariables = removeFromArray(
+                            getVariableStash(config).recentlyCreatedVariables,
+                            iterName
+                        );
+                        updateLastUpdateTimestamp();
                     }
                 }
-            });
-        }, MIN_RECENT_LIFETIME);
+            }
+        });
     }
     function setOperatorForVariable(config: OperatorConfig, name: string, value: Operator | null) {
         makeSureVariableAvailable(config, name);
