@@ -143,6 +143,7 @@
                     selectionUUID.value
                 );
             } else {
+                // if the variable was deleted, empty the output again
                 outputOperator.value = null;
             }
             // trigger typing debounce cleanup (also when emptied again)
