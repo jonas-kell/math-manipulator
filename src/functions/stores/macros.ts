@@ -26,6 +26,23 @@ export const useMacrosStore = defineStore("macros", () => {
         lastUpdate.value = Date.now();
     }
     /**
+     * only for use internal in this module. Outside should use @see makeSureMacroAvailable
+     */
+    function getMacroUUID(config: OperatorConfig, trigger: string): string | null {
+        const stash = getMacroStash(config).macros;
+        let resUUIDOrNull = null as string | null;
+
+        availableMacroUUIDs(config).forEach((uuid) => {
+            const storedTrigger = stash[uuid].trigger;
+
+            if (storedTrigger == trigger) {
+                resUUIDOrNull = storedTrigger;
+            }
+        });
+
+        return resUUIDOrNull;
+    }
+    /**
      * @returns macro-uuid
      */
     function makeSureMacroAvailable(config: OperatorConfig, trigger: string): string {
@@ -44,13 +61,20 @@ export const useMacrosStore = defineStore("macros", () => {
 
         return newMacroUUID;
     }
-    function setOutputForMacro(config: OperatorConfig, trigger: string, output: string) {
-        const macroUUID = makeSureMacroAvailable(config, trigger);
-
-        getMacroStash(config).macros[macroUUID].output = output;
+    function setOutputForMacro(config: OperatorConfig, uuid: string, output: string) {
+        getMacroStash(config).macros[uuid].output = output;
         updateLastUpdateTimestamp();
 
         storeValuesInPermanence(config);
+    }
+    function setTriggerForMacro(config: OperatorConfig, uuid: string, trigger: string) {
+        getMacroStash(config).macros[uuid].trigger = trigger;
+        updateLastUpdateTimestamp();
+
+        storeValuesInPermanence(config);
+    }
+    function getMacroByUUID(config: OperatorConfig, uuid: string) {
+        return getMacroStash(config).macros[uuid];
     }
     function removeMacroFromStore(config: OperatorConfig, uuid: string) {
         delete getMacroStash(config).macros[uuid];
@@ -58,27 +82,25 @@ export const useMacrosStore = defineStore("macros", () => {
 
         storeValuesInPermanence(config);
     }
-    function triggerIsAllowed(trigger: string): boolean {
-        // TODO
-        trigger;
-        wordsParserConsidersReserved;
-        wordsParserConsidersReservedIfWhitespaceSurrounded;
+    function triggerIsAllowed(trigger: string): [boolean, string] {
+        if (trigger.includes(" ")) {
+            return [false, `Macro names may not include any spaces`];
+        }
 
-        return false;
-    }
-    function getMacroUUID(config: OperatorConfig, trigger: string): string | null {
-        const stash = getMacroStash(config).macros;
-        let resUUIDOrNull = null as string | null;
-
-        availableMacroUUIDs(config).forEach((uuid) => {
-            const storedTrigger = stash[uuid].trigger;
-
-            if (storedTrigger == trigger) {
-                resUUIDOrNull = storedTrigger;
+        for (let i = 0; i < wordsParserConsidersReserved.length; i++) {
+            const reservedWord = wordsParserConsidersReserved[i];
+            if (trigger.includes(reservedWord)) {
+                return [false, `Macro names may not contain reserved words (includes ${reservedWord})`];
             }
-        });
+        }
+        for (let i = 0; i < wordsParserConsidersReservedIfWhitespaceSurrounded.length; i++) {
+            const reservedWord = wordsParserConsidersReservedIfWhitespaceSurrounded[i];
+            if (trigger == reservedWord) {
+                return [false, `Macro names may not be equivalent to some reserved words`];
+            }
+        }
 
-        return resUUIDOrNull;
+        return [true, ""];
     }
     function getMacroStash(config: OperatorConfig): MacroStash {
         const macroStashUuid = config.macrosListUuid;
@@ -140,7 +162,7 @@ export const useMacrosStore = defineStore("macros", () => {
         availableMacroUUIDs(config).forEach((uuid) => {
             const trigger = stash[uuid].trigger;
 
-            if (triggerIsAllowed(trigger)) {
+            if (triggerIsAllowed(trigger)[0]) {
                 triggers.push(trigger);
             }
         });
@@ -150,11 +172,12 @@ export const useMacrosStore = defineStore("macros", () => {
 
     return {
         lastUpdate,
+        getMacroByUUID,
         triggerIsAllowed,
         makeSureMacroAvailable,
         removeMacroFromStore,
         setOutputForMacro,
-        getMacroUUID,
+        setTriggerForMacro,
         availableMacroUUIDs,
         availableAllowedMacroTriggers,
     };

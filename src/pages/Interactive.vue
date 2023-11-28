@@ -29,7 +29,7 @@
         <pre>sum((n = 0); 100; int(-inf; inf; (123+(A*4)/100); x))</pre>
         <p>(You can click parts of the rendered function to invoke actions)</p>
     </template>
-    <EquationUtility :config="config" :show-variables="true" />
+    <EquationUtility :config="config" :show-variables="true" :show-macros="true" />
     <div style="width: 100%; min-height: 40vh">
         <button @click="copySessionStorageToClipboard" style="float: right" v-if="VITE_MODE == 'development'">
             Session storage to Clipboard

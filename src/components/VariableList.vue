@@ -18,10 +18,10 @@
     });
 
     function setOperator(varName: string, op: Operator | null) {
-        // set value:
+        // set value
         variablesStore.setOperatorForVariable(props.config, varName, op);
 
-        // bust cache
+        // bust own draw cache
         updated.value = Date.now();
     }
     function removeVariableReference(varName: string) {

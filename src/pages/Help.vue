@@ -46,7 +46,11 @@
     <template v-for="elem in elements">
         <h3>{{ elem.element.title }}</h3>
         <p style="white-space: pre-line">{{ elem.element.description }}</p>
-        <EquationUtility :config="elem.config" :show-variables="elem.element.showVariables" />
+        <EquationUtility
+            :config="elem.config"
+            :show-variables="elem.element.showVariables"
+            :show-macros="elem.element.showMacros"
+        />
     </template>
     <div style="width: 100%; min-height: 40vh"></div>
 </template>

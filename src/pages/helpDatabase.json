@@ -8,6 +8,7 @@
             "8160f415-920a-4f52-a05c-0c3a7aed4670": "{\"textValue\":\"(2-4)*x**(1/2)+5\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "a93c35da-633d-4ed5-8313-3a0e75e67926",
         "variablesUuid": "8ae00f4f-fb5f-4727-a46e-65ee7e64823d"
     },
@@ -21,6 +22,7 @@
             "d93f2151-284e-43f3-b93c-a08b824f6fbc": "{\"operator\":\"{\\\"type\\\":\\\"bracketed_sum\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"bracketed_multiplication\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"x\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"cf8a69e7-229e-4e66-81f4-9ecb430b6e9d\\\"},{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"z\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"dec042c0-d599-46a7-b8d0-c77337301030\\\"}],\\\"uuid\\\":\\\"7428ce5b-76d2-475c-9d80-13515856b096\\\"},{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"z\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"5b62eabc-1c28-4a57-9860-64d9225e9fbf\\\"}],\\\"uuid\\\":\\\"56cfbba6-f8df-4b16-991b-ef70a45ea1f5\\\"}\",\"childUUID\":\"c4f53a53-43c2-42ac-b589-e17f5785c5f2\",\"selectionUUID\":\"\",\"operatorParserUUID\":\"83239af7-fc83-4a90-8520-59a496880bb2\",\"variableNameInputUUID\":\"7c310bfc-d61f-4462-9bd8-e8cf48ff0b17\",\"mode\":\"none\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "d93f2151-284e-43f3-b93c-a08b824f6fbc",
         "variablesUuid": "9520c679-a670-4c01-a7f8-bbaa8e0bf7f0"
     },
@@ -33,6 +35,7 @@
             "a715b604-663e-4e07-97ca-600d3b90247e": "{\"textValue\":\"(x y + 2-5+-6) z\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "e7536bcd-5842-4085-bf37-c4a2a03bd9fe",
         "variablesUuid": "588a6806-b9e0-453a-8388-c861ddebe909"
     },
@@ -45,6 +48,7 @@
             "77b73e33-211a-4192-8e7e-415b92c25002": "{\"variables\":{\"s1\":{\"uuid\":\"9d2f706f-2141-488f-9d55-59e3a4bb98b8\",\"created\":1701010336982,\"op\":null},\"s2\":{\"uuid\":\"ca9e8484-e97f-4c23-896f-5365dd25d4fc\",\"created\":1701010336983,\"op\":null},\"s3\":{\"uuid\":\"c748903d-358f-4f57-aeb2-672820986a31\",\"created\":1701010336984,\"op\":null},\"i1\":{\"uuid\":\"4ef6c31b-876a-4064-ba3c-93a1a61ebb8a\",\"created\":1701010342279,\"op\":null},\"i2\":{\"uuid\":\"48927237-401c-4167-9a73-5ddae0cd662c\",\"created\":1701010342280,\"op\":null},\"i3\":{\"uuid\":\"85759628-166d-4c80-8700-a748cdcea874\",\"created\":1701010342281,\"op\":null},\"i4\":{\"uuid\":\"f4b6bd83-d8da-4ed2-83da-564d8c85659e\",\"created\":1701010342483,\"op\":null},\"a\":{\"uuid\":\"930a464c-7077-466d-9221-d10ac0b76a8e\",\"created\":1701010378436,\"op\":null},\"fun\":{\"uuid\":\"716d8778-e5f8-44f3-aba4-bef1e2dbbf91\",\"created\":1701010417510,\"op\":null},\"f\":{\"uuid\":\"db7dc7c1-2683-44fa-a4c6-6253ddf75620\",\"created\":1701010421009,\"op\":null},\"x\":{\"uuid\":\"22d8afaf-1a9f-4056-abfd-0c7375524f99\",\"created\":1701010421010,\"op\":null}}}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "7acd9015-8d24-413f-9f54-81491f3bb8d3",
         "variablesUuid": "77b73e33-211a-4192-8e7e-415b92c25002"
     },
@@ -57,6 +61,7 @@
             "bdec435f-f49f-449f-b79a-9dfa17f23b7f": "{\"variables\":{\"s1\":{\"uuid\":\"9d2f706f-2141-488f-9d55-59e3a4bb98b8\",\"created\":1701010336982,\"op\":null},\"s2\":{\"uuid\":\"ca9e8484-e97f-4c23-896f-5365dd25d4fc\",\"created\":1701010336983,\"op\":null},\"s3\":{\"uuid\":\"c748903d-358f-4f57-aeb2-672820986a31\",\"created\":1701010336984,\"op\":null},\"i1\":{\"uuid\":\"4ef6c31b-876a-4064-ba3c-93a1a61ebb8a\",\"created\":1701010342279,\"op\":null},\"i2\":{\"uuid\":\"48927237-401c-4167-9a73-5ddae0cd662c\",\"created\":1701010342280,\"op\":null},\"i3\":{\"uuid\":\"85759628-166d-4c80-8700-a748cdcea874\",\"created\":1701010342281,\"op\":null},\"i4\":{\"uuid\":\"f4b6bd83-d8da-4ed2-83da-564d8c85659e\",\"created\":1701010342483,\"op\":null},\"a\":{\"uuid\":\"930a464c-7077-466d-9221-d10ac0b76a8e\",\"created\":1701010378436,\"op\":null},\"fun\":{\"uuid\":\"716d8778-e5f8-44f3-aba4-bef1e2dbbf91\",\"created\":1701010417510,\"op\":null},\"f\":{\"uuid\":\"db7dc7c1-2683-44fa-a4c6-6253ddf75620\",\"created\":1701010421009,\"op\":null},\"x\":{\"uuid\":\"22d8afaf-1a9f-4056-abfd-0c7375524f99\",\"created\":1701010421010,\"op\":null},\"y\":{\"uuid\":\"6f6dc5f9-8b53-4a3c-99ee-1cb2b683df67\",\"created\":1701010775820,\"op\":null},\"z\":{\"uuid\":\"5edd05c4-7f48-49cf-b12c-9de15663e0d3\",\"created\":1701010776376,\"op\":null}}}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "089da23a-4350-42dd-9d74-f4d17fcb1d4e",
         "variablesUuid": "bdec435f-f49f-449f-b79a-9dfa17f23b7f"
     },
@@ -69,6 +74,7 @@
             "2e4eb9d7-9237-446f-9917-5ba2d9f5eb3f": "{\"textValue\":\"x/y <=> x/y = x/y != sum({} {} {}) ; x/y < x/y > x/y <= x/y >= x/y\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "73d2d72a-07fb-4b23-b497-ad9ff7c1942b",
         "variablesUuid": "b9c0de3d-7a91-4108-8152-6998ded16ed9"
     },
@@ -82,6 +88,7 @@
             "efc3f7c6-9008-42be-bb4a-65518ebd79ee": "{\"textValue\":\"pi ; inf ; e ; i ; sqrt2 ; psi ; phi\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "b04874e7-55ac-4fb7-b276-37e4cc6c57fb",
         "variablesUuid": "375cb968-3b46-4eb7-9ce7-0a2dd40dc280"
     },
@@ -100,6 +107,7 @@
             "f8ffd65b-2fe3-4f35-957a-3358b81e3c02": "{\"operator\":\"{\\\"type\\\":\\\"bracketed_sum\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"a248acf9-a2b5-4d3c-889c-5052d7427a18\\\"},{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"Y\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"3c5d80d4-740f-458e-8b9f-bcdd5d0495ad\\\"}],\\\"uuid\\\":\\\"1ded0bdb-893c-4afe-bbec-a4b60822deb5\\\"}\",\"childUUID\":\"b573838a-af7f-41ea-9f24-eb9ed60aecc3\",\"selectionUUID\":\"df804f25-369f-4bb6-9319-44cf3a953c08\",\"operatorParserUUID\":\"3b7f964f-b123-4ebc-aa62-9c3497638ae0\",\"variableNameInputUUID\":\"3f723bfb-f0ba-470c-8c39-3f4d734aebd3\",\"mode\":\"var_def\"}"
         },
         "showVariables": true,
+        "showMacros": false,
         "mainUuid": "5c0534d1-4683-4c4e-8360-d6db45736737",
         "variablesUuid": "80dee28c-96c0-4970-b676-ddf545db718d"
     },
@@ -114,6 +122,7 @@
             "04c9c988-e476-44b3-8958-e6d2752367e5": "{\"operator\":\"{\\\"type\\\":\\\"structural_container\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"0\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"0cfb1694-13d6-4fc8-bae1-96f9835efc90\\\"},{\\\"type\\\":\\\"triple_bra_c_ket\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"structural_container\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"up_arrow\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"f1fd38a6-f09b-4336-a70b-448a1ffa05e4\\\"},{\\\"type\\\":\\\"down_arrow\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"9ca6c8f6-fdfd-433b-a3fd-5b7c22b5c424\\\"},{\\\"type\\\":\\\"up_arrow\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"e414b19b-162b-4ccb-a153-da7cda81e997\\\"}],\\\"uuid\\\":\\\"996548d7-dfbd-4789-ae8f-dcd2cfea9145\\\"},{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"H\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"870f3eaa-9fe2-4df6-ba85-416f311b760d\\\"},{\\\"type\\\":\\\"structural_container\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"up_arrow\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"2af0980a-937f-4d90-bcad-830428a77078\\\"},{\\\"type\\\":\\\"down_arrow\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"e1b612d1-48be-43b0-9088-fc58c1c8095b\\\"},{\\\"type\\\":\\\"up_arrow\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"6029ff2b-7fc2-4d98-abee-55a81e5a6952\\\"}],\\\"uuid\\\":\\\"0b820d7b-c8ec-4741-9742-e8dcab969759\\\"}],\\\"uuid\\\":\\\"aa0b0ddf-0158-4d27-9e5f-5a15a1671522\\\"}],\\\"uuid\\\":\\\"ca91af0d-670a-4460-b7e2-1df394bab49e\\\"}\",\"childUUID\":\"fd8694f2-267f-4a86-8ec5-363523a42414\",\"selectionUUID\":\"0f9e2b33-2b2d-4c56-ab8d-b7d4634f20ac\",\"operatorParserUUID\":\"4544e3af-a268-4bb0-a9ae-0e9a5e924788\",\"variableNameInputUUID\":\"09822f95-c2e7-40fc-94de-5c1aa286d4aa\",\"mode\":\"none\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "1e4127b9-be2f-4de4-9d30-8f9c3183e0ad",
         "variablesUuid": "c4942103-8a48-483f-bd4c-19912bbb8293"
     },
@@ -128,6 +137,7 @@
             "c63d2c09-27d8-49cb-964b-c3d107088b22": "{\"textValue\":\"\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "55d18c0e-67b0-4574-8421-59095c667e9c",
         "variablesUuid": "6d7cd76a-fa3d-4dc1-9fa3-dc87e5be9bb7"
     },
@@ -140,6 +150,7 @@
             "a08b701f-c333-4d3f-922f-44f3018943e4": "{\"operator\":\"{\\\"type\\\":\\\"bracketed_sum\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"negation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"bracketed_multiplication\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"constant_pi\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"f4a5b1f5-8c74-48d1-b24c-0991a7c88b6b\\\"},{\\\"type\\\":\\\"constant_e\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"9050ba59-0b92-4204-b4ef-813086cc3c90\\\"},{\\\"type\\\":\\\"fermionic_annihilation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"7f2a6c6c-1b5a-4160-8d35-cda19a6b5333\\\"}],\\\"uuid\\\":\\\"cc985328-7ccd-4e38-8937-53095eda79b4\\\"},{\\\"type\\\":\\\"fermionic_creation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"2c45c018-6f5d-4b99-b08d-6063a9d5e0f0\\\"}],\\\"uuid\\\":\\\"8cda8d18-29c4-43ba-b8cb-9c38cf4a357e\\\"}],\\\"uuid\\\":\\\"8808a37e-a52a-4012-9121-a76f54c50f87\\\"}],\\\"uuid\\\":\\\"796d321c-ad47-49d6-8cad-56935e5f35b9\\\"},{\\\"type\\\":\\\"negation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"bracketed_multiplication\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"constant_pi\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"99d491ce-687b-4c6c-89e7-7f6506112c8a\\\"},{\\\"type\\\":\\\"constant_e\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"40f8d5a2-b248-476e-ac1f-9ac19fb6e97f\\\"},{\\\"type\\\":\\\"fermionic_annihilation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"866dc2fe-a150-4939-883e-4b6cef35bd3c\\\"}],\\\"uuid\\\":\\\"266fa606-fb0e-4e6e-a2e5-e70d3fefbc43\\\"},{\\\"type\\\":\\\"fermionic_annihilation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"51c7e674-7496-4933-b025-2cd453dfc989\\\"}],\\\"uuid\\\":\\\"85213423-1889-4392-889c-5ee7b2a7962b\\\"},{\\\"type\\\":\\\"fermionic_creation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"b8e7ddd0-f4d3-4c9a-9877-0f10489c0c37\\\"}],\\\"uuid\\\":\\\"35d4d699-155b-459a-aa6b-0fa63f108bf6\\\"},{\\\"type\\\":\\\"fermionic_creation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"dc774f39-e23f-4657-a502-3acc2e69f225\\\"}],\\\"uuid\\\":\\\"1aa73188-093b-4f42-8e0c-ade014bc97d8\\\"}],\\\"uuid\\\":\\\"811a1ec8-7df6-4513-8647-7882f112c057\\\"}],\\\"uuid\\\":\\\"0f230648-d0c2-4d0c-8244-66dd453bc2d5\\\"},{\\\"type\\\":\\\"negation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"bracketed_multiplication\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"constant_pi\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"abaeeb83-d50d-49c6-9866-87f4c0c5f53a\\\"},{\\\"type\\\":\\\"constant_e\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"10b30444-f88b-49a8-8d43-a1943349be70\\\"},{\\\"type\\\":\\\"fermionic_annihilation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"521bf24f-95ae-48af-959d-50e75dd41d2d\\\"}],\\\"uuid\\\":\\\"ca42a4b6-a653-4aad-89ec-60f29b5c1728\\\"},{\\\"type\\\":\\\"fermionic_annihilation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"3\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"a78a6edc-116d-4f71-bacd-77adde6d1df1\\\"}],\\\"uuid\\\":\\\"96921a28-2fa9-4a22-84af-7a310acd7005\\\"},{\\\"type\\\":\\\"fermionic_creation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"5d34b6ef-74e5-4094-8131-dc5ccc9ac628\\\"}],\\\"uuid\\\":\\\"f3741556-c38f-4290-9bbc-5360116d362f\\\"},{\\\"type\\\":\\\"fermionic_creation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"3\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"50425415-00a0-47cd-b052-ef1ed24329fd\\\"}],\\\"uuid\\\":\\\"1c2526ba-59e4-42ba-95e8-22b5c345e6c6\\\"}],\\\"uuid\\\":\\\"f1763715-9ab5-4bb9-8c97-dd1947973b8b\\\"}],\\\"uuid\\\":\\\"b7a8d59b-cb49-48e8-95f2-512c0e99b3d4\\\"},{\\\"type\\\":\\\"bracketed_multiplication\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"constant_pi\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"529e6876-dbeb-40b2-9872-a7c043ad705d\\\"},{\\\"type\\\":\\\"constant_e\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"59e7f469-5c57-4724-96a4-55a93bfd6531\\\"},{\\\"type\\\":\\\"fermionic_annihilation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"5912e359-7c98-426f-a4c8-2b0705d046ac\\\"}],\\\"uuid\\\":\\\"1184282a-b655-4b76-8c95-e700b3140fa4\\\"},{\\\"type\\\":\\\"fermionic_annihilation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"ab98081b-c494-47fa-a016-9229ae08f529\\\"}],\\\"uuid\\\":\\\"e270c885-d62b-4170-96ab-f4ebcb735767\\\"},{\\\"type\\\":\\\"fermionic_annihilation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"3\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"2063c964-4c37-44b7-82da-eb327748af7d\\\"}],\\\"uuid\\\":\\\"868f4ecf-8c00-49d8-bdac-96db67ff236e\\\"},{\\\"type\\\":\\\"fermionic_creation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"1ed82316-702b-46be-ae39-9705960a27f8\\\"}],\\\"uuid\\\":\\\"3972b650-7758-4a2a-a055-86e8a674a6b4\\\"},{\\\"type\\\":\\\"fermionic_creation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"3d0a0e50-c638-44b5-851c-6732af99d2d8\\\"}],\\\"uuid\\\":\\\"0ed26f2d-cd24-486b-b99f-c77b46afa844\\\"},{\\\"type\\\":\\\"fermionic_creation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"3\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"8215f300-b2f9-47ad-90ec-45cb8a69f8c0\\\"}],\\\"uuid\\\":\\\"01023786-d758-4e0a-9412-2ca5e3c13146\\\"}],\\\"uuid\\\":\\\"7bf87391-fbb2-45f7-9365-c398b7e0535f\\\"}],\\\"uuid\\\":\\\"1db1f883-47ed-48b9-b940-71a66267e0b2\\\"}\",\"childUUID\":\"6e8b80e4-81b3-43f0-85da-8056cfc7703a\",\"selectionUUID\":\"155ae219-a8af-4573-8589-8405213883b2\",\"operatorParserUUID\":\"ae6b88c5-d3a9-453f-b1f9-cade8e1263db\",\"variableNameInputUUID\":\"2d67820e-7bc9-4661-8c97-2864ce685816\",\"mode\":\"none\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "5f47aeb7-0ead-4936-b053-c2290331e27f",
         "variablesUuid": "188b340d-55d3-4511-a8aa-23d3ed60ce91"
     },
@@ -153,6 +164,7 @@
             "a5c6504c-e092-4a2d-88eb-c694e17df69e": "{\"operator\":\"{\\\"type\\\":\\\"bracketed_multiplication\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"5\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"b3508d23-7701-46cb-a19c-5b209b5552ac\\\"},{\\\"type\\\":\\\"complex_operator_construct\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"0\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"3c2ce5f1-25cd-457b-973d-1e7757052eb9\\\"},{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"3f18ffb7-bb9a-457c-a7dc-185024e27fc6\\\"}],\\\"uuid\\\":\\\"bb17d0ae-1f1b-415d-b7db-3e3a29c21177\\\"},{\\\"type\\\":\\\"complex_operator_construct\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"235c5e5a-8c59-4a69-83e4-18fbd2f40aa1\\\"},{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"e7d16313-2c80-40b6-b918-a39e0c5c5d3c\\\"}],\\\"uuid\\\":\\\"6c61aad3-e6d1-4ddc-9730-bb3623a0ea9f\\\"},{\\\"type\\\":\\\"complex_operator_construct\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"y\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"85200bd6-3e1c-4c50-b7ff-f6d0e3095db6\\\"},{\\\"type\\\":\\\"variable\\\",\\\"value\\\":\\\"x\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"bd98509d-b8cc-440c-8fdd-b59c727d1969\\\"}],\\\"uuid\\\":\\\"437785b5-99fa-487d-9bab-06a28845d61c\\\"}],\\\"uuid\\\":\\\"ee3b6c8c-ed12-4c25-8b61-7217cfd71ff7\\\"}\",\"childUUID\":\"f19406f1-47e9-4c3f-89c3-e3aea5820e66\",\"selectionUUID\":\"\",\"operatorParserUUID\":\"3200fe0d-6960-4985-be17-8b32315d6ecc\",\"variableNameInputUUID\":\"3d799b9b-0159-4011-a77d-b0f7c5531f14\",\"mode\":\"none\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "a5c6504c-e092-4a2d-88eb-c694e17df69e",
         "variablesUuid": "419212ef-39ab-48ab-996a-b6ddd555fa94"
     },
@@ -169,6 +181,7 @@
             "e84793a4-66bf-4811-b641-092aa4a42840": "{\"operator\":null,\"childUUID\":\"8a58a60b-1da0-4f4e-ac1c-612f376fbdd5\",\"selectionUUID\":\"\",\"operatorParserUUID\":\"7140454f-be89-4777-8100-acf31ef4060f\",\"variableNameInputUUID\":\"edf74b3e-9243-4b51-8788-f7a10dec6a87\",\"mode\":\"none\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "96db89b1-07ea-4f17-b8ef-1c819acb3acb",
         "variablesUuid": "964eb208-dc12-422f-8716-f3e8d93e44aa"
     },
@@ -180,6 +193,7 @@
             "c4886543-6916-4fd0-84d6-eb62064e5dc4": "{\"operator\":\"{\\\"type\\\":\\\"structural_container\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"raw_latex\\\",\\\"value\\\":\\\"\\\\\\\\left\\\\\\\\lbracket\\\\\\\\begin{matrix}1&2\\\\\\\\\\\\\\\\3&4\\\\\\\\end{matrix}\\\\\\\\right\\\\\\\\rbracket\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"1c17138d-2519-4459-b70e-d0925d323be5\\\"},{\\\"type\\\":\\\"empty_argument\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"01246311-46a5-4bef-b81c-1e5657f8795e\\\"},{\\\"type\\\":\\\"raw_latex\\\",\\\"value\\\":\\\"\\\\\\\\mathcal{H}\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"a41e21e9-ce85-466f-be3f-1712bcc8dbc1\\\"}],\\\"uuid\\\":\\\"d0113c43-5ded-44fb-a978-91035326e05b\\\"}\",\"childUUID\":\"703c08e3-0e6f-4bb6-8782-af50ff7a2e03\",\"selectionUUID\":\"\",\"operatorParserUUID\":\"dae494ae-acf5-41d8-9c88-69dfa489acca\",\"variableNameInputUUID\":\"87ef15a8-14d7-48f4-a3de-f9b65ac24ecb\",\"mode\":\"none\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "c4886543-6916-4fd0-84d6-eb62064e5dc4",
         "variablesUuid": "392495e1-c149-4863-991d-865f4fb3d419"
     },
@@ -191,6 +205,7 @@
             "2c4f9b4e-2417-4d82-91ba-337182d72c91": "{\"textValue\":\"\\\\semicolon \\\\plus \\\\minus \\\\starsymb \\\\forwardslash \\\\backslash \\\\colon \\\\lbracket \\\\rbracket \\\\faculty \\\\percent \\\\eq \\\\less \\\\greater\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "e2879e5f-abe5-4a44-aa8f-f0116a83fc27",
         "variablesUuid": "b246424f-7b43-4deb-930f-cad1ac6ce9da"
     },
@@ -205,6 +220,7 @@
             "78b28b7a-b1a0-4bbf-97a6-dfac44f9de59": "{\"operator\":\"{\\\"type\\\":\\\"structural_container\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"0\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"84f83ffd-b59f-481c-8de9-ee343d2a9928\\\"},{\\\"type\\\":\\\"commutator_minus\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"bosonic_annihilation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"a3cbab1b-2ad4-42e2-b15b-03e09959746a\\\"}],\\\"uuid\\\":\\\"2305445c-6cfe-466b-b20a-954938a89c4d\\\"},{\\\"type\\\":\\\"bosonic_creation\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"2\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"40b096a2-2ee2-4b47-a10e-a9096f0ddf23\\\"}],\\\"uuid\\\":\\\"9efc1efb-5390-41a0-b499-19538592d6a7\\\"}],\\\"uuid\\\":\\\"87e9206e-a6dc-4dc7-88c1-44969872d892\\\"}],\\\"uuid\\\":\\\"0a5c5c38-e1d4-4a95-8698-75acac4a01d8\\\"}\",\"childUUID\":\"3b9a7ff8-4897-4d06-8bf2-11336786b255\",\"selectionUUID\":\"1a682222-113b-4a30-87ab-d0d14e4d9aca\",\"operatorParserUUID\":\"4ea9b5ac-e5e2-44c2-9f24-4cecaab3f1ad\",\"variableNameInputUUID\":\"4016e17d-0cbd-45eb-90f7-c6601ce74959\",\"mode\":\"none\"}"
         },
         "showVariables": false,
+        "showMacros": false,
         "mainUuid": "c1c11f7e-06da-40c9-ba79-d64c5316a4a9",
         "variablesUuid": "90aab892-cdef-46d1-b9f5-f338cc958408"
     }
