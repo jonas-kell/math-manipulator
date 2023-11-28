@@ -105,6 +105,8 @@ export function operatorConstructorSwitch(
             return new Commutator(config, childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.AntiCommutator:
             return new AntiCommutator(config, childrenReconstructed[0], childrenReconstructed[1]);
+        case OperatorType.DefinedMacro:
+            return new DefinedMacro(config, value, childrenReconstructed);
         default:
             throw Error(`type ${type} could not be parsed to an implemented Operator`);
     }
@@ -1318,20 +1320,68 @@ export class Variable extends Operator implements OrderableOperator {
 }
 
 export class DefinedMacro extends Operator {
-    constructor(config: OperatorConfig, trigger: string, children: Operator[]) {
-        useMacrosStore().makeSureMacroAvailable(config, trigger);
+    private _trigger: string;
+    private static ARG_REGEX = /#(\d+)/g;
 
+    constructor(config: OperatorConfig, trigger: string, children: Operator[]) {
         super(config, OperatorType.DefinedMacro, "", "", "", children, trigger);
+        this._trigger = trigger;
+        useMacrosStore().makeSureMacroAvailable(config, this._trigger);
     }
 
     protected innerFormulaString(renderChildrenHtmlIds: boolean, renderImpliedSymbols: boolean) {
-        let res = "";
+        const outputString = this.getOwnOutputString();
 
-        this.getChildren().forEach((child) => {
-            res += child.assembleFormulaString(renderChildrenHtmlIds, renderImpliedSymbols);
+        if (outputString.trim() == "") {
+            return `\\text{\\#Macro ${this._trigger} has no output set\\#}`;
+        }
+
+        let res = outputString;
+
+        const neededChildren = DefinedMacro.getNumberOfIntendedChildren(this.getOwnConfig(), this._trigger);
+        const hasChildren = this.getChildren().length;
+
+        if (neededChildren != hasChildren) {
+            return `\\text{\\#Macro ${this._trigger} needs ${neededChildren} argument(s), but was given ${hasChildren}\\#}`;
+        }
+
+        this.getChildren().forEach((child, index) => {
+            const replString = `#${String(index)}`;
+            if (outputString.includes(replString)) {
+                const childRendered = child.assembleFormulaString(renderChildrenHtmlIds, renderImpliedSymbols);
+
+                // direct replaceAll could cause duplicate Ids, so only the first can be interacted with, the rest gets no interactivity.
+                res = res.replace(replString, "{" + childRendered + "}");
+
+                if (res.includes(replString)) {
+                    const childRenderedNonInteractive = child.assembleFormulaString(false, renderImpliedSymbols);
+                    res = res.replaceAll(replString, "{" + childRenderedNonInteractive + "}");
+                }
+            }
         });
 
+        res = res.replaceAll("#", "\\#");
         return res;
+    }
+
+    static getNumberOfIntendedChildren(config: OperatorConfig, trigger: string) {
+        let matches = DefinedMacro.getOutputString(config, trigger).matchAll(DefinedMacro.ARG_REGEX) || [];
+
+        const numbers = [];
+        for (const match of matches) {
+            numbers.push(parseInt(match[1]));
+        }
+
+        return Math.max(0, ...numbers.map((a) => a + 1));
+    }
+
+    static getOutputString(config: OperatorConfig, trigger: string): string {
+        const macroUUID = useMacrosStore().makeSureMacroAvailable(config, trigger);
+        return useMacrosStore().getMacroByUUID(config, macroUUID).output;
+    }
+
+    getOwnOutputString(): string {
+        return DefinedMacro.getOutputString(this.getOwnConfig(), this._trigger);
     }
 
     getChildren(): Operator[] {

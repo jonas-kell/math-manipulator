@@ -209,11 +209,12 @@ export const useVariablesStore = defineStore("variables", () => {
         // surrounds all "wordsParserConsidersReserved" with white-spaces for us
         const processedInput = preProcessInputString(inputString);
 
-        // TODO purge on macro definitions
-        console.log(useMacrosStore().availableAllowedMacroTriggers(config));
-
         let lastIndex = -1;
-        for (const delimiter of [...wordsParserConsidersReservedIfWhitespaceSurrounded, ...wordsParserConsidersReserved]) {
+        for (const delimiter of [
+            ...wordsParserConsidersReservedIfWhitespaceSurrounded,
+            ...wordsParserConsidersReserved,
+            ...useMacrosStore().availableAllowedMacroTriggers(config), // when a macro is defined, it takes precedence over variable names
+        ]) {
             const surroundedDelimiter = " " + delimiter + " ";
 
             // if ends with reserved delimiter, this may be returned

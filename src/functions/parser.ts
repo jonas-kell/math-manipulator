@@ -5,19 +5,21 @@ import {
     MAX_CHILDREN_SPECIFICATIONS,
     MIN_CHILDREN_SPECIFICATIONS,
     OperatorConfig,
+    useMacrosStore,
+    DefinedMacro,
 } from "./exporter";
 
 /**
  * @throws Error on failing to tokenize/parse
  */
 export function operatorFromString(config: OperatorConfig, input: string): Operator {
-    const parsedExport = parseStringToExportOperatorContent(input);
+    const parsedExport = parseStringToExportOperatorContent(config, input);
     const generatedStructure = Operator.generateStructure(config, JSON.stringify(parsedExport), false);
 
     return generatedStructure;
 }
 
-function parseStringToExportOperatorContent(input: string): ExportOperatorContent {
+function parseStringToExportOperatorContent(config: OperatorConfig, input: string): ExportOperatorContent {
     if (input == "") {
         return {
             type: OperatorType.Numerical,
@@ -35,9 +37,9 @@ function parseStringToExportOperatorContent(input: string): ExportOperatorConten
         );
     }
 
-    const tokens = tokenize(input);
-    const grouped = groupTokenStream(tokens);
-    const exportOperators = infixTokenGroupTreeToExportOperatorTreeRecursive(grouped);
+    const tokens = tokenize(config, input);
+    const grouped = groupTokenStream(config, tokens);
+    const exportOperators = infixTokenGroupTreeToExportOperatorTreeRecursive(config, grouped);
 
     return exportOperators;
 }
@@ -58,6 +60,7 @@ enum TokenType {
     Other = "Other",
     Faculty = "Faculty",
     Percent = "Percent",
+    Macro = "Macro",
 }
 
 // ! Reserved Symbols with own token
@@ -183,7 +186,7 @@ export function preProcessInputString(inp: string): string {
     return whitespaceSanitized;
 }
 
-function tokenize(input: string): Token[] {
+function tokenize(config: OperatorConfig, input: string): Token[] {
     const stringToProcess = preProcessInputString(input);
     const length = stringToProcess.length;
 
@@ -238,6 +241,19 @@ function tokenize(input: string): Token[] {
                     tokens.push({
                         type: TokenType.Structural,
                         content: currentBufWord,
+                    });
+                    wordFound = true;
+                    break;
+                }
+            }
+
+            // try parsing as macro
+            const MacroTriggers = useMacrosStore().availableAllowedMacroTriggers(config);
+            for (let i = 0; i < MacroTriggers.length; i++) {
+                if (currentBufWord == MacroTriggers[i]) {
+                    tokens.push({
+                        type: TokenType.Macro,
+                        content: MacroTriggers[i],
                     });
                     wordFound = true;
                     break;
@@ -307,7 +323,7 @@ class TokenGroupKnot extends TokenGroup {
     }
 }
 
-function groupTokenStream(tokens: Token[]): TokenGroup {
+function groupTokenStream(config: OperatorConfig, tokens: Token[]): TokenGroup {
     const countOpen = tokens.filter((tok) => {
         return tok.type == TokenType.OpenParen;
     }).length;
@@ -325,7 +341,7 @@ function groupTokenStream(tokens: Token[]): TokenGroup {
     }
     const trimmed = trimTokenGroupRecursive(res[0]);
     const implicitOperationsInserted = insertImpliedOperationsRecursive(trimmed);
-    const precedenceFixed = fixOperatorPrecedenceGrouping(implicitOperationsInserted);
+    const precedenceFixed = fixOperatorPrecedenceGrouping(config, implicitOperationsInserted);
 
     return precedenceFixed;
 }
@@ -545,6 +561,7 @@ type tokenTypesWithOperatorCharacterType =
     | TokenType.Divide
     | TokenType.Power
     | TokenType.Function
+    | TokenType.Macro
     | TokenType.StructuralSeparation;
 
 const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperatorCharacterType]: OperatorCharacter } = {
@@ -594,6 +611,11 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
         takesNrArgumentsAfter: 1,
         takesNrArgumentsBefore: 0,
     },
+    [TokenType.Macro]: {
+        precedence: 2000,
+        takesNrArgumentsAfter: -1,
+        takesNrArgumentsBefore: 0,
+    },
 };
 const tokenTypesWithOperatorCharacter = Object.keys(tokenTypesWithOperatorCharacterDefinitions);
 const repeatableTokenTypesWithOperatorCharacter = [TokenType.Plus, TokenType.Multiplicate, TokenType.StructuralSeparation];
@@ -630,11 +652,16 @@ class TokenGroupKnotInfixStructural extends TokenGroupKnotInfix {
  * If multiple arguments are needed for a function, grouping beforehand is needed. This however makes the syntax quite neat actually
  * sum(1 2 3) => insertMultiplicationsIntoForbiddenFollowingsRecursive => sum(1 * 2 * 3) => fixOperatorPrecedenceGroupingRecursive => {sum; 1; {*; 2; 3}}
  */
-function fixOperatorPrecedenceGrouping(tokenGroup: TokenGroup): TokenGroup {
+function fixOperatorPrecedenceGrouping(config: OperatorConfig, tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupLeaf && tokenTypesWithOperatorCharacter.includes(tokenGroup.getToken().type)) {
-        const type = tokenGroup.getToken().type;
+        const token = tokenGroup.getToken();
+        const type = token.type;
         // Constants do not take any arguments!
-        if (!(type == TokenType.Constant)) {
+        // Macros WITH arguments must also be filtered here
+        if (
+            !(type == TokenType.Constant) &&
+            !(type == TokenType.Macro && calculateNecessaryNumberOfArgumentsForMacro(config, token) == 0)
+        ) {
             throw Error(
                 `Operator ${tokenGroup.getToken().type}:${
                     tokenGroup.getToken().content
@@ -643,13 +670,13 @@ function fixOperatorPrecedenceGrouping(tokenGroup: TokenGroup): TokenGroup {
         }
     }
 
-    return fixOperatorPrecedenceGroupingRecursive(tokenGroup);
+    return fixOperatorPrecedenceGroupingRecursive(config, tokenGroup);
 }
 
 /**
  * Documentation @see fixOperatorPrecedenceGrouping
  */
-function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGroup {
+function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGroup: TokenGroup): TokenGroup {
     if (tokenGroup instanceof TokenGroupKnot) {
         let children = tokenGroup.getChildren();
 
@@ -786,9 +813,9 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
                     );
                 }
 
-                const recBeforeBuffer = beforeBuffer.map((child) => fixOperatorPrecedenceGroupingRecursive(child));
+                const recBeforeBuffer = beforeBuffer.map((child) => fixOperatorPrecedenceGroupingRecursive(config, child));
                 let recAfterBuffer = [];
-                recAfterBuffer = afterBuffer.map((child) => fixOperatorPrecedenceGroupingRecursive(child));
+                recAfterBuffer = afterBuffer.map((child) => fixOperatorPrecedenceGroupingRecursive(config, child));
                 // group into new element and update-remove the used stuff for the next iteration
                 const newExtraGroup = new TokenGroupKnotInfix(currentOperator, [...recBeforeBuffer, ...recAfterBuffer]);
 
@@ -807,14 +834,16 @@ function fixOperatorPrecedenceGroupingRecursive(tokenGroup: TokenGroup): TokenGr
         } else {
             // multiple elements left: must have something to do with structural elements (=, !=, \iff) or raw Latex
             // as the children here lay flat, they will not have been processed yet when being integrated into a group like above
-            return new TokenGroupKnotInfixStructural(children.map((child) => fixOperatorPrecedenceGroupingRecursive(child)));
+            return new TokenGroupKnotInfixStructural(
+                children.map((child) => fixOperatorPrecedenceGroupingRecursive(config, child))
+            );
         }
     }
     // leaf
     return tokenGroup;
 }
 
-function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup): ExportOperatorContent {
+function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig, tokenGroup: TokenGroup): ExportOperatorContent {
     if (tokenGroup instanceof TokenGroupLeaf) {
         const token = tokenGroup.getToken();
 
@@ -853,10 +882,18 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
                     uuid: "",
                 } as ExportOperatorContent;
             case TokenType.Constant:
-                const operatorToken = tokenGroup.getToken();
+                const operatorTokenConstant = tokenGroup.getToken();
                 return {
-                    type: operatorToken.content,
+                    type: operatorTokenConstant.content,
                     value: "",
+                    children: [],
+                    uuid: "",
+                } as ExportOperatorContent;
+            case TokenType.Macro:
+                const operatorTokenMacro = tokenGroup.getToken();
+                return {
+                    type: OperatorType.DefinedMacro,
+                    value: operatorTokenMacro.content, // trigger
                     children: [],
                     uuid: "",
                 } as ExportOperatorContent;
@@ -866,7 +903,7 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
         }
     } else if (tokenGroup instanceof TokenGroupKnotInfixStructural) {
         // catch this before the next switch, because all TokenGroupKnotInfixStructural are also TokenGroupKnotInfix
-        const children = tokenGroup.getChildren().map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(child));
+        const children = tokenGroup.getChildren().map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(config, child));
 
         return {
             type: OperatorType.StructuralContainer,
@@ -876,7 +913,7 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
         } as ExportOperatorContent;
     } else if (tokenGroup instanceof TokenGroupKnotInfix) {
         const operatorToken = tokenGroup.getOperator().getToken();
-        const children = tokenGroup.getChildren().map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(child));
+        const children = tokenGroup.getChildren().map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(config, child));
 
         switch (operatorToken.type) {
             case TokenType.StructuralSeparation:
@@ -982,4 +1019,12 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(tokenGroup: TokenGroup
             `Only the types TokenGroupKnotInfix, TokenGroupKnotInfixStructural and TokenGroupLeaf should exist... TokenGroupKnot should have been converted to TokenGroupKnotInfix`
         );
     }
+}
+
+function calculateNecessaryNumberOfArgumentsForMacro(config: OperatorConfig, token: Token): number {
+    if (token.type != TokenType.Macro) {
+        throw Error("This should not happen: Only TokenType.Macro may be used here");
+    }
+
+    return DefinedMacro.getNumberOfIntendedChildren(config, token.content);
 }

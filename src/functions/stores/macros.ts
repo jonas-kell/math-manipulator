@@ -36,7 +36,7 @@ export const useMacrosStore = defineStore("macros", () => {
             const storedTrigger = stash[uuid].trigger;
 
             if (storedTrigger == trigger) {
-                resUUIDOrNull = storedTrigger;
+                resUUIDOrNull = uuid;
             }
         });
 
