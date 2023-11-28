@@ -400,6 +400,7 @@ function trimTokenGroupRecursive(tokenGroup: TokenGroup): TokenGroup {
     return tokenGroup;
 }
 
+// TODO add logic for macros and faculty and percent
 const implyStructuralSeparationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.Structural]; // Plus groups aka most of the time brackets
 const implyStructuralSeparationInFront = [
     TokenType.Other,
@@ -481,7 +482,7 @@ function insertImpliedOperationsRecursive(tokenGroup: TokenGroup, insertStructur
                 first &&
                 first != undefined &&
                 first instanceof TokenGroupLeaf &&
-                first.getToken().type == TokenType.Function &&
+                first.getToken().type == TokenType.Function && // TODO insert structural separations in macro arguments
                 ((MAX_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1 &&
                     MIN_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1) ||
                     functionsWithArgumentsConsideredStructural.includes(first.getToken().content as OperatorType))
@@ -711,14 +712,25 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
             const afterPortion = children.slice(highestIndex + 1);
 
             if (currentOperator instanceof TokenGroupLeaf) {
-                const type = currentOperator.getToken().type;
-                const content = currentOperator.getToken().content;
+                const token = currentOperator.getToken();
+                const type = token.type;
+                const content = token.content;
                 const controlStruct = tokenTypesWithOperatorCharacterDefinitions[type as tokenTypesWithOperatorCharacterType];
+                let takesNrArgumentsAfter = controlStruct.takesNrArgumentsAfter;
+                const takesNrArgumentsBefore = controlStruct.takesNrArgumentsBefore;
+                // takesNrArgumentsAfter for macros not defined by the control struct
+                if (type == TokenType.Macro) {
+                    if (calculateNecessaryNumberOfArgumentsForMacro(config, token) > 0) {
+                        takesNrArgumentsAfter = 1;
+                    } else {
+                        takesNrArgumentsAfter = 0;
+                    }
+                }
 
                 // extract elements from before the operator
                 let beforeBuffer = [] as TokenGroup[];
                 let skippedBefore = 0;
-                for (let i = beginningPortion.length - controlStruct.takesNrArgumentsBefore; i < beginningPortion.length; i++) {
+                for (let i = beginningPortion.length - takesNrArgumentsBefore; i < beginningPortion.length; i++) {
                     const elementToTakeFromBefore = beginningPortion[i];
 
                     // can take the next tokens if:
@@ -734,20 +746,20 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
                         beforeBuffer.push(elementToTakeFromBefore);
                     }
                 }
-                if (beforeBuffer.length != controlStruct.takesNrArgumentsBefore) {
+                if (beforeBuffer.length != takesNrArgumentsBefore) {
                     throw Error(
-                        `Operator ${type}:${content} takes ${controlStruct.takesNrArgumentsBefore} arguments before it, but ${beforeBuffer.length} were supplied`
+                        `Operator ${type}:${content} takes ${takesNrArgumentsBefore} arguments before it, but ${beforeBuffer.length} were supplied`
                     );
                 }
 
                 // extract elements from after the operator
                 const canTakeRepeated = repeatableTokenTypesWithOperatorCharacter.includes(type);
                 const takeMax = canTakeRepeated
-                    ? controlStruct.takesNrArgumentsAfter + (controlStruct.takesNrArgumentsAfter + 1) * 99999
-                    : controlStruct.takesNrArgumentsAfter;
+                    ? takesNrArgumentsAfter + (takesNrArgumentsAfter + 1) * 99999
+                    : takesNrArgumentsAfter;
                 let afterBuffer = [] as TokenGroup[];
                 let skippedAfter = 0;
-                let stillNeeded = controlStruct.takesNrArgumentsAfter;
+                let stillNeeded = takesNrArgumentsAfter;
                 for (let j = 0; j < afterPortion.length && j < takeMax; j++) {
                     const elementToTakeFromAfter = afterPortion[j];
 
@@ -770,7 +782,7 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
                     ) {
                         if (stillNeeded == 0) {
                             throw Error(
-                                `Operator ${type}:${content} takes ${controlStruct.takesNrArgumentsAfter} afterwards but they have already been found and there are still some left`
+                                `Operator ${type}:${content} takes ${takesNrArgumentsAfter} afterwards but they have already been found and there are still some left`
                             );
                         }
 
@@ -789,10 +801,8 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
                         if (stillNeeded != 0) {
                             // Currently impossible to trigger, because all repeatable operations only take one argument afterwards
                             throw Error(
-                                `Repeat of Operator ${type}:${content} takes ${
-                                    controlStruct.takesNrArgumentsAfter
-                                } afterwards but only ${
-                                    controlStruct.takesNrArgumentsAfter - stillNeeded
+                                `Repeat of Operator ${type}:${content} takes ${takesNrArgumentsAfter} afterwards but only ${
+                                    takesNrArgumentsAfter - stillNeeded
                                 } have been processed until the end`
                             );
                         }
@@ -800,15 +810,15 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
                         // only skip, do not want to push operator into infix-children
                         skippedAfter += 1;
                         // set repeated tracking
-                        stillNeeded = controlStruct.takesNrArgumentsAfter;
+                        stillNeeded = takesNrArgumentsAfter;
                     } else {
                         break;
                     }
                 }
                 if (stillNeeded != 0) {
                     throw Error(
-                        `Operator ${type}:${content} takes ${controlStruct.takesNrArgumentsAfter} afterwards but only ${
-                            controlStruct.takesNrArgumentsAfter - stillNeeded
+                        `Operator ${type}:${content} takes ${takesNrArgumentsAfter} afterwards but only ${
+                            takesNrArgumentsAfter - stillNeeded
                         } have been processed until the end`
                     );
                 }
@@ -874,7 +884,6 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
                         } as ExportOperatorContent;
                     }
                 }
-
                 return {
                     type: OperatorType.RawLatex,
                     value: token.content,
@@ -1008,6 +1017,37 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
                     type: operatorToken.content,
                     value: "",
                     children: childrenForFunctionOperator,
+                    uuid: "",
+                } as ExportOperatorContent;
+            case TokenType.Macro:
+                let childrenForMacro = [] as ExportOperatorContent[];
+                if (children[0] && children[0] != undefined) {
+                    childrenForMacro = [children[0]];
+                }
+
+                const numberChildrenMacro = calculateNecessaryNumberOfArgumentsForMacro(config, operatorToken);
+
+                // extract if arguments are from group
+                if (
+                    tokenGroup.getChildren()[0] instanceof TokenGroupKnotInfix &&
+                    // Convenience feature: keep the group for functions that only take one argument (= the group)
+                    // With this exp(1 2 3) works, even though exp doesn't take 3 arguments
+                    // also kind of required, because manual exp((1 2 3)) would remove unnecessary brackets beforehand, so the exception would need to be implemented there
+                    !(numberChildrenMacro == 1)
+                ) {
+                    childrenForMacro = children[0].children; // because has already been processed above
+                }
+
+                if (childrenForMacro.length != numberChildrenMacro) {
+                    throw Error(
+                        `Macro ${operatorToken.content} requires ${numberChildrenMacro} arguments, but ${childrenForMacro.length} were provided. Arguments need to be supplied as a group with ; as argument delimiter. e.g. examplemacro(n=1; \\infty; n)`
+                    );
+                }
+
+                return {
+                    type: OperatorType.DefinedMacro,
+                    value: operatorToken.content,
+                    children: childrenForMacro,
                     uuid: "",
                 } as ExportOperatorContent;
 
