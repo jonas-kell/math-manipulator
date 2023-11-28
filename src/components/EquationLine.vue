@@ -142,6 +142,8 @@
                     variableDefinitionName.value,
                     selectionUUID.value
                 );
+            } else {
+                outputOperator.value = null;
             }
             // trigger typing debounce cleanup (also when emptied again)
             variablesStore.purgeLastElementsWithNamesLeadingUpToThis(props.config, variableDefinitionName.value);
