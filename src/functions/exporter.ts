@@ -11,4 +11,5 @@ export * from "./operator";
 export * from "./implementedOperators";
 export * from "./parser";
 export * from "./stores/permanence"; // store uses operator.ts but only required ion .vue at the moment
-export * from "./stores/variables"; // store uses operator.ts, parser.ts and stores/permanence.ts dependency. Is required by implementedOperators.ts, but only on runtime as it calls the useStore function, so this NEEDS to be after parser.ts and luckily may be also after implementedOperators.ts
+export * from "./stores/macros"; // store uses operator.ts, parser.ts and stores/permanence.ts dependency. Is required by parser.ts and implementedOperators.ts, but only on runtime as it calls the useStore function, so this NEEDS to be after these three and luckily may be also after parser.ts and implementedOperators.ts
+export * from "./stores/variables"; // store uses operator.ts, parser.ts, stores/permanence.ts and stores/macros.ts dependency. Is required by implementedOperators.ts, but only on runtime as it calls the useStore function, so this NEEDS to be after parser.ts and luckily may be also after implementedOperators.ts

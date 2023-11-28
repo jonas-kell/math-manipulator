@@ -1,15 +1,18 @@
 export type OperatorConfig = {
     mainLineUuid: string;
     variablesListUuid: string;
+    macrosListUuid: string;
 };
 
 export function generateOperatorConfig(
     mainLineUuid: string = "MAIN_UUID",
-    variablesListUuid: string = "MAIN_VARIABLE_LIST_UUID"
+    variablesListUuid: string = "MAIN_VARIABLE_LIST_UUID",
+    macrosListUuid: string = "MAIN_MACRO_LIST_UUID"
 ): OperatorConfig {
     return {
         mainLineUuid: mainLineUuid,
         variablesListUuid: variablesListUuid,
+        macrosListUuid: macrosListUuid,
     };
 }
 
@@ -61,6 +64,7 @@ export enum OperatorType {
     AntiCommutator = "commutator_plus",
     Faculty = "faculty",
     Percent = "percent",
+    DefinedMacro = "defined_macro",
 }
 
 const MAX_CHILDREN = 99999999;
@@ -112,6 +116,7 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.AntiCommutator]: 2,
     [OperatorType.Faculty]: 1,
     [OperatorType.Percent]: 1,
+    [OperatorType.DefinedMacro]: MAX_CHILDREN,
 };
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
@@ -162,4 +167,5 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.AntiCommutator]: 2,
     [OperatorType.Faculty]: 1,
     [OperatorType.Percent]: 1,
+    [OperatorType.DefinedMacro]: 0,
 };

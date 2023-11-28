@@ -1,4 +1,4 @@
-import { Operator, OperatorType, useVariablesStore, OperatorConfig } from "./exporter";
+import { Operator, OperatorType, useVariablesStore, OperatorConfig, useMacrosStore } from "./exporter";
 
 export function operatorConstructorSwitch(
     config: OperatorConfig,
@@ -1314,6 +1314,28 @@ export class Variable extends Operator implements OrderableOperator {
 
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
+    }
+}
+
+export class DefinedMacro extends Operator {
+    constructor(config: OperatorConfig, trigger: string, children: Operator[]) {
+        useMacrosStore().makeSureMacroAvailable(config, trigger);
+
+        super(config, OperatorType.DefinedMacro, "", "", "", children, trigger);
+    }
+
+    protected innerFormulaString(renderChildrenHtmlIds: boolean, renderImpliedSymbols: boolean) {
+        let res = "";
+
+        this.getChildren().forEach((child) => {
+            res += child.assembleFormulaString(renderChildrenHtmlIds, renderImpliedSymbols);
+        });
+
+        return res;
+    }
+
+    getChildren(): Operator[] {
+        return this._children;
     }
 }
 

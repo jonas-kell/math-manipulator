@@ -4,20 +4,17 @@ import {
     OperatorConfig,
     PersistentVariablesStoreStorage,
     usePermanenceStore,
-    PersistentVariable,
+    PersistentVariables as Variables,
     preProcessInputString,
     wordsParserConsidersReserved,
     wordsParserConsidersReservedIfWhitespaceSurrounded,
+    useMacrosStore,
 } from "./../exporter";
 import { v4 as uuidv4 } from "uuid";
 import { ref } from "vue";
 
-interface Values {
-    [key: string]: { op: Operator | null; created: number; uuid: string };
-}
-
 interface VariableStash {
-    values: Values;
+    variables: Variables;
     recentlyCreatedVariables: string[];
     mostRecentVariableName: string;
 }
@@ -41,16 +38,16 @@ export const useVariablesStore = defineStore("variables", () => {
             // skip creation. On import we would otherwise get infinite recursion side effects
             // on import, all stuff is stored, so we must not have new Variable(...) have side effects
         } else {
-            let val = getVariableStash(config).values[name];
+            let val = getVariableStash(config).variables[name];
 
             if (val != undefined && val != null && val) {
                 // ok, variable is set
             } else {
                 // There NEEDS to be a new creation
-                getVariableStash(config).values[name] = { op: null, created: Date.now(), uuid: uuidv4() };
+                getVariableStash(config).variables[name] = { op: null, created: Date.now(), uuid: uuidv4() };
                 updateLastUpdateTimestamp();
 
-                storeValues(config);
+                storeValuesInPermanence(config);
 
                 // cache the variable name temporarily for debouncing
                 getVariableStash(config).recentlyCreatedVariables.push(name);
@@ -74,12 +71,12 @@ export const useVariablesStore = defineStore("variables", () => {
         // deletes all variables with names that are substrings of the just created variable, that have been created not more than half a second ago
 
         // extract the typed variable string from the input
-        const extracted = getLastStringSegment(typedString);
+        const extracted = getLastStringSegment(config, typedString);
         const copyOfRecentlyCreated = getVariableStash(config).recentlyCreatedVariables;
 
         // this is debouncing typing actions. Therefore call this on keyUp with the new text. Then here a delay is introduced, to make sure, processing on the logic side is finished
         [...new Set(copyOfRecentlyCreated.concat(getVariableStash(config).recentlyCreatedVariables))].forEach((iterName) => {
-            const storedObject = getVariableStash(config).values[iterName];
+            const storedObject = getVariableStash(config).variables[iterName];
             // check the variable is even stored
             if (storedObject && storedObject != null && storedObject != undefined) {
                 // check if the naming indicates typing related creation
@@ -116,20 +113,20 @@ export const useVariablesStore = defineStore("variables", () => {
             // on import, all stuff is stored, so we must not have new Variable(...) have side effects
         } else {
             makeSureVariableAvailable(config, name);
-            getVariableStash(config).values[name].op = value;
+            getVariableStash(config).variables[name].op = value;
             updateLastUpdateTimestamp();
 
-            storeValues(config);
+            storeValuesInPermanence(config);
         }
     }
     function removeVariableFromStore(config: OperatorConfig, name: string) {
-        delete getVariableStash(config).values[name];
+        delete getVariableStash(config).variables[name];
         updateLastUpdateTimestamp();
 
-        storeValues(config);
+        storeValuesInPermanence(config);
     }
     function getVariableContent(config: OperatorConfig, name: string): Operator | null {
-        let val = getVariableStash(config).values[name];
+        let val = getVariableStash(config).variables[name];
 
         if (val != undefined && val != null && val) {
             return val.op;
@@ -138,7 +135,7 @@ export const useVariablesStore = defineStore("variables", () => {
         }
     }
     function getVariableUUID(config: OperatorConfig, name: string): string | null {
-        let val = getVariableStash(config).values[name];
+        let val = getVariableStash(config).variables[name];
 
         if (val != undefined && val != null && val) {
             return val.uuid;
@@ -156,10 +153,10 @@ export const useVariablesStore = defineStore("variables", () => {
 
         // fresh initialization needed
         // delete all variables, while not using the access functions that remove the stored values
-        let values: Values = {};
+        let variables: Variables = {};
 
         // call all the constructors once and store results, to make sure that calling a variable constructor while creating another variable doesn't cause empty variable initialization later
-        const buffer = {} as { [key: string]: PersistentVariable };
+        const buffer = {} as Variables;
 
         currentlyImporting.value = true; // next line possibly calls new Variable. Stop this causing recursive effects until fully initialized
         const reimport = usePermanenceStore().getVariablesStoreForUUID(config, variableStashUuid);
@@ -175,11 +172,11 @@ export const useVariablesStore = defineStore("variables", () => {
         // overwrite locally stored values
         for (const key in buffer) {
             const storage = buffer[key];
-            values[key] = storage;
+            variables[key] = storage;
         }
 
         const newStash: VariableStash = {
-            values: values,
+            variables: variables,
             recentlyCreatedVariables: [],
             mostRecentVariableName: "Will not be choose-able by user because spaces",
         };
@@ -188,29 +185,32 @@ export const useVariablesStore = defineStore("variables", () => {
 
         return newStash;
     }
-    function storeValues(config: OperatorConfig) {
+    function storeValuesInPermanence(config: OperatorConfig) {
         let exp = { variables: {} } as PersistentVariablesStoreStorage;
 
         availableVariables(config).forEach((variableName) => {
-            const variableToExport = getVariableStash(config).values[variableName];
+            const variableToExport = getVariableStash(config).variables[variableName];
             exp.variables[variableName] = variableToExport;
         });
 
         usePermanenceStore().storeVariablesStoreForUUID(config.variablesListUuid, exp);
     }
     function availableVariables(config: OperatorConfig): string[] {
-        return Object.keys(getVariableStash(config).values).sort((keyA, keyB) => {
+        return Object.keys(getVariableStash(config).variables).sort((keyA, keyB) => {
             // append to end of list if is newer
-            return getVariableStash(config).values[keyA].created - getVariableStash(config).values[keyB].created;
+            return getVariableStash(config).variables[keyA].created - getVariableStash(config).variables[keyB].created;
         });
     }
-    function getLastStringSegment(inputString: string): string {
+    function getLastStringSegment(config: OperatorConfig, inputString: string): string {
         if (inputString.endsWith(" ")) {
             return "";
         }
 
         // surrounds all "wordsParserConsidersReserved" with white-spaces for us
         const processedInput = preProcessInputString(inputString);
+
+        // TODO purge on macro definitions
+        console.log(useMacrosStore().availableAllowedMacroTriggers(config));
 
         let lastIndex = -1;
         for (const delimiter of [...wordsParserConsidersReservedIfWhitespaceSurrounded, ...wordsParserConsidersReserved]) {
@@ -249,15 +249,12 @@ export const useVariablesStore = defineStore("variables", () => {
 
     return {
         lastUpdate,
-        updateLastUpdateTimestamp,
         makeSureVariableAvailable,
         purgeLastElementsWithNamesLeadingUpToThis,
         setOperatorForVariable,
         removeVariableFromStore,
         getVariableContent,
         getVariableUUID,
-        getVariableStash,
-        storeValues,
         availableVariables,
     };
 });

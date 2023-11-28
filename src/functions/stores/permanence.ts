@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { vscodeApiInstance, registerUpdateHandler } from "./vscodeApi";
 import { ref } from "vue";
 
+// Equation Line
 export interface PersistentLineStorage {
     operator: Operator | null;
     childUUID: string;
@@ -12,7 +13,6 @@ export interface PersistentLineStorage {
     variableNameInputUUID: string;
     mode: string;
 }
-
 interface ExportablePersistedLineStorage {
     operator: string | null;
     childUUID: string;
@@ -22,28 +22,49 @@ interface ExportablePersistedLineStorage {
     mode: string;
 }
 
+// Input
 export interface PersistentInputStorage {
     textValue: string;
 }
 
-export interface PersistentVariable {
+// Variables
+interface PersistentVariable {
     op: Operator | null;
     created: number;
     uuid: string;
 }
-export interface PersistentVariablesStoreStorage {
-    variables: { [key: string]: PersistentVariable };
+export interface PersistentVariables {
+    [key: string]: PersistentVariable;
 }
-
+export interface PersistentVariablesStoreStorage {
+    variables: PersistentVariables;
+}
 interface ExportableVariable {
     op: string | null;
     created: number;
     uuid: string;
 }
+interface ExportableVariables {
+    [key: string]: ExportableVariable;
+}
 interface ExportablePersistentVariablesStoreStorage {
-    variables: { [key: string]: ExportableVariable };
+    variables: ExportableVariables;
 }
 
+// Macros
+interface ExportablePersistentMacro {
+    trigger: string;
+    output: string;
+    created: number;
+}
+export interface ExportablePersistentMacros {
+    [key: string]: ExportablePersistentMacro;
+}
+export interface ExportablePersistentMacrosStoreStorage {
+    macros: ExportablePersistentMacros;
+}
+
+// source/target modes
 export enum PermanenceStorageModes {
     session = "session",
     vscode = "vscode",
@@ -120,7 +141,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
         return res;
     }
     function storeVariablesStoreForUUID(uuid: string, values: PersistentVariablesStoreStorage) {
-        let variables = {} as { [key: string]: ExportableVariable };
+        let variables = {} as ExportableVariables;
 
         for (const key in values.variables) {
             const element = values.variables[key];
@@ -146,7 +167,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
         if (loadedState && loadedState != null && loadedState != undefined) {
             const loadedObject = JSON.parse(loadedState) as ExportablePersistentVariablesStoreStorage;
 
-            let variables = {} as { [key: string]: PersistentVariable };
+            let variables = {} as PersistentVariables;
             for (const key in loadedObject.variables) {
                 const element = loadedObject.variables[key];
 
@@ -165,6 +186,53 @@ export const usePermanenceStore = defineStore("permanence", () => {
             res = {
                 variables: variables,
             } as PersistentVariablesStoreStorage;
+        }
+
+        return res;
+    }
+    function storeMacrosStoreForUUID(uuid: string, values: ExportablePersistentMacrosStoreStorage) {
+        let macros = {} as ExportablePersistentMacros;
+
+        for (const key in values.macros) {
+            const element = values.macros[key];
+
+            if (element != null && element != undefined) {
+                macros[key] = {
+                    created: element.created,
+                    trigger: element.trigger,
+                    output: element.output,
+                } as ExportablePersistentMacro;
+            }
+        }
+
+        const toStore: ExportablePersistentMacrosStoreStorage = {
+            macros: macros,
+        };
+        abstractStoreImplementationSet(uuid, JSON.stringify(toStore));
+    }
+    function getMacrosStoreForUUID(uuid: string): ExportablePersistentMacrosStoreStorage | null {
+        const loadedState = abstractStoreImplementationGet(uuid);
+
+        let res = null;
+        if (loadedState && loadedState != null && loadedState != undefined) {
+            const loadedObject = JSON.parse(loadedState) as ExportablePersistentMacrosStoreStorage;
+
+            let macros = {} as ExportablePersistentMacros;
+            for (const key in loadedObject.macros) {
+                const element = loadedObject.macros[key];
+
+                if (element != null && element != undefined) {
+                    macros[key] = {
+                        created: element.created != null && element.created != undefined ? element.created : Date.now(),
+                        output: element.output != null && element.output != undefined ? element.output : "",
+                        trigger: element.trigger != null && element.trigger != undefined ? element.trigger : "",
+                    } as ExportablePersistentMacro;
+                }
+            }
+
+            res = {
+                macros: macros,
+            } as ExportablePersistentMacrosStoreStorage;
         }
 
         return res;
@@ -250,9 +318,11 @@ export const usePermanenceStore = defineStore("permanence", () => {
         storeLineForUUID,
         storeInputForUUID,
         storeVariablesStoreForUUID,
+        storeMacrosStoreForUUID,
         getLineForUUID,
         getInputForUUID,
         getVariablesStoreForUUID,
+        getMacrosStoreForUUID,
         addPermanenceHasUpdatedHandler,
         setStorageModeTo,
         abstractStoreImplementationSet,
