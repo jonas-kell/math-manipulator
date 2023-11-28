@@ -81,6 +81,7 @@ const AllowedReservedSymbols = Object.keys(AllowedReservedSymbolsMapping);
 const NotEqualsSignSymbol = "$NEQSIGN$";
 const IffSignSymbol = "$IFFSIGN$";
 const AllowedStructuralKeywordMapping = {
+    // TODO < > <= >=
     "{}": OperatorType.EmptyArgument,
     "=": OperatorType.Equals,
     [NotEqualsSignSymbol]: OperatorType.NotEquals, // actually != is used, but this doesn't work, because ! and = is already a reserved word. Therefore special pre-processing with WordPreProcessingMap
