@@ -219,9 +219,12 @@ export const useVariablesStore = defineStore("variables", () => {
         }
 
         // Extract the substring from the last delimiter to the end
-        const lastElement = processedInput.substring(lastIndex).replace(/\s/g, "");
+        const lastNonReservedSegment = processedInput.substring(lastIndex).trim();
 
-        return lastElement;
+        // if there are spaces left, select from last
+        const trueLastSegment = lastNonReservedSegment.substring(lastNonReservedSegment.lastIndexOf(" ")).trim();
+
+        return trueLastSegment;
     }
     function removeFromArray(arr: string[], elem: string): string[] {
         const index = arr.indexOf(elem);
