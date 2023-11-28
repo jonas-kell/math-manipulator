@@ -22,7 +22,7 @@
             try {
                 res = operatorFromString(props.config, text.value);
             } catch (err) {
-                console.error(err);
+                // console.warn(err); // no longer useful to log this to the stdout/stderr, as the module is basically stable now
                 error.value = String(err);
             }
         }
