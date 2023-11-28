@@ -79,13 +79,18 @@ const AllowedReservedSymbols = Object.keys(AllowedReservedSymbolsMapping);
 
 // ! Structural Operators
 const NotEqualsSignSymbol = "$NEQSIGN$";
+const LessEqualsSignSymbol = "$LESSEQUALSIGN$";
+const GreaterEqualsSignSymbol = "$GREATEREQUALSIGN$";
 const IffSignSymbol = "$IFFSIGN$";
 const AllowedStructuralKeywordMapping = {
-    // TODO < > <= >=
     "{}": OperatorType.EmptyArgument,
     "=": OperatorType.Equals,
+    "<": OperatorType.Less,
+    ">": OperatorType.Greater,
     [NotEqualsSignSymbol]: OperatorType.NotEquals, // actually != is used, but this doesn't work, because ! and = is already a reserved word. Therefore special pre-processing with WordPreProcessingMap
-    [IffSignSymbol]: OperatorType.Iff, // actually <=> is used, but this doesn't work, because = is already a reserved word. Therefore special pre-processing with WordPreProcessingMap
+    [LessEqualsSignSymbol]: OperatorType.LessEquals, // actually <= is used, but this doesn't work, because = and < is already a reserved word. Therefore special pre-processing with WordPreProcessingMap
+    [GreaterEqualsSignSymbol]: OperatorType.GreaterEquals, // actually >= is used, but this doesn't work, because = and > is already a reserved word. Therefore special pre-processing with WordPreProcessingMap
+    [IffSignSymbol]: OperatorType.Iff, // actually <=> is used, but this doesn't work, because = and <= is already a reserved word. Therefore special pre-processing with WordPreProcessingMap
 } as { [key: string]: OperatorType };
 const AllowedStructuralKeywords = Object.keys(AllowedStructuralKeywordMapping);
 
@@ -132,11 +137,13 @@ const AllowedConstantKeywordMapping = {
 } as { [key: string]: OperatorType };
 const AllowedConstantKeywords = Object.keys(AllowedConstantKeywordMapping);
 
-// ! Pre-Processing Section
+// ! Pre-Processing Section (order is important)
 const WordPreProcessingMap = {
     "**": [PowerSignSymbol],
     "!=": [NotEqualsSignSymbol],
     "<=>": [IffSignSymbol],
+    "<=": [LessEqualsSignSymbol],
+    ">=": [GreaterEqualsSignSymbol],
 };
 const WordsThatNeedPreProcessing = Object.keys(WordPreProcessingMap);
 

@@ -87,6 +87,14 @@ export function operatorConstructorSwitch(
             return new NotEquals(config);
         case OperatorType.Iff:
             return new Iff(config);
+        case OperatorType.Less:
+            return new Less(config);
+        case OperatorType.Greater:
+            return new Greater(config);
+        case OperatorType.LessEquals:
+            return new LessEquals(config);
+        case OperatorType.GreaterEquals:
+            return new GreaterEquals(config);
         case OperatorType.Faculty:
             return new Faculty(config, childrenReconstructed[0]);
         case OperatorType.Percent:
@@ -1791,6 +1799,30 @@ export class NotEquals extends Operator {
 export class Iff extends Operator {
     constructor(config: OperatorConfig) {
         super(config, OperatorType.Iff, "\\iff", "", "", [], "");
+    }
+}
+
+export class Less extends Operator {
+    constructor(config: OperatorConfig) {
+        super(config, OperatorType.Less, "\\less", "", "", [], "");
+    }
+}
+
+export class Greater extends Operator {
+    constructor(config: OperatorConfig) {
+        super(config, OperatorType.Greater, "\\greater", "", "", [], "");
+    }
+}
+
+export class LessEquals extends Operator {
+    constructor(config: OperatorConfig) {
+        super(config, OperatorType.LessEquals, "\\leq", "", "", [], "");
+    }
+}
+
+export class GreaterEquals extends Operator {
+    constructor(config: OperatorConfig) {
+        super(config, OperatorType.GreaterEquals, "\\geq", "", "", [], "");
     }
 }
 

@@ -86,6 +86,8 @@
                     "\\faculty": "!",
                     "\\percent": "\\%",
                     "\\eq": "=",
+                    "\\less": "<",
+                    "\\greater": ">",
                 },
                 throwOnError: false,
                 displayMode: true,
