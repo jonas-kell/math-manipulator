@@ -31,35 +31,41 @@ export const useVariablesStore = defineStore("variables", () => {
         }
     );
     const lastUpdate = ref(Date.now());
+    const currentlyImporting = ref(false);
 
     function updateLastUpdateTimestamp() {
         lastUpdate.value = Date.now();
     }
     function makeSureVariableAvailable(config: OperatorConfig, name: string) {
-        let val = getVariableStash(config).values[name];
-
-        if (val != undefined && val != null && val) {
-            // ok, variable is set
+        if (currentlyImporting.value) {
+            // skip creation. On import we would otherwise get infinite recursion side effects
+            // on import, all stuff is stored, so we must not have new Variable(...) have side effects
         } else {
-            // There NEEDS to be a new creation
-            getVariableStash(config).values[name] = { op: null, created: Date.now(), uuid: uuidv4() };
-            updateLastUpdateTimestamp();
+            let val = getVariableStash(config).values[name];
 
-            storeValues(config);
-
-            // cache the variable name temporarily for debouncing
-            getVariableStash(config).recentlyCreatedVariables.push(name);
-            getVariableStash(config).mostRecentVariableName = name;
-            updateLastUpdateTimestamp();
-
-            setTimeout(() => {
-                // definitely no longer in the array after MAX_RECENT_LIFETIME
-                getVariableStash(config).recentlyCreatedVariables = removeFromArray(
-                    getVariableStash(config).recentlyCreatedVariables,
-                    name
-                );
+            if (val != undefined && val != null && val) {
+                // ok, variable is set
+            } else {
+                // There NEEDS to be a new creation
+                getVariableStash(config).values[name] = { op: null, created: Date.now(), uuid: uuidv4() };
                 updateLastUpdateTimestamp();
-            }, MAX_RECENT_LIFETIME);
+
+                storeValues(config);
+
+                // cache the variable name temporarily for debouncing
+                getVariableStash(config).recentlyCreatedVariables.push(name);
+                getVariableStash(config).mostRecentVariableName = name;
+                updateLastUpdateTimestamp();
+
+                setTimeout(() => {
+                    // definitely no longer in the array after MAX_RECENT_LIFETIME
+                    getVariableStash(config).recentlyCreatedVariables = removeFromArray(
+                        getVariableStash(config).recentlyCreatedVariables,
+                        name
+                    );
+                    updateLastUpdateTimestamp();
+                }, MAX_RECENT_LIFETIME);
+            }
         }
     }
     function purgeLastElementsWithNamesLeadingUpToThis(config: OperatorConfig, typedString: string) {
@@ -105,11 +111,16 @@ export const useVariablesStore = defineStore("variables", () => {
         });
     }
     function setOperatorForVariable(config: OperatorConfig, name: string, value: Operator | null) {
-        makeSureVariableAvailable(config, name);
-        getVariableStash(config).values[name].op = value;
-        updateLastUpdateTimestamp();
+        if (currentlyImporting.value) {
+            // skip creation. On import we would otherwise get infinite recursion side effects
+            // on import, all stuff is stored, so we must not have new Variable(...) have side effects
+        } else {
+            makeSureVariableAvailable(config, name);
+            getVariableStash(config).values[name].op = value;
+            updateLastUpdateTimestamp();
 
-        storeValues(config);
+            storeValues(config);
+        }
     }
     function removeVariableFromStore(config: OperatorConfig, name: string) {
         delete getVariableStash(config).values[name];
@@ -149,7 +160,11 @@ export const useVariablesStore = defineStore("variables", () => {
 
         // call all the constructors once and store results, to make sure that calling a variable constructor while creating another variable doesn't cause empty variable initialization later
         const buffer = {} as { [key: string]: PersistentVariable };
+
+        currentlyImporting.value = true; // next line possibly calls new Variable. Stop this causing recursive effects until fully initialized
         const reimport = usePermanenceStore().getVariablesStoreForUUID(config, variableStashUuid);
+        currentlyImporting.value = false;
+
         if (reimport && reimport != null) {
             for (const key in reimport.variables) {
                 const reimportedVariable = reimport.variables[key];
