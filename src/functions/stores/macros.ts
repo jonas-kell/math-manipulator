@@ -6,6 +6,7 @@ import {
     wordsParserConsidersReserved,
     wordsParserConsidersReservedIfWhitespaceSurrounded,
     ExportablePersistentMacrosStoreStorage,
+    useVariablesStore,
 } from "./../exporter";
 import { v4 as uuidv4 } from "uuid";
 import { ref } from "vue";
@@ -58,6 +59,10 @@ export const useMacrosStore = defineStore("macros", () => {
         updateLastUpdateTimestamp();
 
         storeValuesInPermanence(config);
+
+        // purge (useful when macro is not last element of input)
+        useVariablesStore().setMostRecentCustomReservedWord(config, trigger);
+        useVariablesStore().purgeLastElementsWithNamesLeadingUpToThis(config, trigger);
 
         return newMacroUUID;
     }

@@ -16,7 +16,7 @@ import { ref } from "vue";
 interface VariableStash {
     variables: Variables;
     recentlyCreatedVariables: string[];
-    mostRecentVariableName: string;
+    mostRecentCustomReservedWord: string;
 }
 
 const MAX_RECENT_LIFETIME = 1500;
@@ -51,8 +51,11 @@ export const useVariablesStore = defineStore("variables", () => {
 
                 // cache the variable name temporarily for debouncing
                 getVariableStash(config).recentlyCreatedVariables.push(name);
-                getVariableStash(config).mostRecentVariableName = name;
+                setMostRecentCustomReservedWord(config, name);
                 updateLastUpdateTimestamp();
+
+                // purge (useful when variable is not last element of input)
+                purgeLastElementsWithNamesLeadingUpToThis(config, name);
 
                 setTimeout(() => {
                     // definitely no longer in the array after MAX_RECENT_LIFETIME
@@ -64,6 +67,9 @@ export const useVariablesStore = defineStore("variables", () => {
                 }, MAX_RECENT_LIFETIME);
             }
         }
+    }
+    function setMostRecentCustomReservedWord(config: OperatorConfig, word: string) {
+        getVariableStash(config).mostRecentCustomReservedWord = word;
     }
     function purgeLastElementsWithNamesLeadingUpToThis(config: OperatorConfig, typedString: string) {
         // when typing e.g. the variable "asdf", The variables "a" "as" "asd" get created and then linger
@@ -87,7 +93,7 @@ export const useVariablesStore = defineStore("variables", () => {
                     // most recent variable must not be deleted obviously. (Required, because this happens in timeout and this could cause de-sync for very fast following inputs)
                     // therefore extra check so that the second-last character of a normally typed string doesn't delete the full name as it thinks it is a deleting motion
                     (iterName.substring(0, iterName.length - 1) == extracted &&
-                        iterName != getVariableStash(config).mostRecentVariableName) ||
+                        iterName != getVariableStash(config).mostRecentCustomReservedWord) ||
                     // deleting single character variables
                     (extracted == "" && iterName.length == 1)
                 ) {
@@ -178,7 +184,7 @@ export const useVariablesStore = defineStore("variables", () => {
         const newStash: VariableStash = {
             variables: variables,
             recentlyCreatedVariables: [],
-            mostRecentVariableName: "Will not be choose-able by user because spaces",
+            mostRecentCustomReservedWord: "Will not be choose-able by user because spaces",
         };
         variableStashes.value[variableStashUuid] = newStash;
         updateLastUpdateTimestamp();
@@ -257,5 +263,6 @@ export const useVariablesStore = defineStore("variables", () => {
         getVariableContent,
         getVariableUUID,
         availableVariables,
+        setMostRecentCustomReservedWord,
     };
 });
