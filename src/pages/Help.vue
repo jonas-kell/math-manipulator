@@ -23,7 +23,7 @@
             }
 
             outArray.push({
-                config: generateOperatorConfig(elem.mainUuid, elem.variablesUuid),
+                config: generateOperatorConfig(elem.mainUuid, elem.variablesUuid), // TODO replace Macro UUID and insert here
                 element: elem,
             });
         });
