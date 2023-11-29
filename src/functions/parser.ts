@@ -58,9 +58,8 @@ enum TokenType {
     Constant = "Constant",
     Number = "Number",
     Other = "Other",
-    Faculty = "Faculty",
-    Percent = "Percent",
     Macro = "Macro",
+    BeforeFunction = "BeforeFunction",
 }
 
 // ! Reserved Symbols with own token
@@ -75,8 +74,6 @@ const AllowedReservedSymbolsMapping = {
     ":": TokenType.Divide,
     "(": TokenType.OpenParen,
     ")": TokenType.CloseParen,
-    "!": TokenType.Faculty,
-    "%": TokenType.Percent,
 } as { [key: string]: TokenType };
 const AllowedReservedSymbols = Object.keys(AllowedReservedSymbolsMapping);
 
@@ -96,6 +93,14 @@ const AllowedStructuralKeywordMapping = {
     [IffSignSymbol]: OperatorType.Iff, // actually <=> is used, but this doesn't work, because = and <= is already a reserved word. Therefore special pre-processing with WordPreProcessingMap
 } as { [key: string]: OperatorType };
 const AllowedStructuralKeywords = Object.keys(AllowedStructuralKeywordMapping);
+
+// ! Pre-defined BeforeFunctions (that stand after their argument)
+// Caution, these and all above count as completely reserved, not only if whitespace surrounded, like below (will break up other arguments if contained in them)
+const AllowedBeforeFunctionKeywordMapping = {
+    "!": OperatorType.Faculty,
+    "%": OperatorType.Percent,
+} as { [key: string]: OperatorType };
+const AllowedBeforeFunctionKeywords = Object.keys(AllowedBeforeFunctionKeywordMapping);
 
 // ! Pre-defined Functions
 const AllowedFunctionKeywordMapping = {
@@ -126,7 +131,7 @@ const functionsWithArgumentsConsideredStructural = [
 ] as OperatorType[];
 const AllowedFunctionKeywords = Object.keys(AllowedFunctionKeywordMapping);
 
-// ! Pre-defined Constants
+// ! Pre-defined Constants (=Functions without arguments)
 const AllowedConstantKeywordMapping = {
     pi: OperatorType.PiConstant,
     inf: OperatorType.InfinityConstant,
@@ -154,6 +159,7 @@ const WordsThatNeedPreProcessing = Object.keys(WordPreProcessingMap);
 export const wordsParserConsidersReserved: string[] = [
     ...AllowedReservedSymbols,
     ...AllowedStructuralKeywords,
+    ...AllowedBeforeFunctionKeywords,
     ...WordsThatNeedPreProcessing,
 ];
 export const wordsParserConsidersReservedIfWhitespaceSurrounded: string[] = [
@@ -226,6 +232,16 @@ function tokenize(config: OperatorConfig, input: string): Token[] {
                     break;
                 }
             }
+            for (let i = 0; i < AllowedBeforeFunctionKeywords.length; i++) {
+                if (currentBufWord == AllowedBeforeFunctionKeywords[i]) {
+                    tokens.push({
+                        type: TokenType.BeforeFunction,
+                        content: AllowedBeforeFunctionKeywordMapping[AllowedBeforeFunctionKeywords[i]],
+                    });
+                    wordFound = true;
+                    break;
+                }
+            }
             for (let i = 0; i < AllowedConstantKeywords.length; i++) {
                 if (currentBufWord == AllowedConstantKeywords[i]) {
                     tokens.push({
@@ -276,7 +292,8 @@ function tokenize(config: OperatorConfig, input: string): Token[] {
                     currentBufWord.includes("^") ||
                     currentBufWord.includes("_") ||
                     currentBufWord.includes("{") ||
-                    currentBufWord.includes("}");
+                    currentBufWord.includes("}") ||
+                    currentBufWord.includes("$");
                 tokens.push({ type: likelyLatex ? TokenType.Structural : TokenType.Other, content: currentBufWord });
                 wordFound = true;
             }
@@ -400,8 +417,14 @@ function trimTokenGroupRecursive(tokenGroup: TokenGroup): TokenGroup {
     return tokenGroup;
 }
 
-// TODO add logic for macros and faculty and percent
-const implyStructuralSeparationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.Structural]; // Plus groups aka most of the time brackets
+// TODO add logic for macros
+const implyStructuralSeparationBehind = [
+    TokenType.Other,
+    TokenType.Number,
+    TokenType.Constant,
+    TokenType.Structural,
+    TokenType.BeforeFunction,
+]; // Plus groups aka most of the time brackets
 const implyStructuralSeparationInFront = [
     TokenType.Other,
     TokenType.Number,
@@ -409,9 +432,9 @@ const implyStructuralSeparationInFront = [
     TokenType.Constant,
     TokenType.Structural,
 ]; // Plus groups aka most of the time brackets
-const implyMultiplicationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant]; // Plus groups aka most of the time brackets
+const implyMultiplicationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets
 const implyMultiplicationInFront = [TokenType.Other, TokenType.Number, TokenType.Function, TokenType.Constant]; // Plus groups aka most of the time brackets
-const implyAdditionBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.Function]; // Plus groups aka most of the time brackets
+const implyAdditionBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets
 const implyAdditionInFront = [TokenType.Minus]; // ! here NOT groups
 
 function insertImpliedOperationsRecursive(tokenGroup: TokenGroup, insertStructuralSeparation: boolean = false): TokenGroup {
@@ -557,10 +580,9 @@ type tokenTypesWithOperatorCharacterType =
     | TokenType.Plus
     | TokenType.Minus
     | TokenType.Multiplicate
-    | TokenType.Faculty
-    | TokenType.Percent
     | TokenType.Divide
     | TokenType.Power
+    | TokenType.BeforeFunction
     | TokenType.Function
     | TokenType.Macro
     | TokenType.StructuralSeparation;
@@ -597,13 +619,8 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
         takesNrArgumentsBefore: 0,
         takesNrArgumentsAfter: 1,
     },
-    [TokenType.Faculty]: {
+    [TokenType.BeforeFunction]: {
         precedence: 550,
-        takesNrArgumentsBefore: 1,
-        takesNrArgumentsAfter: 0,
-    },
-    [TokenType.Percent]: {
-        precedence: 555,
         takesNrArgumentsBefore: 1,
         takesNrArgumentsAfter: 0,
     },
@@ -967,20 +984,7 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
                     children: [children[0], children[1]],
                     uuid: "",
                 } as ExportOperatorContent;
-            case TokenType.Faculty:
-                return {
-                    type: OperatorType.Faculty,
-                    value: "",
-                    children: [children[0]],
-                    uuid: "",
-                } as ExportOperatorContent;
-            case TokenType.Percent:
-                return {
-                    type: OperatorType.Percent,
-                    value: "",
-                    children: [children[0]],
-                    uuid: "",
-                } as ExportOperatorContent;
+            case TokenType.BeforeFunction:
             case TokenType.Function:
                 let childrenForFunctionOperator = [children[0]];
 
