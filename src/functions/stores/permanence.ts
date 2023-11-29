@@ -307,6 +307,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
             description: "",
             storage: sessionData,
             showVariables: false,
+            showMacros: false,
             mainUuid: newMainUuid,
             variablesUuid: newVariablesUuid,
         })

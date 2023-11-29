@@ -640,7 +640,7 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
         takesNrArgumentsBefore: 0,
     },
     [TokenType.Macro]: {
-        precedence: 2000,
+        precedence: 1000,
         takesNrArgumentsAfter: -1, // will get overwritten, depends on the macro
         takesNrArgumentsBefore: 0,
     },
@@ -718,6 +718,7 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
             let highestIndex = -1;
             let currentPrecedence = -1;
             children.forEach((child, index) => {
+                // TODO "hyp exp 1" doesn't work, "exp hyp 1" does work
                 if (child instanceof TokenGroupLeaf && tokenTypesWithOperatorCharacter.includes(child.getToken().type)) {
                     const controlStruct =
                         tokenTypesWithOperatorCharacterDefinitions[child.getToken().type as tokenTypesWithOperatorCharacterType];
