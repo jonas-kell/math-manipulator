@@ -10,7 +10,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "a93c35da-633d-4ed5-8313-3a0e75e67926",
-        "variablesUuid": "8ae00f4f-fb5f-4727-a46e-65ee7e64823d"
+        "variablesUuid": "8ae00f4f-fb5f-4727-a46e-65ee7e64823d",
+        "macrosUuid": "d1a613c4-3ac5-4067-a042-51a8c2a0ed9e"
     },
     {
         "title": "Selecting and advanced operations",
@@ -24,7 +25,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "d93f2151-284e-43f3-b93c-a08b824f6fbc",
-        "variablesUuid": "9520c679-a670-4c01-a7f8-bbaa8e0bf7f0"
+        "variablesUuid": "9520c679-a670-4c01-a7f8-bbaa8e0bf7f0",
+        "macrosUuid": "49dc6516-c68b-40c6-9904-934c082192d7"
     },
     {
         "title": "Implied Multiplication",
@@ -37,7 +39,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "e7536bcd-5842-4085-bf37-c4a2a03bd9fe",
-        "variablesUuid": "588a6806-b9e0-453a-8388-c861ddebe909"
+        "variablesUuid": "588a6806-b9e0-453a-8388-c861ddebe909",
+        "macrosUuid": "6ff43071-a8f6-4007-ab63-7bf0355a9c40"
     },
     {
         "title": "Advanced mathematical functions",
@@ -50,7 +53,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "7acd9015-8d24-413f-9f54-81491f3bb8d3",
-        "variablesUuid": "77b73e33-211a-4192-8e7e-415b92c25002"
+        "variablesUuid": "77b73e33-211a-4192-8e7e-415b92c25002",
+        "macrosUuid": "61faeacb-15bf-40cd-945d-53bc22fc13c4"
     },
     {
         "title": "Single argument functions",
@@ -63,7 +67,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "089da23a-4350-42dd-9d74-f4d17fcb1d4e",
-        "variablesUuid": "bdec435f-f49f-449f-b79a-9dfa17f23b7f"
+        "variablesUuid": "bdec435f-f49f-449f-b79a-9dfa17f23b7f",
+        "macrosUuid": "f187d6f2-3ebb-4c6b-a09f-ac611e2ac272"
     },
     {
         "title": "Structural operators",
@@ -76,7 +81,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "73d2d72a-07fb-4b23-b497-ad9ff7c1942b",
-        "variablesUuid": "b9c0de3d-7a91-4108-8152-6998ded16ed9"
+        "variablesUuid": "b9c0de3d-7a91-4108-8152-6998ded16ed9",
+        "macrosUuid": "c2464faf-d57d-4599-a3ab-e5d444d38881"
     },
     {
         "title": "Constants",
@@ -90,7 +96,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "b04874e7-55ac-4fb7-b276-37e4cc6c57fb",
-        "variablesUuid": "375cb968-3b46-4eb7-9ce7-0a2dd40dc280"
+        "variablesUuid": "375cb968-3b46-4eb7-9ce7-0a2dd40dc280",
+        "macrosUuid": "1955d711-05df-40fe-aa59-25072fa11b75"
     },
     {
         "title": "Variables - Definition and Usage",
@@ -109,20 +116,22 @@
         "showVariables": true,
         "showMacros": false,
         "mainUuid": "5c0534d1-4683-4c4e-8360-d6db45736737",
-        "variablesUuid": "80dee28c-96c0-4970-b676-ddf545db718d"
+        "variablesUuid": "80dee28c-96c0-4970-b676-ddf545db718d",
+        "macrosUuid": "58970069-878a-4e60-b2a0-4dcf87726dc2"
     },
     {
         "title": "User-defined Macros utility",
         "description": "Alongside the dynamic variables, there exists the possibility to define custom macros.\nThese basically work like the pre-defined functions.\n They may have arguments or not. The argument number is controlled by the largest number next to a \"#\" in the \"macro-output\".\n The same argument (\"#<ARGUMENTNUMBER>\") can be used multiple times in the output, in that case only the first instance is clickable.\nThe smallest argument-number is #0 (so if your macro contains a #1, it requires at least two arguments/parameters).",
         "storage": {
-            "MAIN_MACRO_LIST_UUID": "{\"macros\":{\"9ae9f293-c575-4605-8664-020793f45854\":{\"created\":1701208671446,\"trigger\":\"ham\",\"output\":\"\\\\mathcal{H}\"},\"59e3082f-febf-4a32-8254-5ff8a0f4cc5e\":{\"created\":1701220067823,\"trigger\":\"hbar\",\"output\":\"\\\\hbar\"},\"d25ca489-4ae5-4b37-9ade-a91952d46728\":{\"created\":1701220192896,\"trigger\":\"difft\",\"output\":\"\\\\frac{\\\\partial #0}{\\\\partial t}\"}}}",
+            "97c3cdb6-4383-4c19-8e43-065f44c0d7ef": "{\"macros\":{\"9ae9f293-c575-4605-8664-020793f45854\":{\"created\":1701208671446,\"trigger\":\"ham\",\"output\":\"\\\\mathcal{H}\"},\"59e3082f-febf-4a32-8254-5ff8a0f4cc5e\":{\"created\":1701220067823,\"trigger\":\"hbar\",\"output\":\"\\\\hbar\"},\"d25ca489-4ae5-4b37-9ade-a91952d46728\":{\"created\":1701220192896,\"trigger\":\"difft\",\"output\":\"\\\\frac{\\\\partial #0}{\\\\partial t}\"}}}",
             "b34d82a9-0f2a-4310-bc40-170c71da03f7": "{\"textValue\":\"ham ket(psi) = i hbar difft (ket psi)\"}",
             "3c338ec1-1282-4e9a-aaa0-791df53ed389": "{\"operator\":\"{\\\"type\\\":\\\"structural_container\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"bracketed_multiplication\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"defined_macro\\\",\\\"value\\\":\\\"ham\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"3fd25cbb-ae4a-4851-9d56-1a8e1b532221\\\"},{\\\"type\\\":\\\"singular_ket\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"op_psi\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"15f59ed2-cb9e-4e9a-ad4d-121b22c2556f\\\"}],\\\"uuid\\\":\\\"760f3051-3af1-46bc-9e4f-3051588dda37\\\"}],\\\"uuid\\\":\\\"cdf90b31-826d-4d92-97e8-53efb50975e1\\\"},{\\\"type\\\":\\\"equals\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"5e9959a4-7475-42de-aa06-a2e4505b72d4\\\"},{\\\"type\\\":\\\"bracketed_multiplication\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"complex_operator_construct\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"0\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"25d1addc-ab30-4517-9e39-55f9de043012\\\"},{\\\"type\\\":\\\"number\\\",\\\"value\\\":\\\"1\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"42751423-49e0-4a88-9f9a-ee226847be6f\\\"}],\\\"uuid\\\":\\\"c9933a48-a1b7-4d6c-8ad1-e2e5e97c3905\\\"},{\\\"type\\\":\\\"defined_macro\\\",\\\"value\\\":\\\"hbar\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"8510b9e5-a284-4668-9d0c-769c6068fa85\\\"},{\\\"type\\\":\\\"defined_macro\\\",\\\"value\\\":\\\"difft\\\",\\\"children\\\":[{\\\"type\\\":\\\"singular_ket\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[{\\\"type\\\":\\\"op_psi\\\",\\\"value\\\":\\\"\\\",\\\"children\\\":[],\\\"uuid\\\":\\\"988419bc-7776-4ddf-bd7f-402d77bab5fa\\\"}],\\\"uuid\\\":\\\"4dae99a4-f86e-4ad1-af39-bddaf476ec51\\\"}],\\\"uuid\\\":\\\"338d45ab-2c01-473f-afee-17b5c15001e9\\\"}],\\\"uuid\\\":\\\"ccd98e3e-3696-4b70-b97c-1201758284b7\\\"}],\\\"uuid\\\":\\\"0e254f50-789a-452a-a54e-229fdd6ba703\\\"}\",\"childUUID\":\"835aae87-8bbf-49ca-ac6c-5b985240a70f\",\"selectionUUID\":\"\",\"operatorParserUUID\":\"b34d82a9-0f2a-4310-bc40-170c71da03f7\",\"variableNameInputUUID\":\"27567409-0f07-4f8e-b929-f2d592dcaa90\",\"mode\":\"none\"}"
         },
         "showVariables": false,
         "showMacros": true,
         "mainUuid": "3c338ec1-1282-4e9a-aaa0-791df53ed389",
-        "variablesUuid": "134e8658-a853-4e78-990a-d3299ae31cdd"
+        "variablesUuid": "134e8658-a853-4e78-990a-d3299ae31cdd",
+        "macrosUuid": "97c3cdb6-4383-4c19-8e43-065f44c0d7ef"
     },
     {
         "title": "Bra-Ket with orthonormal evaluation",
@@ -137,7 +146,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "1e4127b9-be2f-4de4-9d30-8f9c3183e0ad",
-        "variablesUuid": "c4942103-8a48-483f-bd4c-19912bbb8293"
+        "variablesUuid": "c4942103-8a48-483f-bd4c-19912bbb8293",
+        "macrosUuid": "e660ad18-8b86-4f35-aace-facf87d93b9e"
     },
     {
         "title": "Fermionic- and Bosonic- Creation- and Annihilation-Operators",
@@ -152,7 +162,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "55d18c0e-67b0-4574-8421-59095c667e9c",
-        "variablesUuid": "6d7cd76a-fa3d-4dc1-9fa3-dc87e5be9bb7"
+        "variablesUuid": "6d7cd76a-fa3d-4dc1-9fa3-dc87e5be9bb7",
+        "macrosUuid": "16f40b9d-7dff-4764-a221-d15955a4545f"
     },
     {
         "title": "Operator string ordering (works for non-commutative operators)",
@@ -165,7 +176,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "5f47aeb7-0ead-4936-b053-c2290331e27f",
-        "variablesUuid": "188b340d-55d3-4511-a8aa-23d3ed60ce91"
+        "variablesUuid": "188b340d-55d3-4511-a8aa-23d3ed60ce91",
+        "macrosUuid": "f873cb5b-b366-4217-835c-25b4dc35c393"
     },
     {
         "title": "Complex Numbers",
@@ -179,7 +191,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "a5c6504c-e092-4a2d-88eb-c694e17df69e",
-        "variablesUuid": "419212ef-39ab-48ab-996a-b6ddd555fa94"
+        "variablesUuid": "419212ef-39ab-48ab-996a-b6ddd555fa94",
+        "macrosUuid": "34f0824b-5a26-4ca4-8b27-e17289a32686"
     },
     {
         "title": "Distribute and cancel from sums",
@@ -196,7 +209,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "96db89b1-07ea-4f17-b8ef-1c819acb3acb",
-        "variablesUuid": "964eb208-dc12-422f-8716-f3e8d93e44aa"
+        "variablesUuid": "964eb208-dc12-422f-8716-f3e8d93e44aa",
+        "macrosUuid": "cab4d092-4908-45f9-b870-e2ef72f00122"
     },
     {
         "title": "LaTeX",
@@ -208,7 +222,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "c4886543-6916-4fd0-84d6-eb62064e5dc4",
-        "variablesUuid": "392495e1-c149-4863-991d-865f4fb3d419"
+        "variablesUuid": "392495e1-c149-4863-991d-865f4fb3d419",
+        "macrosUuid": "f4e3d339-b083-4ae4-9d2d-4c7902c6b0a2"
     },
     {
         "title": "Custom LaTeX macros",
@@ -220,7 +235,8 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "e2879e5f-abe5-4a44-aa8f-f0116a83fc27",
-        "variablesUuid": "b246424f-7b43-4deb-930f-cad1ac6ce9da"
+        "variablesUuid": "b246424f-7b43-4deb-930f-cad1ac6ce9da",
+        "macrosUuid": "84ebfd27-7031-4753-8298-a894fc90df75"
     },
     {
         "title": "Commutators",
@@ -235,6 +251,7 @@
         "showVariables": false,
         "showMacros": false,
         "mainUuid": "c1c11f7e-06da-40c9-ba79-d64c5316a4a9",
-        "variablesUuid": "90aab892-cdef-46d1-b9f5-f338cc958408"
+        "variablesUuid": "90aab892-cdef-46d1-b9f5-f338cc958408",
+        "macrosUuid": "0b5e98c8-d39a-438c-ad0f-5cc299acbf63"
     }
 ]

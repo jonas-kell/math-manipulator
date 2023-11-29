@@ -301,6 +301,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
 
         const newMainUuid = uuidv4();
         const newVariablesUuid = uuidv4();
+        const newMacrosUuid = uuidv4();
 
         return JSON.stringify({
             title: "",
@@ -310,9 +311,11 @@ export const usePermanenceStore = defineStore("permanence", () => {
             showMacros: false,
             mainUuid: newMainUuid,
             variablesUuid: newVariablesUuid,
+            macrosUuid: newMacrosUuid,
         })
             .replace(config.mainLineUuid, newMainUuid)
-            .replace(config.variablesListUuid, newVariablesUuid);
+            .replace(config.variablesListUuid, newVariablesUuid)
+            .replace(config.macrosListUuid, newMacrosUuid);
     }
 
     return {

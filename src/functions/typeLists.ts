@@ -5,10 +5,20 @@ export type OperatorConfig = {
 };
 
 export function generateOperatorConfig(
-    mainLineUuid: string = "MAIN_UUID",
-    variablesListUuid: string = "MAIN_VARIABLE_LIST_UUID",
-    macrosListUuid: string = "MAIN_MACRO_LIST_UUID"
+    mainLineUuid: string | undefined = undefined,
+    variablesListUuid: string | undefined = undefined,
+    macrosListUuid: string | undefined = undefined
 ): OperatorConfig {
+    if (mainLineUuid == undefined) {
+        mainLineUuid = "MAIN_UUID";
+    }
+    if (variablesListUuid == undefined) {
+        variablesListUuid = "MAIN_VARIABLE_LIST_UUID";
+    }
+    if (macrosListUuid == undefined) {
+        macrosListUuid = "MAIN_MACRO_LIST_UUID";
+    }
+
     return {
         mainLineUuid: mainLineUuid,
         variablesListUuid: variablesListUuid,

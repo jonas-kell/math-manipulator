@@ -6,4 +6,5 @@ export type HelpElement = {
     showMacros: boolean;
     mainUuid: string;
     variablesUuid: string;
+    macrosUuid: string;
 };
