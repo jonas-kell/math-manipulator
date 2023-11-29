@@ -628,18 +628,19 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
         takesNrArgumentsAfter: 1,
         takesNrArgumentsBefore: 1,
     },
+    // Minus, Function and Macro(for more than 0 parameters) work exactly the same, therefore same precedence!!
+    // Macro for 0 parameters takes 0 parameters, so no sweat and this works generally
     [TokenType.Minus]: {
-        // only one-after-it type of minus
-        precedence: 500,
-        takesNrArgumentsBefore: 0,
+        // only one-after-it type of minus (THEREFORE same as function)
+        precedence: 1000,
         takesNrArgumentsAfter: 1,
+        takesNrArgumentsBefore: 0,
     },
     [TokenType.Function]: {
         precedence: 1000,
         takesNrArgumentsAfter: 1,
         takesNrArgumentsBefore: 0,
     },
-    // Function and Macro for more then 0 parameters work exactly the same, therefore same precedence!!
     [TokenType.Macro]: {
         precedence: 1000,
         takesNrArgumentsAfter: -1, // will get overwritten, depends on the macro
