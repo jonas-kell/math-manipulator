@@ -357,7 +357,7 @@ function groupTokenStream(config: OperatorConfig, tokens: Token[]): TokenGroup {
         throw Error("Should not be possible, not all tokens have been processed in the grouping stage");
     }
     const trimmed = trimTokenGroupRecursive(res[0]);
-    const implicitOperationsInserted = insertImpliedOperationsRecursive(trimmed);
+    const implicitOperationsInserted = insertImpliedOperationsRecursive(config, trimmed);
     const precedenceFixed = fixOperatorPrecedenceGrouping(config, implicitOperationsInserted);
 
     return precedenceFixed;
@@ -417,27 +417,31 @@ function trimTokenGroupRecursive(tokenGroup: TokenGroup): TokenGroup {
     return tokenGroup;
 }
 
-// TODO add logic for macros
 const implyStructuralSeparationBehind = [
     TokenType.Other,
     TokenType.Number,
     TokenType.Constant,
     TokenType.Structural,
     TokenType.BeforeFunction,
-]; // Plus groups aka most of the time brackets
+]; // Plus groups aka most of the time brackets // Plus Macros WITHOUT Arguments
 const implyStructuralSeparationInFront = [
     TokenType.Other,
     TokenType.Number,
     TokenType.Function,
     TokenType.Constant,
     TokenType.Structural,
+    TokenType.Macro,
 ]; // Plus groups aka most of the time brackets
-const implyMultiplicationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets
-const implyMultiplicationInFront = [TokenType.Other, TokenType.Number, TokenType.Function, TokenType.Constant]; // Plus groups aka most of the time brackets
-const implyAdditionBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets
+const implyMultiplicationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets // Plus Macros WITHOUT Arguments
+const implyMultiplicationInFront = [TokenType.Other, TokenType.Number, TokenType.Function, TokenType.Constant, TokenType.Macro]; // Plus groups aka most of the time brackets
+const implyAdditionBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets // Plus Macros WITHOUT Arguments
 const implyAdditionInFront = [TokenType.Minus]; // ! here NOT groups
 
-function insertImpliedOperationsRecursive(tokenGroup: TokenGroup, insertStructuralSeparation: boolean = false): TokenGroup {
+function insertImpliedOperationsRecursive(
+    config: OperatorConfig,
+    tokenGroup: TokenGroup,
+    insertStructuralSeparation: boolean = false
+): TokenGroup {
     if (tokenGroup instanceof TokenGroupKnot) {
         let children = tokenGroup.getChildren();
 
@@ -458,7 +462,10 @@ function insertImpliedOperationsRecursive(tokenGroup: TokenGroup, insertStructur
                 first &&
                 first != undefined &&
                 (first instanceof TokenGroupKnot ||
-                    (first instanceof TokenGroupLeaf && implyStructuralSeparationBehind.includes(first.getToken().type)))
+                    (first instanceof TokenGroupLeaf &&
+                        (implyStructuralSeparationBehind.includes(first.getToken().type) ||
+                            (first.getToken().type == TokenType.Macro &&
+                                calculateNecessaryNumberOfArgumentsForMacro(config, first.getToken()) == 0))))
             ) {
                 firstNeedsStructuralSeparation = true;
             }
@@ -473,7 +480,10 @@ function insertImpliedOperationsRecursive(tokenGroup: TokenGroup, insertStructur
                 first &&
                 first != undefined &&
                 (first instanceof TokenGroupKnot ||
-                    (first instanceof TokenGroupLeaf && implyMultiplicationBehind.includes(first.getToken().type)))
+                    (first instanceof TokenGroupLeaf &&
+                        (implyMultiplicationBehind.includes(first.getToken().type) ||
+                            (first.getToken().type == TokenType.Macro &&
+                                calculateNecessaryNumberOfArgumentsForMacro(config, first.getToken()) == 0))))
             ) {
                 firstNeedsMultiplication = true;
             }
@@ -488,7 +498,10 @@ function insertImpliedOperationsRecursive(tokenGroup: TokenGroup, insertStructur
                 first &&
                 first != undefined &&
                 (first instanceof TokenGroupKnot ||
-                    (first instanceof TokenGroupLeaf && implyAdditionBehind.includes(first.getToken().type)))
+                    (first instanceof TokenGroupLeaf &&
+                        (implyAdditionBehind.includes(first.getToken().type) ||
+                            (first.getToken().type == TokenType.Macro &&
+                                calculateNecessaryNumberOfArgumentsForMacro(config, first.getToken()) == 0))))
             ) {
                 firstNeedsAddition = true;
             }
@@ -505,12 +518,14 @@ function insertImpliedOperationsRecursive(tokenGroup: TokenGroup, insertStructur
                 first &&
                 first != undefined &&
                 first instanceof TokenGroupLeaf &&
-                first.getToken().type == TokenType.Function && // TODO insert structural separations in macro arguments
-                ((MAX_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1 &&
-                    MIN_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1) ||
-                    functionsWithArgumentsConsideredStructural.includes(first.getToken().content as OperatorType))
+                ((first.getToken().type == TokenType.Function &&
+                    ((MAX_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1 &&
+                        MIN_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1) ||
+                        functionsWithArgumentsConsideredStructural.includes(first.getToken().content as OperatorType))) ||
+                    (first.getToken().type == TokenType.Macro &&
+                        calculateNecessaryNumberOfArgumentsForMacro(config, first.getToken()) > 0))
             ) {
-                // Special case: the element after a function is the argument (bracket)
+                // Special case: the element after a function/macro(that takes arguments) is the argument (bracket)
                 // NEVER insert operations before
                 // ONLY insert operations in between, when the function takes more than one argument
                 if (second instanceof TokenGroupLeaf) {
@@ -519,7 +534,7 @@ function insertImpliedOperationsRecursive(tokenGroup: TokenGroup, insertStructur
                 } else {
                     if (second instanceof TokenGroupKnot) {
                         // recursive call that makes sure
-                        newChildren.push(insertImpliedOperationsRecursive(second, true));
+                        newChildren.push(insertImpliedOperationsRecursive(config, second, true));
                     } else {
                         throw Error("Unreachable. At this point there should only exist TokenGroupLeaves and TokenGroupKnots.");
                     }
@@ -560,7 +575,7 @@ function insertImpliedOperationsRecursive(tokenGroup: TokenGroup, insertStructur
                     }
                 }
                 // insert self
-                newChildren.push(insertImpliedOperationsRecursive(second));
+                newChildren.push(insertImpliedOperationsRecursive(config, second));
             }
         }
 
@@ -619,11 +634,6 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
         takesNrArgumentsBefore: 0,
         takesNrArgumentsAfter: 1,
     },
-    [TokenType.BeforeFunction]: {
-        precedence: 550,
-        takesNrArgumentsBefore: 1,
-        takesNrArgumentsAfter: 0,
-    },
     [TokenType.Function]: {
         precedence: 1000,
         takesNrArgumentsAfter: 1,
@@ -631,8 +641,13 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
     },
     [TokenType.Macro]: {
         precedence: 2000,
-        takesNrArgumentsAfter: -1,
+        takesNrArgumentsAfter: -1, // will get overwritten, depends on the macro
         takesNrArgumentsBefore: 0,
+    },
+    [TokenType.BeforeFunction]: {
+        precedence: 3000,
+        takesNrArgumentsBefore: 1,
+        takesNrArgumentsAfter: 0,
     },
 };
 const tokenTypesWithOperatorCharacter = Object.keys(tokenTypesWithOperatorCharacterDefinitions);
