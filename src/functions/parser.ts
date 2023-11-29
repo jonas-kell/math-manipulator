@@ -519,11 +519,11 @@ function insertImpliedOperationsRecursive(
                 first != undefined &&
                 first instanceof TokenGroupLeaf &&
                 ((first.getToken().type == TokenType.Function &&
-                    ((MAX_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1 &&
-                        MIN_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] != 1) ||
+                    ((MAX_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] > 1 && // ONLY IF ONE OR MORE ARGUMENTS
+                        MIN_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] > 1) ||
                         functionsWithArgumentsConsideredStructural.includes(first.getToken().content as OperatorType))) ||
                     (first.getToken().type == TokenType.Macro &&
-                        calculateNecessaryNumberOfArgumentsForMacro(config, first.getToken()) > 0))
+                        calculateNecessaryNumberOfArgumentsForMacro(config, first.getToken()) > 1))
             ) {
                 // Special case: the element after a function/macro(that takes arguments) is the argument (bracket)
                 // NEVER insert operations before
@@ -639,6 +639,7 @@ const tokenTypesWithOperatorCharacterDefinitions: { [key in tokenTypesWithOperat
         takesNrArgumentsAfter: 1,
         takesNrArgumentsBefore: 0,
     },
+    // Function and Macro for more then 0 parameters work exactly the same, therefore same precedence!!
     [TokenType.Macro]: {
         precedence: 1000,
         takesNrArgumentsAfter: -1, // will get overwritten, depends on the macro
@@ -718,7 +719,6 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
             let highestIndex = -1;
             let currentPrecedence = -1;
             children.forEach((child, index) => {
-                // TODO "hyp exp 1" doesn't work, "exp hyp 1" does work
                 if (child instanceof TokenGroupLeaf && tokenTypesWithOperatorCharacter.includes(child.getToken().type)) {
                     const controlStruct =
                         tokenTypesWithOperatorCharacterDefinitions[child.getToken().type as tokenTypesWithOperatorCharacterType];
