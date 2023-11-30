@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { Operator, OperatorConfig } from "./../exporter";
 import { v4 as uuidv4 } from "uuid";
-import { vscodeApiInstance, registerUpdateHandler } from "./vscodeApi";
+import { vscodeApiInstance, registerUpdateHandler, registerAtLeastOneUpdateReceivedHandler } from "./vscodeApi";
 import { ref } from "vue";
 
 // Equation Line
@@ -75,6 +75,23 @@ export const usePermanenceStore = defineStore("permanence", () => {
     const permanenceHasUpdatedHandlers = ref([] as (() => void)[]);
     const mode = ref(PermanenceStorageModes[(process.env.VITE_PERMANENCE ?? "session") as PermanenceStorageModes]);
     const memoryStorage = ref({} as { [key: string]: string });
+
+    // editor interface handlers
+    const storageReady = ref(mode.value == PermanenceStorageModes.vscode ? false : true);
+    registerUpdateHandler(() => {
+        // register VSCODE updates to cascade up
+        triggerPermanenceHasUpdatedHandlers();
+    });
+    registerAtLeastOneUpdateReceivedHandler(() => {
+        storageReady.value = true;
+    });
+    if (mode.value == PermanenceStorageModes.vscode) {
+        // if not freshly opened window, but hidden and re-opened, this would be set already
+        let state = vscodeApiInstance()?.getState();
+        if (state != undefined && state != null && state) {
+            storageReady.value = true;
+        }
+    }
 
     function setStorageModeTo(val: PermanenceStorageModes) {
         mode.value = val;
@@ -245,10 +262,6 @@ export const usePermanenceStore = defineStore("permanence", () => {
             handler();
         });
     }
-    // register VSCODE updates to cascade up
-    registerUpdateHandler(() => {
-        triggerPermanenceHasUpdatedHandlers();
-    });
 
     function abstractStoreImplementationSet(uuid: string, content: string) {
         switch (mode.value) {
@@ -319,6 +332,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
     }
 
     return {
+        storageReady,
         storeLineForUUID,
         storeInputForUUID,
         storeVariablesStoreForUUID,
