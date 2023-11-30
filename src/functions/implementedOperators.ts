@@ -1,4 +1,4 @@
-import { Operator, OperatorType, useVariablesStore, OperatorConfig, useMacrosStore } from "./exporter";
+import { Operator, OperatorType, useVariablesStore, OperatorConfig, useMacrosStore, ExportOperatorContent } from "./exporter";
 
 export function operatorConstructorSwitch(
     config: OperatorConfig,
@@ -671,6 +671,42 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
 
         return false;
     }
+
+    OrderSummandsMODIFICATION(): Operator {
+        let data = this.getChildren().map((a): ExportOperatorContent => {
+            return a.getSerializedStructureRecursive(false);
+        });
+
+        let sortedChildren = data.sort(sumSortFunction).map((a): Operator => {
+            return Operator.generateStructureRecursive(this.getOwnConfig(), a, false);
+        });
+
+        return constructContainerOrFirstChild(this.getOwnConfig(), OperatorType.BracketedSum, sortedChildren, false);
+    }
+}
+
+function sumSortFunction(a: ExportOperatorContent, b: ExportOperatorContent): number {
+    if (a.type != b.type) {
+        return a.type.localeCompare(b.type);
+    }
+    if (a.value != b.value) {
+        return a.value.localeCompare(b.value);
+    }
+    const numChildA = a.children.length;
+    const numChildB = b.children.length;
+    for (let i = 0; i < Math.min(numChildA, numChildB); i++) {
+        const childA = a.children[i];
+        const childB = b.children[i];
+
+        const childCompare = sumSortFunction(childA, childB);
+        if (childCompare == 0) {
+            continue;
+        } else {
+            return childCompare;
+        }
+    }
+    // all children were the same until one ran out
+    return numChildA - numChildB;
 }
 
 /**

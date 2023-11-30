@@ -214,7 +214,10 @@ export abstract class Operator {
         return JSON.stringify(this.getSerializedStructureRecursive(includeUUIDs));
     }
 
-    private getSerializedStructureRecursive(includeUUIDs: boolean = true) {
+    /**
+     * Only use for internal operator implementations. For extern use, use @see getSerializedStructure
+     */
+    getSerializedStructureRecursive(includeUUIDs: boolean = true) {
         let children = [] as ExportOperatorContent[];
 
         this._children.forEach((child) => {
@@ -241,11 +244,10 @@ export abstract class Operator {
         return Operator.generateStructureRecursive(config, json, keepUUIDs);
     }
 
-    private static generateStructureRecursive(
-        config: OperatorConfig,
-        input: ExportOperatorContent,
-        keepUUIDs: boolean
-    ): Operator {
+    /**
+     * Only use for internal operator implementations. For extern use, use @see Operator.generateStructure
+     */
+    static generateStructureRecursive(config: OperatorConfig, input: ExportOperatorContent, keepUUIDs: boolean): Operator {
         let res = new Numerical(config, 0) as Operator;
 
         let childrenReconstructed = [] as Operator[];
