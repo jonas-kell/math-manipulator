@@ -14,6 +14,8 @@
         "pinia",
         "summands",
         "uuidv",
-        "VITE"
+        "VITE",
+        "prefactor",
+        "prefactors"
     ]
 }

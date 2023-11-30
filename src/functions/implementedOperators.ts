@@ -685,6 +685,132 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
 
         return constructContainerOrFirstChild(this.getOwnConfig(), OperatorType.BracketedSum, sortedChildren, false);
     }
+
+    FactorOutLeftMODIFICATION(): Operator {
+        let children = this.getChildren();
+        let products = [] as { minus: boolean; multiplicationChildren: Operator[] }[];
+
+        // break summands into products (with or without negation) and single elements (equal to multiplication with one element)
+        children.forEach((child) => {
+            if (child instanceof Negation) {
+                const childOfNegation = child.getChild();
+                if (childOfNegation instanceof BracketedMultiplication) {
+                    products.push({
+                        minus: true,
+                        multiplicationChildren: childOfNegation.getChildren(),
+                    });
+                } else {
+                    products.push({
+                        minus: true,
+                        multiplicationChildren: [childOfNegation],
+                    });
+                }
+            } else {
+                if (child instanceof BracketedMultiplication) {
+                    products.push({
+                        minus: false,
+                        multiplicationChildren: child.getChildren(),
+                    });
+                } else {
+                    products.push({
+                        minus: false,
+                        multiplicationChildren: [child],
+                    });
+                }
+            }
+        });
+
+        // find most common pre-factor
+        let prefactors = [] as { factor: Operator; count: number }[];
+        products.forEach((product) => {
+            const firstElem = product.multiplicationChildren[0];
+            let found = false;
+            for (const prefactor of prefactors) {
+                if (Operator.assertOperatorsEquivalent(firstElem, prefactor.factor)) {
+                    prefactor.count += 1;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                prefactors.push({
+                    count: 1,
+                    factor: firstElem,
+                });
+            }
+        });
+        let largestCount = 0;
+        let largestCountPrefactor = null as Operator | null;
+        prefactors.forEach((prefactorObject) => {
+            if (largestCount < prefactorObject.count) {
+                largestCountPrefactor = prefactorObject.factor;
+                largestCount = prefactorObject.count;
+            }
+        });
+        if (largestCount <= 1 || largestCountPrefactor == null) {
+            return this; // nothing to factor out
+        }
+        const commonPrefactor = largestCountPrefactor as Operator; // typescript stuff
+
+        // map back into a product
+        const mapIntoOperatorConsiderNegation = (
+            productObject: {
+                minus: boolean;
+                multiplicationChildren: Operator[];
+            },
+            omitFirst: boolean
+        ): Operator => {
+            let innerChildren = productObject.multiplicationChildren;
+            if (omitFirst) {
+                innerChildren = innerChildren.slice(1); // omit the commonPrefactor
+            }
+            const assembledMultiplication = constructContainerOrFirstChild(
+                this.getOwnConfig(),
+                OperatorType.BracketedMultiplication,
+                innerChildren,
+                false
+            );
+            if (productObject.minus) {
+                return new Negation(this.getOwnConfig(), assembledMultiplication);
+            } else {
+                return assembledMultiplication;
+            }
+        };
+
+        const multiplicationsThatContainPrefactorWithPrefactorStripped = products // or negations thereof
+            .filter((productObject) => {
+                // filter to the products that start with commonPrefactor
+                return Operator.assertOperatorsEquivalent(commonPrefactor, productObject.multiplicationChildren[0]);
+            })
+            .map((a) => mapIntoOperatorConsiderNegation(a, true));
+        const multiplicationsThatDoNotContainPrefactor = products // or negations thereof
+            .filter((productObject) => {
+                // filter to the products that DON'T start with commonPrefactor
+                return !Operator.assertOperatorsEquivalent(commonPrefactor, productObject.multiplicationChildren[0]);
+            })
+            .map((a) => mapIntoOperatorConsiderNegation(a, false));
+        const withFactoredOut = constructContainerOrFirstChild(
+            this.getOwnConfig(),
+            OperatorType.BracketedMultiplication,
+            [
+                largestCountPrefactor, // first prefactor, then sum of the products
+                constructContainerOrFirstChild(
+                    this.getOwnConfig(),
+                    OperatorType.BracketedSum,
+                    multiplicationsThatContainPrefactorWithPrefactorStripped,
+                    false
+                ),
+            ],
+            false
+        );
+
+        return constructContainerOrFirstChild(
+            this.getOwnConfig(),
+            OperatorType.BracketedSum,
+            [withFactoredOut, ...multiplicationsThatDoNotContainPrefactor],
+            false
+        );
+    }
 }
 
 function sumSortFunction(a: ExportOperatorContent, b: ExportOperatorContent, topLevel: boolean): number {
