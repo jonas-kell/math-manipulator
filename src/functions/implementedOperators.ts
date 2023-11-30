@@ -677,28 +677,52 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             return a.getSerializedStructureRecursive(false);
         });
 
-        let sortedChildren = data.sort(sumSortFunction).map((a): Operator => {
-            return Operator.generateStructureRecursive(this.getOwnConfig(), a, false);
-        });
+        let sortedChildren = data
+            .sort((a, b) => sumSortFunction(a, b, true))
+            .map((a): Operator => {
+                return Operator.generateStructureRecursive(this.getOwnConfig(), a, false);
+            });
 
         return constructContainerOrFirstChild(this.getOwnConfig(), OperatorType.BracketedSum, sortedChildren, false);
     }
 }
 
-function sumSortFunction(a: ExportOperatorContent, b: ExportOperatorContent): number {
-    if (a.type != b.type) {
-        return a.type.localeCompare(b.type);
+function sumSortFunction(a: ExportOperatorContent, b: ExportOperatorContent, topLevel: boolean): number {
+    let aChildren = a.children;
+    let bChildren = b.children;
+    let aType = a.type;
+    let bType = b.type;
+    let aValue = a.value;
+    let bValue = b.value;
+    let aWasMinus = false;
+    let bWasMinus = false;
+    // if executed directly on a sum, we expect plus and minus terms to get ordered with the same priority as the "+" before the minus is omitted visually
+    if (topLevel) {
+        if (a.type == OperatorType.Negation) {
+            aWasMinus = true;
+            aType = a.children[0].type;
+            aValue = a.children[0].value;
+            aChildren = a.children[0].children;
+        }
+        if (b.type == OperatorType.Negation) {
+            bWasMinus = true;
+            bType = b.children[0].type;
+            bValue = b.children[0].value;
+            bChildren = b.children[0].children;
+        }
     }
-    if (a.value != b.value) {
-        return a.value.localeCompare(b.value);
+    if (aType != bType) {
+        return aType.localeCompare(bType);
     }
-    const numChildA = a.children.length;
-    const numChildB = b.children.length;
+    if (aValue != bValue) {
+        return aValue.localeCompare(bValue);
+    }
+    const numChildA = aChildren.length;
+    const numChildB = bChildren.length;
     for (let i = 0; i < Math.min(numChildA, numChildB); i++) {
-        const childA = a.children[i];
-        const childB = b.children[i];
-
-        const childCompare = sumSortFunction(childA, childB);
+        const childA = aChildren[i];
+        const childB = bChildren[i];
+        const childCompare = sumSortFunction(childA, childB, false);
         if (childCompare == 0) {
             continue;
         } else {
@@ -706,7 +730,12 @@ function sumSortFunction(a: ExportOperatorContent, b: ExportOperatorContent): nu
         }
     }
     // all children were the same until one ran out
-    return numChildA - numChildB;
+    const number = numChildA - numChildB;
+    if (number != 0) {
+        return number;
+    } else {
+        return (aWasMinus ? 1 : 0) - (bWasMinus ? 1 : 0);
+    }
 }
 
 /**
