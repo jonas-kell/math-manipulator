@@ -864,9 +864,9 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
                 const newExtraGroup = new TokenGroupKnotInfix(currentOperator, [...recBeforeBuffer, ...recAfterBuffer]);
 
                 children = [
-                    ...beginningPortion.splice(0, beginningPortion.length - skippedBefore),
+                    ...beginningPortion.slice(0, beginningPortion.length - skippedBefore),
                     newExtraGroup,
-                    ...afterPortion.splice(skippedAfter),
+                    ...afterPortion.slice(skippedAfter),
                 ];
             } else {
                 throw Error("Unreachable, or else the highest precedence search failed");
