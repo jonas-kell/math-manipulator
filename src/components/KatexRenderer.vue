@@ -94,6 +94,7 @@
                 trust: true,
                 strict: false,
                 output: "html",
+                maxExpand: Infinity, // weak macro expansion limit to 1000. As my latex is computer generated, it SHOULD not have macro loops... So he said
             });
         }
 
