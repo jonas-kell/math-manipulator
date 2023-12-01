@@ -234,6 +234,14 @@
     };
     const actionsHaveAnyEffectAndTheirResults = computed(() => {
         let res = {} as { [key: string]: EffectMeasure };
+        let timers = {} as { [key: string]: number };
+        let timer = 0;
+        const startTimer = () => {
+            timer = Date.now();
+        };
+        const logTimer = (name: string) => {
+            timers[name] = Date.now() - timer;
+        };
 
         if (selectedOperator.value != null) {
             const selOp = selectedOperator.value as Operator;
@@ -243,6 +251,7 @@
 
                 // swap with subsequent
                 if (selParent instanceof BracketedSum || selParent instanceof BracketedMultiplication) {
+                    startTimer();
                     const actionResult = selParent
                         .commuteChildAndSubsequent(selectedOperator.value.getUUID())
                         .getCopyWithGottenRidOfUnnecessaryTerms();
@@ -260,6 +269,7 @@
                             result: actionResult,
                         };
                     }
+                    logTimer("Commute with subsequent");
                 }
             }
 
@@ -267,6 +277,7 @@
             if (selOp instanceof BracketedMultiplication) {
                 const actionResult = selOp.orderOperatorStrings();
 
+                startTimer();
                 // allows to execute getCopyWithGottenRidOfUnnecessaryTerms one level above if possible
                 let target = selOp as Operator;
                 if (selectedOperatorsParentOperator.value != null) {
@@ -283,6 +294,7 @@
                     replacesUUID: target.getUUID(),
                     result: newToInsert,
                 };
+                logTimer("Order Operator Strings");
             }
 
             // single-replace-modifications
@@ -295,6 +307,8 @@
                     .replace("MODIFICATION", "")
                     .replace("getCopyWithNumbersFolded", "Fold Numbers")
                     .replace("getCopyWithGottenRidOfUnnecessaryTerms", "Cleanup Terms");
+
+                startTimer();
 
                 // as the `action` was extracted from filtered `getOwnPropertyNames` or manually inserted, this is should always be a valid method
                 let actionResult = (selOp as any)[action]() as Operator;
@@ -313,8 +327,12 @@
                         result: actionResult,
                     };
                 }
+                logTimer(name);
             });
         }
+
+        // TODO disable. Will keep at the moment to profile if this approach doesn't generate too much latency
+        console.log(timers); // track how long the various actions took to compute
 
         return res;
     });
