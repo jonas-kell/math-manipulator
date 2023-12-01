@@ -1,7 +1,8 @@
 <script setup lang="ts">
-    import { OperatorConfig, useMacrosStore } from "./../functions";
+    import { OperatorConfig, useMacrosStore, useKeybindingsStore } from "./../functions";
     import { computed, ref } from "vue";
     const macrosStore = useMacrosStore();
+    const keybindingsStore = useKeybindingsStore();
 
     const props = defineProps<{
         config: OperatorConfig;
@@ -77,6 +78,7 @@
                             :value="draw.trigger"
                             @input="($event) => setTriggerForMacro(draw.uuid, ($event.target as any)?.value)"
                             :key="draw.uuid + 'trigger'"
+                            @focus="keybindingsStore.unSetActiveUUID"
                         />
                     </td>
                     <td>
@@ -85,6 +87,7 @@
                             :value="draw.output"
                             @input="($event) => setOutputForMacro(draw.uuid, ($event.target as any)?.value)"
                             :key="draw.uuid + 'output'"
+                            @focus="keybindingsStore.unSetActiveUUID"
                         />
                     </td>
                     <td>

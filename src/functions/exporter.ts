@@ -7,6 +7,7 @@
 export * from "./typeLists"; // by design uses no dependency
 export * from "./stores/selectors"; // store uses no external dependency
 export * from "./stores/route"; // store uses no external dependency
+export * from "./stores/keybindings"; // store uses no external dependency
 export * from "./operator";
 export * from "./implementedOperators";
 export * from "./parser";

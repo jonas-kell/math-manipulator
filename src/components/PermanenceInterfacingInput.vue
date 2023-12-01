@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import { computed, onMounted, watch } from "vue";
-    import { PersistentInputStorage, usePermanenceStore } from "./../functions";
+    import { PersistentInputStorage, usePermanenceStore, useKeybindingsStore } from "./../functions";
+    const keybindingsStore = useKeybindingsStore();
 
     const props = defineProps<{
         modelValue: string;
@@ -43,6 +44,11 @@
 </script>
 
 <template>
-    <textarea v-model="localValue" :style="($attrs.style as any)" v-if="props.type == 'textarea'"></textarea>
-    <input v-model="localValue" :style="($attrs.style as any)" v-else />
+    <textarea
+        v-model="localValue"
+        :style="($attrs.style as any)"
+        v-if="props.type == 'textarea'"
+        @focus="keybindingsStore.unSetActiveUUID"
+    ></textarea>
+    <input v-model="localValue" :style="($attrs.style as any)" @focus="keybindingsStore.unSetActiveUUID" v-else />
 </template>

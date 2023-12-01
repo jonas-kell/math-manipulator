@@ -1,10 +1,16 @@
 <script setup lang="ts">
-    import { computed, onMounted, ref, watch } from "vue";
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
     import { Operator, EmptyArgument, BracketedSum, BracketedMultiplication, OperatorConfig } from "../functions";
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
     import { v4 as uuidv4 } from "uuid";
-    import { useSelectFunctionStore, useVariablesStore, usePermanenceStore, PersistentLineStorage } from "../functions";
+    import {
+        useSelectFunctionStore,
+        useVariablesStore,
+        usePermanenceStore,
+        PersistentLineStorage,
+        useKeybindingsStore,
+    } from "../functions";
     import PermanenceInterfacingInput from "./PermanenceInterfacingInput.vue";
     const VITE_MODE = import.meta.env.MODE;
 
@@ -17,6 +23,7 @@
     const selectFunctionStore = useSelectFunctionStore();
     const variablesStore = useVariablesStore();
     const permanenceStore = usePermanenceStore();
+    const keybindingsStore = useKeybindingsStore();
 
     // input to the equation line
     const props = defineProps<{
@@ -25,6 +32,7 @@
         config: OperatorConfig;
         isBase: boolean;
     }>();
+    const keybindingsRegisterUUID = ref(uuidv4());
     const childLineUUID = ref(uuidv4());
     const operatorParserUUID = ref(uuidv4());
     const variableNameInputUUID = ref(uuidv4());
@@ -76,7 +84,35 @@
         if (selectedOperator.value && selectedOperator.value != null) {
             selectFunctionStore.callGraphicalSelectionHandlerCallback(rendererUUID.value, selectedOperator.value.getUUIDRef());
         }
+
+        // set keybindings to listen here
+        if (loadingComplete.value) {
+            keybindingsStore.setActiveUUID(keybindingsRegisterUUID.value);
+        }
     };
+
+    // keybindings
+    keybindingsStore.registerHandler(keybindingsRegisterUUID.value, (key: string) => {
+        switch (key) {
+            case "ArrowUp":
+                selectParentAction();
+                break;
+            case "ArrowRight":
+                selectNextSiblingAction();
+                break;
+            case "ArrowDown":
+                selectFirstChildAction();
+                break;
+            case "ArrowLeft":
+                selectPrevSiblingAction();
+                break;
+            default:
+                keybindingsStore.unSetActiveUUID();
+        }
+    });
+    onBeforeUnmount(() => {
+        keybindingsStore.unRegisterHandler(keybindingsRegisterUUID.value);
+    });
 
     // structure of the operations line
     enum MODES {
