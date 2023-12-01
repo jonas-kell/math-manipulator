@@ -2,6 +2,7 @@
     import katex from "katex";
     import { ref, watch, onBeforeMount, onMounted, computed, onBeforeUnmount } from "vue";
     import { Operator, useSelectFunctionStore } from "../functions";
+    import { katexMacros } from "./katexMacros";
 
     const selectFunctionStore = useSelectFunctionStore();
 
@@ -73,22 +74,7 @@
 
             // render new content
             katex.render(props.katexInput, element, {
-                macros: {
-                    "\\semicolon": ";",
-                    "\\plus": "+",
-                    "\\minus": "-",
-                    "\\starsymb": "\\ast",
-                    "\\forwardslash": "/",
-                    // "\\backslash": "\\backslash", // already exists per default and breaks if defined
-                    "\\colon": ":",
-                    "\\lbracket": "(",
-                    "\\rbracket": ")",
-                    "\\faculty": "!",
-                    "\\percent": "\\%",
-                    "\\eq": "=",
-                    "\\less": "<",
-                    "\\greater": ">",
-                },
+                macros: katexMacros,
                 throwOnError: false,
                 displayMode: true,
                 trust: true,
