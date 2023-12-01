@@ -451,10 +451,6 @@ export abstract class Operator {
     }
 
     public findParentOperator(uuid: string): Operator | null {
-        return this.findParentOperatorRecursive(uuid);
-    }
-
-    private findParentOperatorRecursive(uuid: string): Operator | null {
         // search first in own children
         for (let i = 0; i < this._children.length; i++) {
             const child = this._children[i];
@@ -466,7 +462,79 @@ export abstract class Operator {
         // then go recursive
         for (let i = 0; i < this._children.length; i++) {
             const child = this._children[i];
-            const childRes = child.findParentOperatorRecursive(uuid);
+            const childRes = child.findParentOperator(uuid);
+            if (childRes != null) {
+                return childRes;
+            }
+        }
+
+        return null;
+    }
+
+    public findFirstChildOperator(uuid: string): Operator | null {
+        // check self
+        if (this._uuid == uuid) {
+            if (this._children.length > 0) {
+                return this._children[0];
+            } else {
+                return null;
+            }
+        }
+
+        // then go recursive
+        for (let i = 0; i < this._children.length; i++) {
+            const child = this._children[i];
+            const childRes = child.findFirstChildOperator(uuid);
+            if (childRes != null) {
+                return childRes;
+            }
+        }
+
+        return null;
+    }
+
+    public findNextSiblingOperator(uuid: string): Operator | null {
+        // search first in own children
+        for (let i = 0; i < this._children.length; i++) {
+            const child = this._children[i];
+            if (child._uuid == uuid) {
+                if (i + 1 < this._children.length) {
+                    return this._children[i + 1];
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        // then go recursive
+        for (let i = 0; i < this._children.length; i++) {
+            const child = this._children[i];
+            const childRes = child.findNextSiblingOperator(uuid);
+            if (childRes != null) {
+                return childRes;
+            }
+        }
+
+        return null;
+    }
+
+    public findPrevSiblingOperator(uuid: string): Operator | null {
+        // search first in own children
+        for (let i = 0; i < this._children.length; i++) {
+            const child = this._children[i];
+            if (child._uuid == uuid) {
+                if (i - 1 >= 0) {
+                    return this._children[i - 1];
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        // then go recursive
+        for (let i = 0; i < this._children.length; i++) {
+            const child = this._children[i];
+            const childRes = child.findPrevSiblingOperator(uuid);
             if (childRes != null) {
                 return childRes;
             }

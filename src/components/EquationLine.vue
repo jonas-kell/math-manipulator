@@ -37,16 +37,41 @@
     const selectionUUID = ref("");
     const selectedOperator = ref(null as Operator | null);
     const selectedOperatorsParentOperator = ref(null as null | Operator);
+    const selectedOperatorsFirstChildOperator = ref(null as null | Operator);
+    const selectedOperatorsNextSiblingOperator = ref(null as null | Operator);
+    const selectedOperatorsPrevSiblingOperator = ref(null as null | Operator);
     const selectOperator = (id: string) => {
         resetControlPanel();
+        // select the operator
         selectionUUID.value = id;
         selectedOperator.value = props.operator.getOperatorByUUID(selectionUUID.value);
+
+        // select the adjacent Operators
         const parentOperatorResult = props.operator.findParentOperator(selectionUUID.value);
         if (parentOperatorResult != null) {
             selectedOperatorsParentOperator.value = parentOperatorResult;
         } else {
             selectedOperatorsParentOperator.value = null;
         }
+        const firstChildOperatorResult = props.operator.findFirstChildOperator(selectionUUID.value);
+        if (firstChildOperatorResult != null) {
+            selectedOperatorsFirstChildOperator.value = firstChildOperatorResult;
+        } else {
+            selectedOperatorsFirstChildOperator.value = null;
+        }
+        const nextSiblingOperatorResult = props.operator.findNextSiblingOperator(selectionUUID.value);
+        if (nextSiblingOperatorResult != null) {
+            selectedOperatorsNextSiblingOperator.value = nextSiblingOperatorResult;
+        } else {
+            selectedOperatorsNextSiblingOperator.value = null;
+        }
+        const prevSiblingOperatorResult = props.operator.findPrevSiblingOperator(selectionUUID.value);
+        if (prevSiblingOperatorResult != null) {
+            selectedOperatorsPrevSiblingOperator.value = prevSiblingOperatorResult;
+        } else {
+            selectedOperatorsPrevSiblingOperator.value = null;
+        }
+
         // trigger select graphically manually (important on e.g. load)
         if (selectedOperator.value && selectedOperator.value != null) {
             selectFunctionStore.callGraphicalSelectionHandlerCallback(rendererUUID.value, selectedOperator.value.getUUIDRef());
@@ -76,6 +101,9 @@
             resetControlPanel();
             selectionUUID.value = "";
             selectedOperatorsParentOperator.value = null;
+            selectedOperatorsFirstChildOperator.value = null;
+            selectedOperatorsNextSiblingOperator.value = null;
+            selectedOperatorsPrevSiblingOperator.value = null;
             selectedOperator.value = null;
             replaceWithOperator.value = null;
         },
@@ -96,6 +124,24 @@
     const skipBaseParserEffect = ref(false);
     const selectParentAction = () => {
         const UUIDref = selectedOperatorsParentOperator.value?.getUUIDRef() ?? null;
+        if (UUIDref != null) {
+            selectFunctionStore.callSelectionHandlerCallback(rendererUUID.value, UUIDref);
+        }
+    };
+    const selectFirstChildAction = () => {
+        const UUIDref = selectedOperatorsFirstChildOperator.value?.getUUIDRef() ?? null;
+        if (UUIDref != null) {
+            selectFunctionStore.callSelectionHandlerCallback(rendererUUID.value, UUIDref);
+        }
+    };
+    const selectNextSiblingAction = () => {
+        const UUIDref = selectedOperatorsNextSiblingOperator.value?.getUUIDRef() ?? null;
+        if (UUIDref != null) {
+            selectFunctionStore.callSelectionHandlerCallback(rendererUUID.value, UUIDref);
+        }
+    };
+    const selectPrevSiblingAction = () => {
+        const UUIDref = selectedOperatorsPrevSiblingOperator.value?.getUUIDRef() ?? null;
         if (UUIDref != null) {
             selectFunctionStore.callSelectionHandlerCallback(rendererUUID.value, UUIDref);
         }
@@ -331,6 +377,28 @@
         <button @click="selectParentAction" style="margin-right: 0.2em" :disabled="selectedOperatorsParentOperator == null">
             Sel. Parent
         </button>
+        <button
+            @click="selectFirstChildAction"
+            style="margin-right: 0.2em"
+            :disabled="selectedOperatorsFirstChildOperator == null"
+        >
+            Sel. First Child
+        </button>
+        <button
+            @click="selectNextSiblingAction"
+            style="margin-right: 0.2em"
+            :disabled="selectedOperatorsNextSiblingOperator == null"
+        >
+            Sel. Next Sibling
+        </button>
+        <button
+            @click="selectPrevSiblingAction"
+            style="margin-right: 0.2em"
+            :disabled="selectedOperatorsPrevSiblingOperator == null"
+        >
+            Sel. Previous Sibling
+        </button>
+        <div style="margin-bottom: -0.5em; width: 100%">&nbsp;</div>
         <button @click="replaceButtonAction" style="margin-right: 0.2em">Replace</button>
         <button @click="variableDefinitionButtonAction" style="margin-right: 0.2em">Define Variable</button>
         <button
