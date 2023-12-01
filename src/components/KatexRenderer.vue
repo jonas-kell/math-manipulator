@@ -60,7 +60,15 @@
             // add the class only to the current container
             const selected = container.querySelector("#" + selectionRef.value);
             if (selected) {
+                // add the border as selection indication
                 selected.classList.add("border");
+
+                // scroll the screen so this can be seen
+                selected.scrollIntoView({
+                    inline: "center",
+                    behavior: "smooth",
+                    block: "nearest",
+                });
             }
         }
     };
