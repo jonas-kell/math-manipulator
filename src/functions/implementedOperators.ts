@@ -1005,16 +1005,19 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         }
     }
 
+    // this input previously completely broke everything... (asd+asd+asd+asd+asd+asd)*(asd+asd+asd+asd+asd+asd)*(asd+asd+asd+asd+asd+asd)*(asd+asd+asd+asd+asd+asd)*(asd+asd+asd+asd+asd+asd)*(asd+asd+asd+asd+asd+asd)*(asd+asd+asd+asd+asd+asd)*(asd+asd+asd+asd+asd+asd) -> introduced distribute upper term limit
     DistributeMODIFICATION(): Operator {
         let children = this.getChildren();
 
         if (children.length >= 2) {
             let numberOfSums = 0;
+            let sumElementCount = [] as number[];
             const childSumInstances = children
                 // can only distribute into sum. Therefore wrap singular elements into a single sum for ease of use
                 .map((child) => {
                     if (child instanceof BracketedSum) {
                         numberOfSums += 1;
+                        sumElementCount.push(child.getChildren().length);
                         return child;
                     } else {
                         // because do not use `constructContainerOrFirstChild` here, because we SPECIFICALLY WANT a sum with only one element.
@@ -1024,6 +1027,12 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
                 .filter((child) => child instanceof BracketedSum) as BracketedSum[];
 
             if (numberOfSums > 0 && childSumInstances.length === children.length) {
+                const willResultInNrTerms = sumElementCount.reduce((a, b) => a * b, 1);
+                if (willResultInNrTerms > 400) {
+                    console.warn(`Distribute Operation not performed, because this would result in ${willResultInNrTerms} terms`);
+                    return this;
+                }
+
                 const newSummands = [] as BracketedMultiplication[];
 
                 // do this recursively in order to allow for as many sum-terms in the product as you want
