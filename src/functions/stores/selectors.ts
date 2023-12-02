@@ -24,7 +24,7 @@ export const useSelectFunctionStore = defineStore("selectors", {
         removeGraphicalSelectionHandlerFromStore(rendererUUID: string) {
             delete this.registeredGraphicalSelectionHandlers[rendererUUID];
         },
-        callSelectionHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string, additional: boolean = true) {
+        callSelectionHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string, additional: boolean = false) {
             let func = this.registeredSelectionHandlers[rendererUUID];
 
             if (func != undefined) {
@@ -33,7 +33,7 @@ export const useSelectFunctionStore = defineStore("selectors", {
                 console.error("There was no selection handler registered...", rendererUUID, UUIDRefToCallWith, additional);
             }
         },
-        callGraphicalSelectionHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string, additional: boolean = true) {
+        callGraphicalSelectionHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string, additional: boolean = false) {
             let func = this.registeredGraphicalSelectionHandlers[rendererUUID];
 
             if (func != undefined) {
