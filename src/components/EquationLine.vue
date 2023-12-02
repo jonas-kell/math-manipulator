@@ -331,8 +331,8 @@
             });
         }
 
-        // TODO disable. Will keep at the moment to profile if this approach doesn't generate too much latency
-        console.log(timers); // track how long the various actions took to compute
+        // Comment in to profile if operations generate too much latency
+        // console.log(timers); // track how long the various actions took to compute
 
         return res;
     });
