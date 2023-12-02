@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 
-type Handler = (UUIDRef: string) => {};
+type Handler = (UUIDRef: string, additional: boolean) => {};
 
 interface StoreType {
     registeredSelectionHandlers: { [key: string]: Handler };
@@ -24,22 +24,27 @@ export const useSelectFunctionStore = defineStore("selectors", {
         removeGraphicalSelectionHandlerFromStore(rendererUUID: string) {
             delete this.registeredGraphicalSelectionHandlers[rendererUUID];
         },
-        callSelectionHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string) {
+        callSelectionHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string, additional: boolean = true) {
             let func = this.registeredSelectionHandlers[rendererUUID];
 
             if (func != undefined) {
-                (func as Handler)(UUIDRefToCallWith);
+                (func as Handler)(UUIDRefToCallWith, additional);
             } else {
-                console.error("There was no selection handler registered...", rendererUUID, UUIDRefToCallWith);
+                console.error("There was no selection handler registered...", rendererUUID, UUIDRefToCallWith, additional);
             }
         },
-        callGraphicalSelectionHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string) {
+        callGraphicalSelectionHandlerCallback(rendererUUID: string, UUIDRefToCallWith: string, additional: boolean = true) {
             let func = this.registeredGraphicalSelectionHandlers[rendererUUID];
 
             if (func != undefined) {
-                (func as Handler)(UUIDRefToCallWith);
+                (func as Handler)(UUIDRefToCallWith, additional);
             } else {
-                console.error("There was no graphical selection handler registered...", rendererUUID, UUIDRefToCallWith);
+                console.error(
+                    "There was no graphical selection handler registered...",
+                    rendererUUID,
+                    UUIDRefToCallWith,
+                    additional
+                );
             }
         },
     },

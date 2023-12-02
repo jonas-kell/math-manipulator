@@ -101,6 +101,7 @@
                             :katex-input="draw.katex"
                             :uuid-refs-to-process="[]"
                             @selected="() => {}"
+                            @selected-additional="() => {}"
                             :renderer-uuid="draw.rendererUUID"
                         />
                     </td>

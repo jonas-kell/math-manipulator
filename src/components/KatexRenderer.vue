@@ -12,28 +12,54 @@
         rendererUuid: string;
     }>();
 
-    const emit = defineEmits(["selected"]);
+    const emit = defineEmits(["selected", "selected-additional"]);
 
     const containerId = computed(() => {
         return Operator.UUIDRefFromUUID(props.rendererUuid);
     });
     const selectionRef = ref(null as string | null);
+    const additionalSelectionRefs = ref(new Set<string>());
+    const additionalSelectionUUIDs = ref(new Set<string>());
 
     const clickListenerWrapper = (UUIDRef: string) => {
         return (event: MouseEvent) => {
             event.stopPropagation();
 
-            selectUUIDProgrammatically(UUIDRef);
+            selectUUIDProgrammatically(UUIDRef, false);
+        };
+    };
+    const rightClickListenerWrapper = (UUIDRef: string) => {
+        return (event: MouseEvent) => {
+            event.stopPropagation();
+            event.preventDefault();
+
+            selectUUIDProgrammatically(UUIDRef, true);
         };
     };
 
-    const selectUUIDProgrammatically = (UUIDRef: string) => {
-        selectUUIDGraphically(UUIDRef);
-        emit("selected", Operator.UUIDFromUUIDRef(UUIDRef));
+    const selectUUIDProgrammatically = (UUIDRef: string, additional: boolean = false) => {
+        const uuid = Operator.UUIDFromUUIDRef(UUIDRef);
+        if (!additional) {
+            additionalSelectionUUIDs.value = new Set();
+            emit("selected", uuid);
+        } else {
+            additionalSelectionUUIDs.value.add(uuid);
+            emit("selected-additional", additionalSelectionUUIDs.value);
+        }
+
+        // do not double select
+        if (!additional || UUIDRef != selectionRef.value) {
+            selectUUIDGraphically(UUIDRef, additional);
+        }
     };
 
-    const selectUUIDGraphically = (UUIDRef: string) => {
-        selectionRef.value = UUIDRef;
+    const selectUUIDGraphically = (UUIDRef: string, additional: boolean = false) => {
+        if (!additional) {
+            selectionRef.value = UUIDRef;
+            additionalSelectionRefs.value = new Set(); // de-select additional selections
+        } else {
+            additionalSelectionRefs.value.add(UUIDRef);
+        }
         updateBorders();
     };
 
@@ -42,6 +68,7 @@
             const outer = document.getElementById(UUIDRef);
             if (outer) {
                 outer.addEventListener("click", clickListenerWrapper(UUIDRef));
+                outer.addEventListener("contextmenu", rightClickListenerWrapper(UUIDRef));
             }
         });
 
@@ -52,9 +79,14 @@
         const container = document.getElementById(containerId.value);
         if (container) {
             // remove the border-class from all that have it
-            const elements = container.querySelectorAll(".border");
-            elements.forEach(function (element) {
+            const borderedElements = container.querySelectorAll(".border");
+            borderedElements.forEach(function (element) {
                 element.classList.remove("border");
+            });
+            // remove the red-border-class from all that have it
+            const additionalBorderedElements = container.querySelectorAll(".red-border");
+            additionalBorderedElements.forEach(function (element) {
+                element.classList.remove("red-border");
             });
 
             // add the class only to the current container
@@ -70,6 +102,14 @@
                     block: "nearest",
                 });
             }
+            additionalSelectionRefs.value.forEach((uuidRef) => {
+                // add the additional-class only to the current container
+                const additionalSelected = container.querySelector("#" + uuidRef);
+                if (additionalSelected) {
+                    // add the red-border as selection indication
+                    additionalSelected.classList.add("red-border");
+                }
+            });
         }
     };
 

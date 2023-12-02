@@ -408,6 +408,11 @@
         :katex-input="katexInput"
         :uuid-refs-to-process="uuidRefsToProcess"
         @selected="selectOperator"
+        @selected-additional="
+            () => {
+                /** TODO */
+            }
+        "
         :renderer-uuid="rendererUUID"
     />
 

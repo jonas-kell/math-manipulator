@@ -12,8 +12,11 @@
     cursor: pointer;
 }
 
-.render-katex-custom span.border {
+.render-katex-custom .border {
     border: blue 1px solid;
+}
+.render-katex-custom .red-border:not(.border) {
+    border: red 1px solid;
 }
 
 button {
