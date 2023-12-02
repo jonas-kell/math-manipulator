@@ -43,7 +43,9 @@
         return props.operator.getContainedUUIDRefs();
     });
     const selectionUUID = ref("");
+    const additionalSelectionUUIDs = ref([] as string[]);
     const selectedOperator = ref(null as Operator | null);
+    const additionalSelectionOperators = ref([] as Operator[]);
     const selectedOperatorsParentOperator = ref(null as null | Operator);
     const selectedOperatorsFirstChildOperator = ref(null as null | Operator);
     const selectedOperatorsNextSiblingOperator = ref(null as null | Operator);
@@ -53,6 +55,10 @@
         // select the operator
         selectionUUID.value = id;
         selectedOperator.value = props.operator.getOperatorByUUID(selectionUUID.value);
+
+        // clear additional selections
+        additionalSelectionUUIDs.value = [];
+        additionalSelectionOperators.value = [];
 
         // select the adjacent Operators
         const parentOperatorResult = props.operator.findParentOperator(selectionUUID.value);
@@ -89,6 +95,22 @@
         if (loadingComplete.value) {
             keybindingsStore.setActiveUUID(keybindingsRegisterUUID.value);
         }
+    };
+    const selectAdditionalOperator = (additionalUUIDs: string[]) => {
+        // select the operator
+        additionalSelectionUUIDs.value = additionalUUIDs;
+        additionalSelectionOperators.value = [];
+        additionalSelectionUUIDs.value.forEach((uuid) => {
+            const operator = props.operator.getOperatorByUUID(uuid);
+            if (operator != null) {
+                additionalSelectionOperators.value.push(operator);
+            }
+        });
+
+        // trigger select graphically manually (important on e.g. load)
+        additionalSelectionUUIDs.value.forEach((uuid) => {
+            selectFunctionStore.callGraphicalSelectionHandlerCallback(rendererUUID.value, Operator.UUIDRefFromUUID(uuid), true);
+        });
     };
 
     // keybindings
@@ -365,10 +387,12 @@
     // STATE AND IMPORT/EXPORT
     const loadingComplete = ref(false);
     const lineStateAllocation = computed((): PersistentLineStorage => {
+        additionalSelectionUUIDs.value.length;
         return {
             operator: outputOperator.value as Operator | null,
             childUUID: childLineUUID.value,
             selectionUUID: selectionUUID.value,
+            additionalSelectionUUIDs: additionalSelectionUUIDs.value,
             operatorParserUUID: operatorParserUUID.value,
             variableNameInputUUID: variableNameInputUUID.value,
             mode: String(mode.value),
@@ -395,6 +419,7 @@
             operatorParserUUID.value = loaded.operatorParserUUID;
             variableNameInputUUID.value = loaded.variableNameInputUUID;
             selectOperator(loaded.selectionUUID);
+            selectAdditionalOperator(loaded.additionalSelectionUUIDs);
             outputOperator.value = loaded.operator;
             mode.value = loaded.mode as unknown as MODES;
         }
@@ -408,11 +433,7 @@
         :katex-input="katexInput"
         :uuid-refs-to-process="uuidRefsToProcess"
         @selected="selectOperator"
-        @selected-additional="
-            () => {
-                /** TODO */
-            }
-        "
+        @selected-additional="selectAdditionalOperator"
         :renderer-uuid="rendererUUID"
     />
 

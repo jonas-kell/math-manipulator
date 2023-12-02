@@ -44,7 +44,7 @@
             emit("selected", uuid);
         } else {
             additionalSelectionUUIDs.value.add(uuid);
-            emit("selected-additional", additionalSelectionUUIDs.value);
+            emit("selected-additional", Array.from(additionalSelectionUUIDs.value));
         }
 
         // do not double select
@@ -59,6 +59,8 @@
             additionalSelectionRefs.value = new Set(); // de-select additional selections
         } else {
             additionalSelectionRefs.value.add(UUIDRef);
+            // this is not 100% name-reflective... If graphically selected, make sure the additionalSelectionUUIDs cache also contains the uuid or mismatches will happen
+            additionalSelectionUUIDs.value.add(Operator.UUIDFromUUIDRef(UUIDRef));
         }
         updateBorders();
     };

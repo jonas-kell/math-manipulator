@@ -9,6 +9,7 @@ export interface PersistentLineStorage {
     operator: Operator | null;
     childUUID: string;
     selectionUUID: string;
+    additionalSelectionUUIDs: string[];
     operatorParserUUID: string;
     variableNameInputUUID: string;
     mode: string;
@@ -17,6 +18,7 @@ interface ExportablePersistedLineStorage {
     operator: string | null;
     childUUID: string;
     selectionUUID: string;
+    additionalSelectionUUIDs: string[];
     operatorParserUUID: string;
     variableNameInputUUID: string;
     mode: string;
@@ -101,6 +103,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
             operator: values.operator == null ? null : values.operator.getSerializedStructure(true),
             childUUID: values.childUUID,
             selectionUUID: values.selectionUUID,
+            additionalSelectionUUIDs: values.additionalSelectionUUIDs,
             operatorParserUUID: values.operatorParserUUID,
             variableNameInputUUID: values.variableNameInputUUID,
             mode: values.mode,
@@ -124,6 +127,10 @@ export const usePermanenceStore = defineStore("permanence", () => {
                     loadedObject.selectionUUID != null && loadedObject.selectionUUID != undefined
                         ? loadedObject.selectionUUID
                         : uuidv4(),
+                additionalSelectionUUIDs:
+                    loadedObject.additionalSelectionUUIDs != null && loadedObject.additionalSelectionUUIDs != undefined
+                        ? Array.from(loadedObject.additionalSelectionUUIDs)
+                        : [],
                 operatorParserUUID:
                     loadedObject.operatorParserUUID != null && loadedObject.operatorParserUUID != undefined
                         ? loadedObject.operatorParserUUID
