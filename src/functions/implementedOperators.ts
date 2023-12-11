@@ -2154,7 +2154,7 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
 
         let res = [] as PeerAlterationResult;
         additionalSelectedOperators.forEach((selectedOperator) => {
-            const tryReplace = selectedOperator.getCopyWithEquivalentOperatorsReplaced(argument, replacement);
+            const tryReplace = selectedOperator.getCopyWithEquivalentOperatorsReplaced(argument, replacement, this.getUUID());
 
             if (!Operator.assertOperatorsEquivalent(selectedOperator, tryReplace, false)) {
                 res.push({
