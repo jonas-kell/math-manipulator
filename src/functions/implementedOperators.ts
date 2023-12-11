@@ -184,6 +184,8 @@ export function implementsMinusPulloutManagement(object: any): object is MinusPu
     return "minusCanBePulledOut" in object && "PullOutMinusMODIFICATION" in object;
 }
 
+export type PeerAlterationResult = { uuid: string; replacement: Operator }[];
+
 /**
  * The boolean states if an additional minus (-) was introduced
  *
@@ -2129,6 +2131,37 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
 
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
+    }
+
+    SumOverFirstArgumentPEERALTERATION(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        return this.sumOverArgumentImplementation(this._children[0], this._children[1], additionalSelectedOperators);
+    }
+
+    SumOverSecondArgumentPEERALTERATION(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        return this.sumOverArgumentImplementation(this._children[1], this._children[0], additionalSelectedOperators);
+    }
+
+    private sumOverArgumentImplementation(
+        argument: Operator,
+        replacement: Operator,
+        additionalSelectedOperators: Operator[]
+    ): PeerAlterationResult {
+        let res: PeerAlterationResult = [
+            {
+                // replacing the kronecker-delta with a 1 is currently the cleanest solution I can think of
+                uuid: this.getUUID(),
+                replacement: new Numerical(this.getOwnConfig(), 1),
+            },
+        ];
+
+        additionalSelectedOperators.forEach((selectedOperator) => {
+            res.push({
+                uuid: selectedOperator.getUUID(),
+                replacement: selectedOperator.getCopyWithEquivalentOperatorsReplaced(argument, replacement),
+            });
+        });
+
+        return res;
     }
 }
 

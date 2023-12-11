@@ -1,6 +1,13 @@
 <script setup lang="ts">
     import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-    import { Operator, EmptyArgument, BracketedSum, BracketedMultiplication, OperatorConfig } from "../functions";
+    import {
+        Operator,
+        EmptyArgument,
+        BracketedSum,
+        BracketedMultiplication,
+        OperatorConfig,
+        PeerAlterationResult,
+    } from "../functions";
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
     import { v4 as uuidv4 } from "uuid";
@@ -347,6 +354,39 @@
                         hasEffect: true,
                         replacesUUID: selOp.getUUID(),
                         result: actionResult,
+                    };
+                }
+                logTimer(name);
+            });
+
+            // multi-replace-modifications (takes additionalOperators)
+            [
+                ...Object.getOwnPropertyNames(Object.getPrototypeOf(selOp)).filter((name) => name.includes("PEERALTERATION")),
+            ].forEach((action) => {
+                const name = action.replace("PEERALTERATION", "");
+
+                startTimer();
+
+                // as the `action` was extracted from filtered `getOwnPropertyNames` or manually inserted, this is should always be a valid method
+                let actionResult = (selOp as any)[action](additionalSelectionOperators.value) as PeerAlterationResult;
+
+                let iterator: Operator = props.operator.getCopyWithReplaced("", new EmptyArgument(props.config), true); // just get a copy. Nothing replaced
+                actionResult.forEach((res) => {
+                    iterator = iterator.getCopyWithReplaced(res.uuid, res.replacement, true);
+                });
+
+                // only consider actions that change anything applicable
+                if (Operator.assertOperatorsEquivalent(props.operator, iterator, false)) {
+                    res[name] = {
+                        hasEffect: false,
+                        replacesUUID: "",
+                        result: null,
+                    };
+                } else {
+                    res[name] = {
+                        hasEffect: true,
+                        replacesUUID: props.operator.getUUID(),
+                        result: iterator.getCopyWithGottenRidOfUnnecessaryTerms(), // applies this globally, which may not be intended, but I cannot do anything about it
                     };
                 }
                 logTimer(name);

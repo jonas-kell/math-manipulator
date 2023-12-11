@@ -11,11 +11,12 @@
         "mathrm",
         "multiplicators",
         "pasteable",
+        "PEERALTERATION",
         "pinia",
+        "prefactor",
+        "prefactors",
         "summands",
         "uuidv",
-        "VITE",
-        "prefactor",
-        "prefactors"
+        "VITE"
     ]
 }

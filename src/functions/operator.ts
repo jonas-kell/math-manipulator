@@ -371,15 +371,15 @@ export abstract class Operator {
         return this.numberFoldingInternalImplementation(false, null, onlyFoldIfMakesTermSimpler);
     }
 
-    getCopyWithReplaced(uuid: string, replacement: Operator) {
+    getCopyWithReplaced(uuid: string, replacement: Operator, keepUUIDs: boolean = false) {
         let copy = this.getSerializedStructureRecursive();
         const replacementValue = replacement.getSerializedStructureRecursive();
         copy = Operator.replaceRecursive(copy, uuid, (_a) => replacementValue);
 
-        return Operator.generateStructureRecursive(this.getOwnConfig(), copy, false);
+        return Operator.generateStructureRecursive(this.getOwnConfig(), copy, keepUUIDs);
     }
 
-    getCopyWithPackedIntoVariable(name: string, uuid: string) {
+    getCopyWithPackedIntoVariable(name: string, uuid: string, keepUUIDs: boolean = false) {
         let copy = this.getSerializedStructureRecursive();
         copy = Operator.replaceRecursive(copy, uuid, (a) => {
             const variable = new Variable(this.getOwnConfig(), name);
@@ -389,7 +389,7 @@ export abstract class Operator {
             return variable.getSerializedStructureRecursive();
         });
 
-        return Operator.generateStructureRecursive(this.getOwnConfig(), copy, false);
+        return Operator.generateStructureRecursive(this.getOwnConfig(), copy, keepUUIDs);
     }
 
     private static replaceRecursive(
@@ -408,6 +408,30 @@ export abstract class Operator {
 
             structure.children = newChildren;
             return structure;
+        }
+    }
+
+    getCopyWithEquivalentOperatorsReplaced(find: Operator, replacement: Operator) {
+        // This operates on operator equivalence, so there is no reason to keep uuids ever
+        let copy = Operator.generateStructureRecursive(this.getOwnConfig(), this.getSerializedStructureRecursive(), false);
+
+        return copy.replaceEquivalentOperatorRecursive(find, replacement);
+    }
+
+    // ! modifies this._children !! Only call on sacrificial copies !!
+    private replaceEquivalentOperatorRecursive(find: Operator, replacement: Operator): Operator {
+        if (Operator.assertOperatorsEquivalent(this, find)) {
+            // This operates on operator equivalence, so there is no reason to keep uuids ever
+            return Operator.generateStructureRecursive(this.getOwnConfig(), replacement.getSerializedStructureRecursive(), false);
+        } else {
+            for (let i = 0; i < this._children.length; i++) {
+                const child = this._children[i];
+                const moddedChild = child.replaceEquivalentOperatorRecursive(find, replacement);
+
+                this._children[i] = moddedChild;
+            }
+
+            return this;
         }
     }
 
