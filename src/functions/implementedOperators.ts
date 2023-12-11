@@ -2146,22 +2146,29 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
         replacement: Operator,
         additionalSelectedOperators: Operator[]
     ): PeerAlterationResult {
-        let res: PeerAlterationResult = [
-            {
-                // replacing the kronecker-delta with a 1 is currently the cleanest solution I can think of
-                uuid: this.getUUID(),
-                replacement: new Numerical(this.getOwnConfig(), 1),
-            },
-        ];
+        let selfRes = {
+            // replacing the kronecker-delta with a 1 is currently the cleanest solution I can think of
+            uuid: this.getUUID(),
+            replacement: new Numerical(this.getOwnConfig(), 1),
+        };
 
+        let res = [] as PeerAlterationResult;
         additionalSelectedOperators.forEach((selectedOperator) => {
-            res.push({
-                uuid: selectedOperator.getUUID(),
-                replacement: selectedOperator.getCopyWithEquivalentOperatorsReplaced(argument, replacement),
-            });
+            const tryReplace = selectedOperator.getCopyWithEquivalentOperatorsReplaced(argument, replacement);
+
+            if (!Operator.assertOperatorsEquivalent(selectedOperator, tryReplace, false)) {
+                res.push({
+                    uuid: selectedOperator.getUUID(),
+                    replacement: tryReplace,
+                });
+            }
         });
 
-        return res;
+        if (res.length == 0) {
+            return [];
+        } else {
+            return [selfRes, ...res];
+        }
     }
 }
 
