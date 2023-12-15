@@ -465,6 +465,12 @@
         }
         loadingComplete.value = true;
     });
+
+    const buttonRowUUID = ref(uuidv4());
+    window.addEventListener("scroll", function () {
+        const elem = document.getElementById(buttonRowUUID.value);
+        elem?.style.setProperty("left", "" + (document.documentElement.scrollLeft ?? "0") + "px");
+    });
 </script>
 
 <template>
@@ -494,68 +500,72 @@
     />
 
     <template v-if="selectionUUID != '' && selectedOperator != null && !isBase">
-        <button @click="selectParentAction" style="margin-right: 0.2em" :disabled="selectedOperatorsParentOperator == null">
-            Sel. Parent
-        </button>
-        <button
-            @click="selectFirstChildAction"
-            style="margin-right: 0.2em"
-            :disabled="selectedOperatorsFirstChildOperator == null"
-        >
-            Sel. First Child
-        </button>
-        <button
-            @click="selectNextSiblingAction"
-            style="margin-right: 0.2em"
-            :disabled="selectedOperatorsNextSiblingOperator == null"
-        >
-            Sel. Next Sibling
-        </button>
-        <button
-            @click="selectPrevSiblingAction"
-            style="margin-right: 0.2em"
-            :disabled="selectedOperatorsPrevSiblingOperator == null"
-        >
-            Sel. Previous Sibling
-        </button>
-        <div style="margin-bottom: -0.5em; width: 100%">&nbsp;</div>
-        <button @click="replaceButtonAction" style="margin-right: 0.2em">Replace</button>
-        <button @click="variableDefinitionButtonAction" style="margin-right: 0.2em">Define Variable</button>
-        <button
-            v-for="(mod, name) in actionsHaveAnyEffectAndTheirResults"
-            @click="modificationAction(mod)"
-            :disabled="!mod.hasEffect"
-            style="margin-right: 0.2em"
-        >
-            {{ name }}
-        </button>
-        <div style="margin-bottom: -0.9em; width: 100%">&nbsp;</div>
-        <button @click="showLatexExportButtonAction" style="margin-right: 0.2em; float: right">Show Latex</button>
-        <button @click="showExportStructureButtonAction" style="margin-right: 0.2em; float: right">Show Export Structure</button>
-        <button @click="showExportStructureWithUUIDsButtonAction" style="margin-right: 0.2em; float: right">
-            Show Export Structure (UUIDs)
-        </button>
-        <div style="margin-bottom: 0.5em; width: 100%">&nbsp;</div>
-        <InputToOperatorParser
-            :textarea="true"
-            :config="config"
-            v-show="mode == MODES.REPLACEMENT"
-            @parsed="(a: Operator | null) => { 
+        <div class="offset-x" :id="buttonRowUUID">
+            <button @click="selectParentAction" style="margin-right: 0.2em" :disabled="selectedOperatorsParentOperator == null">
+                Sel. Parent
+            </button>
+            <button
+                @click="selectFirstChildAction"
+                style="margin-right: 0.2em"
+                :disabled="selectedOperatorsFirstChildOperator == null"
+            >
+                Sel. First Child
+            </button>
+            <button
+                @click="selectPrevSiblingAction"
+                style="margin-right: 0.2em"
+                :disabled="selectedOperatorsPrevSiblingOperator == null"
+            >
+                Sel. Previous Sibling
+            </button>
+            <button
+                @click="selectNextSiblingAction"
+                style="margin-right: 0.2em"
+                :disabled="selectedOperatorsNextSiblingOperator == null"
+            >
+                Sel. Next Sibling
+            </button>
+            <div style="margin-bottom: -0.5em; width: 100%">&nbsp;</div>
+            <button @click="replaceButtonAction" style="margin-right: 0.2em">Replace</button>
+            <button @click="variableDefinitionButtonAction" style="margin-right: 0.2em">Define Variable</button>
+            <button
+                v-for="(mod, name) in actionsHaveAnyEffectAndTheirResults"
+                @click="modificationAction(mod)"
+                :disabled="!mod.hasEffect"
+                style="margin-right: 0.2em"
+            >
+                {{ name }}
+            </button>
+            <div style="margin-bottom: -0.9em; width: 100%">&nbsp;</div>
+            <button @click="showLatexExportButtonAction" style="margin-right: 0.2em; float: right">Show Latex</button>
+            <button @click="showExportStructureButtonAction" style="margin-right: 0.2em; float: right">
+                Show Export Structure
+            </button>
+            <button @click="showExportStructureWithUUIDsButtonAction" style="margin-right: 0.2em; float: right">
+                Show Export Structure (UUIDs)
+            </button>
+            <div style="margin-bottom: 0.5em; width: 100%">&nbsp;</div>
+            <InputToOperatorParser
+                :textarea="true"
+                :config="config"
+                v-show="mode == MODES.REPLACEMENT"
+                @parsed="(a: Operator | null) => { 
                 replaceWithOperator = a;
                 replaceWithCallback() 
             }"
-            @loading-value="() => (skipReplaceWithEffect = true)"
-            style="margin-top: 0.5em; width: 100%; min-height: 2em"
-            :uuid="operatorParserUUID"
-        />
-        <PermanenceInterfacingInput
-            v-show="mode == MODES.VARIABLE_DEFINITION"
-            v-model="variableDefinitionName"
-            style="margin-top: 0.5em; width: 100%"
-            :type="'input'"
-            :uuid="variableNameInputUUID"
-            @loading-value="() => (skipVariableNameEffect = true)"
-        />
+                @loading-value="() => (skipReplaceWithEffect = true)"
+                style="margin-top: 0.5em; width: 100%; min-height: 2em"
+                :uuid="operatorParserUUID"
+            />
+            <PermanenceInterfacingInput
+                v-show="mode == MODES.VARIABLE_DEFINITION"
+                v-model="variableDefinitionName"
+                style="margin-top: 0.5em; width: 100%"
+                :type="'input'"
+                :uuid="variableNameInputUUID"
+                @loading-value="() => (skipVariableNameEffect = true)"
+            />
+        </div>
     </template>
 
     <template v-if="outputOperator != null">
@@ -580,3 +590,10 @@
         </div>
     </template>
 </template>
+
+<style>
+    .offset-x {
+        position: relative;
+        width: 100%;
+    }
+</style>
