@@ -60,10 +60,12 @@ enum TokenType {
     Other = "Other",
     Macro = "Macro",
     BeforeFunction = "BeforeFunction",
+    String = "String",
 }
 
 // ! Reserved Symbols with own token
 const PowerSignSymbol = "$POWERSIGN$";
+const StringDelimiterSymbol = '"';
 const AllowedReservedSymbolsMapping = {
     ";": TokenType.StructuralSeparation,
     "+": TokenType.Plus,
@@ -75,7 +77,7 @@ const AllowedReservedSymbolsMapping = {
     "(": TokenType.OpenParen,
     ")": TokenType.CloseParen,
 } as { [key: string]: TokenType };
-const AllowedReservedSymbols = Object.keys(AllowedReservedSymbolsMapping);
+const AllowedReservedSymbols = [...Object.keys(AllowedReservedSymbolsMapping), StringDelimiterSymbol];
 
 // ! Structural Operators
 const NotEqualsSignSymbol = "$NEQSIGN$";
@@ -208,8 +210,34 @@ function tokenize(config: OperatorConfig, input: string): Token[] {
         // test if is reserved word
         let wordFound = false;
 
+        if (currentBuf.startsWith(StringDelimiterSymbol)) {
+            const restOfString = stringToProcess
+                .substring(startIndex)
+                .trimStart()
+                .substring(StringDelimiterSymbol.length)
+                .trimStart();
+            const nextStringDelimIndex = restOfString.indexOf(StringDelimiterSymbol);
+
+            if (nextStringDelimIndex == -1) {
+                throw Error("Start string delimiter without corresponding end delimiter");
+            }
+
+            const stringValue = restOfString.substring(0, nextStringDelimIndex).trim();
+            tokens.push({
+                type: TokenType.String,
+                content: stringValue,
+            });
+
+            wordFound = true;
+            endIndex =
+                stringToProcess.indexOf(
+                    StringDelimiterSymbol,
+                    stringToProcess.indexOf(StringDelimiterSymbol, startIndex) + StringDelimiterSymbol.length
+                ) + StringDelimiterSymbol.length;
+        }
+
         // only attempt to parse if substring is finished
-        if (currentBuf.endsWith(" ")) {
+        if (!wordFound && currentBuf.endsWith(" ")) {
             const currentBufWord = currentBuf.substring(0, currentBuf.length - 1); // remove space at the end
 
             for (let i = 0; i < AllowedReservedSymbols.length; i++) {
@@ -940,7 +968,13 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
                     children: [],
                     uuid: "",
                 } as ExportOperatorContent;
-
+            case TokenType.String:
+                return {
+                    type: OperatorType.RawLatex,
+                    value: token.content,
+                    children: [],
+                    uuid: "",
+                } as ExportOperatorContent;
             default:
                 throw Error(`Singular token without implemented Export target type ${token.type} `);
         }

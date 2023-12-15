@@ -13,4 +13,5 @@ export const katexMacros = {
     "\\eq": "=",
     "\\less": "<",
     "\\greater": ">",
+    "\\quotation": '"',
 };
