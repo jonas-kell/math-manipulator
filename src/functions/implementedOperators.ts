@@ -1925,6 +1925,10 @@ abstract class QMOperatorWithOneArgument extends Operator implements OrderableOp
         return this._children[0];
     }
 
+    sameDegreeOfFreedom(as: QMOperatorWithOneArgument) {
+        return as._value == this._value;
+    }
+
     abstract commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate;
 }
 
@@ -1936,13 +1940,13 @@ export class FermionicCreationOperator extends QMOperatorWithOneArgument {
     }
 
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
-        if (commuteWith instanceof FermionicAnnihilationOperator) {
+        if (commuteWith instanceof FermionicAnnihilationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [true, [commuteWith, this]],
                 [false, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]],
             ];
         }
-        if (commuteWith instanceof FermionicCreationOperator) {
+        if (commuteWith instanceof FermionicCreationOperator || commuteWith instanceof FermionicAnnihilationOperator) {
             return [[true, [commuteWith, this]]];
         }
 
@@ -1958,13 +1962,13 @@ export class FermionicAnnihilationOperator extends QMOperatorWithOneArgument {
     }
 
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
-        if (commuteWith instanceof FermionicCreationOperator) {
+        if (commuteWith instanceof FermionicCreationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [true, [commuteWith, this]],
                 [false, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]],
             ];
         }
-        if (commuteWith instanceof FermionicAnnihilationOperator) {
+        if (commuteWith instanceof FermionicAnnihilationOperator || commuteWith instanceof FermionicCreationOperator) {
             return [[true, [commuteWith, this]]];
         }
 
@@ -1980,7 +1984,7 @@ export class BosonicCreationOperator extends QMOperatorWithOneArgument {
     }
 
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
-        if (commuteWith instanceof BosonicAnnihilationOperator) {
+        if (commuteWith instanceof BosonicAnnihilationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
                 [false, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]],
@@ -1999,7 +2003,7 @@ export class BosonicAnnihilationOperator extends QMOperatorWithOneArgument {
     }
 
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
-        if (commuteWith instanceof BosonicCreationOperator) {
+        if (commuteWith instanceof BosonicCreationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
                 [false, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]],
