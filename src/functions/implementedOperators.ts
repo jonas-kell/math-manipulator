@@ -1946,6 +1946,7 @@ export class FermionicCreationOperator extends QMOperatorWithOneArgument {
                 [false, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]],
             ];
         }
+        // fermionic still anti-commute if different degree of freedom (see theoretical many-body-physics exercise-sheet 6 problem 2)
         if (commuteWith instanceof FermionicCreationOperator || commuteWith instanceof FermionicAnnihilationOperator) {
             return [[true, [commuteWith, this]]];
         }
@@ -1968,6 +1969,7 @@ export class FermionicAnnihilationOperator extends QMOperatorWithOneArgument {
                 [false, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]],
             ];
         }
+        // @see FermionicCreationOperator
         if (commuteWith instanceof FermionicAnnihilationOperator || commuteWith instanceof FermionicCreationOperator) {
             return [[true, [commuteWith, this]]];
         }
