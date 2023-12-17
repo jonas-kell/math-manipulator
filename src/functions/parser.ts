@@ -113,10 +113,12 @@ const AllowedFunctionKeywordMapping = {
     ket: OperatorType.Ket,
     braket: OperatorType.Braket,
     bracket: OperatorType.Bracket,
-    "c#": OperatorType.FermionicCreationOperator,
-    c: OperatorType.FermionicAnnihilationOperator,
+    fc: OperatorType.FermionicCreationOperator,
+    "f#": OperatorType.FermionicCreationOperator,
+    fa: OperatorType.FermionicAnnihilationOperator,
+    bc: OperatorType.BosonicCreationOperator,
     "b#": OperatorType.BosonicCreationOperator,
-    b: OperatorType.BosonicAnnihilationOperator,
+    ba: OperatorType.BosonicAnnihilationOperator,
     func: OperatorType.FunctionMathMode,
     funcrm: OperatorType.FunctionMathRm,
     sin: OperatorType.Sin,
@@ -547,8 +549,8 @@ function insertImpliedOperationsRecursive(
                 first != undefined &&
                 first instanceof TokenGroupLeaf &&
                 ((first.getToken().type == TokenType.Function &&
-                    ((MAX_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] > 1 && // ONLY IF ONE OR MORE ARGUMENTS
-                        MIN_CHILDREN_SPECIFICATIONS[first.getToken().content as OperatorType] > 1) ||
+                    ((maxNumChildrenParser(first.getToken().content as OperatorType) > 1 && // ONLY IF ONE OR MORE ARGUMENTS
+                        minNumChildrenParser(first.getToken().content as OperatorType) > 1) ||
                         functionsWithArgumentsConsideredStructural.includes(first.getToken().content as OperatorType))) ||
                     (first.getToken().type == TokenType.Macro &&
                         calculateNecessaryNumberOfArgumentsForMacro(config, first.getToken()) > 1))
@@ -970,7 +972,7 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
                 } as ExportOperatorContent;
             case TokenType.String:
                 return {
-                    type: OperatorType.RawLatex,
+                    type: OperatorType.String,
                     value: token.content,
                     children: [],
                     uuid: "",
@@ -1046,34 +1048,49 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
                     // With this exp(1 2 3) works, even though exp doesn't take 3 arguments
                     // also kind of required, because manual exp((1 2 3)) would remove unnecessary brackets beforehand, so the exception would need to be implemented there
                     !(
-                        MIN_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType] == 1 &&
-                        MAX_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType] == 1
+                        minNumChildrenParser(operatorToken.content as OperatorType) == 1 &&
+                        maxNumChildrenParser(operatorToken.content as OperatorType) == 1
                     )
                 ) {
                     childrenForFunctionOperator = children[0].children; // because has already been processed above
                 }
 
                 if (
-                    childrenForFunctionOperator.length < MIN_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType] ||
-                    childrenForFunctionOperator.length > MAX_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
+                    childrenForFunctionOperator.length < minNumChildrenParser(operatorToken.content as OperatorType) ||
+                    childrenForFunctionOperator.length > maxNumChildrenParser(operatorToken.content as OperatorType)
                 ) {
                     throw Error(
-                        `Function of subtype ${operatorToken.content} requires between ${
-                            MIN_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
-                        } and ${
-                            MAX_CHILDREN_SPECIFICATIONS[operatorToken.content as OperatorType]
-                        } arguments in its arguments, but ${
+                        `Function of subtype ${operatorToken.content} requires between ${minNumChildrenParser(
+                            operatorToken.content as OperatorType
+                        )} and ${maxNumChildrenParser(operatorToken.content as OperatorType)} arguments in its arguments, but ${
                             childrenForFunctionOperator.length
                         } were provided. Arguments need to be supplied as a group with ; as argument delimiter. e.g. sum(n=1; \\infty; n)`
                     );
                 }
 
-                return {
-                    type: operatorToken.content,
-                    value: "",
-                    children: childrenForFunctionOperator,
-                    uuid: "",
-                } as ExportOperatorContent;
+                if (takesAdditionalStringFirstArgument(operatorToken.content as OperatorType)) {
+                    const childrenWithoutFirstString = childrenForFunctionOperator.slice(1);
+                    const stringArg = childrenForFunctionOperator[0];
+
+                    if (stringArg.type != OperatorType.String) {
+                        throw Error(`First Argument of the function type:${operatorToken.content} needs to be a string ("...")`);
+                    }
+
+                    return {
+                        type: operatorToken.content,
+                        value: stringArg.value,
+                        children: childrenWithoutFirstString,
+                        uuid: "",
+                    } as ExportOperatorContent;
+                } else {
+                    return {
+                        type: operatorToken.content,
+                        value: "",
+                        children: childrenForFunctionOperator,
+                        uuid: "",
+                    } as ExportOperatorContent;
+                }
+
             case TokenType.Macro:
                 let childrenForMacro = [] as ExportOperatorContent[];
                 if (children[0] && children[0] != undefined) {
@@ -1122,4 +1139,35 @@ function calculateNecessaryNumberOfArgumentsForMacro(config: OperatorConfig, tok
     }
 
     return DefinedMacro.getNumberOfIntendedChildren(config, token.content);
+}
+
+function takesAdditionalStringFirstArgument(type: OperatorType): boolean {
+    const functionConvertsFirstStringArgumentToValue = [
+        OperatorType.FermionicCreationOperator,
+        OperatorType.FermionicAnnihilationOperator,
+        OperatorType.BosonicAnnihilationOperator,
+        OperatorType.BosonicCreationOperator,
+    ];
+
+    return functionConvertsFirstStringArgumentToValue.includes(type);
+}
+
+function minNumChildrenParser(type: OperatorType): number {
+    let base = MIN_CHILDREN_SPECIFICATIONS[type];
+
+    if (takesAdditionalStringFirstArgument(type)) {
+        base += 1;
+    }
+
+    return base;
+}
+
+function maxNumChildrenParser(type: OperatorType): number {
+    let base = MAX_CHILDREN_SPECIFICATIONS[type];
+
+    if (takesAdditionalStringFirstArgument(type)) {
+        base += 1;
+    }
+
+    return base;
 }

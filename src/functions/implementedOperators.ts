@@ -31,6 +31,8 @@ export function operatorConstructorSwitch(
             );
         case OperatorType.RawLatex:
             return new RawLatex(config, value);
+        case OperatorType.String:
+            return new RawString(config, value);
         case OperatorType.Negation:
             return new Negation(config, childrenReconstructed[0]);
         case OperatorType.PiConstant:
@@ -64,13 +66,13 @@ export function operatorConstructorSwitch(
         case OperatorType.Bracket:
             return new Bracket(config, childrenReconstructed[0], childrenReconstructed[1], childrenReconstructed[2]);
         case OperatorType.FermionicCreationOperator:
-            return new FermionicCreationOperator(config, childrenReconstructed[0]);
+            return new FermionicCreationOperator(config, value, childrenReconstructed[0]);
         case OperatorType.FermionicAnnihilationOperator:
-            return new FermionicAnnihilationOperator(config, childrenReconstructed[0]);
+            return new FermionicAnnihilationOperator(config, value, childrenReconstructed[0]);
         case OperatorType.BosonicCreationOperator:
-            return new BosonicCreationOperator(config, childrenReconstructed[0]);
+            return new BosonicCreationOperator(config, value, childrenReconstructed[0]);
         case OperatorType.BosonicAnnihilationOperator:
-            return new BosonicAnnihilationOperator(config, childrenReconstructed[0]);
+            return new BosonicAnnihilationOperator(config, value, childrenReconstructed[0]);
         case OperatorType.FunctionMathMode:
             return new FunctionMathMode(config, childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.FunctionMathRm:
@@ -1597,6 +1599,12 @@ export class RawLatex extends Operator {
     }
 }
 
+export class RawString extends Operator {
+    constructor(config: OperatorConfig, stringContent: string) {
+        super(config, OperatorType.String, "\\text{", "", "}", [], stringContent);
+    }
+}
+
 export class Negation extends Operator implements MinusPulloutManagement {
     constructor(config: OperatorConfig, content: Operator) {
         super(config, OperatorType.Negation, "-", "", "", [content], "");
@@ -1905,8 +1913,8 @@ export class Bracket extends Operator {
 }
 
 abstract class QMOperatorWithOneArgument extends Operator implements OrderableOperator {
-    constructor(config: OperatorConfig, opType: OperatorType, latex: string, argument: Operator) {
-        super(config, opType, latex + "_{", "", "}", [argument], "");
+    constructor(config: OperatorConfig, opType: OperatorType, latex: string, argument: Operator, value: string) {
+        super(config, opType, latex + "_{", "", "}", [argument], value, undefined, undefined, false);
     }
 
     orderPriorityString() {
@@ -1921,8 +1929,10 @@ abstract class QMOperatorWithOneArgument extends Operator implements OrderableOp
 }
 
 export class FermionicCreationOperator extends QMOperatorWithOneArgument {
-    constructor(config: OperatorConfig, index: Operator) {
-        super(config, OperatorType.FermionicCreationOperator, "\\mathrm{c}^\\dagger", index);
+    constructor(config: OperatorConfig, name: string, index: Operator) {
+        const nameOrDefault = name == null || name == "" || name == undefined ? "c" : name;
+        const latex = `\\mathrm{${nameOrDefault}}^\\dagger`;
+        super(config, OperatorType.FermionicCreationOperator, latex, index, nameOrDefault);
     }
 
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
@@ -1941,8 +1951,10 @@ export class FermionicCreationOperator extends QMOperatorWithOneArgument {
 }
 
 export class FermionicAnnihilationOperator extends QMOperatorWithOneArgument {
-    constructor(config: OperatorConfig, index: Operator) {
-        super(config, OperatorType.FermionicAnnihilationOperator, "\\mathrm{c}", index);
+    constructor(config: OperatorConfig, name: string, index: Operator) {
+        const nameOrDefault = name == null || name == "" || name == undefined ? "c" : name;
+        const latex = `\\mathrm{${nameOrDefault}}`;
+        super(config, OperatorType.FermionicAnnihilationOperator, latex, index, nameOrDefault);
     }
 
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
@@ -1961,8 +1973,10 @@ export class FermionicAnnihilationOperator extends QMOperatorWithOneArgument {
 }
 
 export class BosonicCreationOperator extends QMOperatorWithOneArgument {
-    constructor(config: OperatorConfig, index: Operator) {
-        super(config, OperatorType.BosonicCreationOperator, "\\mathrm{b}^\\dagger", index);
+    constructor(config: OperatorConfig, name: string, index: Operator) {
+        const nameOrDefault = name == null || name == "" || name == undefined ? "b" : name;
+        const latex = `\\mathrm{${nameOrDefault}}^\\dagger`;
+        super(config, OperatorType.BosonicCreationOperator, latex, index, nameOrDefault);
     }
 
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
@@ -1978,8 +1992,10 @@ export class BosonicCreationOperator extends QMOperatorWithOneArgument {
 }
 
 export class BosonicAnnihilationOperator extends QMOperatorWithOneArgument {
-    constructor(config: OperatorConfig, index: Operator) {
-        super(config, OperatorType.BosonicAnnihilationOperator, "\\mathrm{b}", index);
+    constructor(config: OperatorConfig, name: string, index: Operator) {
+        const nameOrDefault = name == null || name == "" || name == undefined ? "b" : name;
+        const latex = `\\mathrm{${nameOrDefault}}`;
+        super(config, OperatorType.BosonicAnnihilationOperator, latex, index, nameOrDefault);
     }
 
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {

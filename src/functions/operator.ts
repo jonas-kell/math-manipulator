@@ -35,6 +35,7 @@ export abstract class Operator {
     protected _hasMidDisplayOverwrite: boolean = false;
     protected _midDisplayOverwrite: string[] = [];
     protected _renderChildren: boolean = true;
+    protected _renderValue: boolean = true;
 
     constructor(
         config: OperatorConfig,
@@ -45,7 +46,8 @@ export abstract class Operator {
         children: Operator[],
         value: string,
         midDisplayOverwrite: string[] = [],
-        renderChildren: boolean = true
+        renderChildren: boolean = true,
+        renderValue: boolean = true
     ) {
         this._config = config;
 
@@ -75,6 +77,7 @@ export abstract class Operator {
         this._hasMidDisplayOverwrite = hasMidDisplayOverwrite;
         this._midDisplayOverwrite = midDisplayOverwrite;
         this._renderChildren = renderChildren;
+        this._renderValue = renderValue;
     }
 
     getOwnConfig(): OperatorConfig {
@@ -132,7 +135,7 @@ export abstract class Operator {
     protected innerFormulaString(renderChildrenHtmlIds: boolean, renderImpliedSymbols: boolean) {
         let formula = "";
 
-        let value = this._value;
+        let value = this._renderValue ? this._value : "";
 
         let anyMiddleDisplayRendered = false;
         let middleFormula = "";
