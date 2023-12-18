@@ -453,6 +453,7 @@ const implyStructuralSeparationBehind = [
     TokenType.Constant,
     TokenType.Structural,
     TokenType.BeforeFunction,
+    TokenType.String,
 ]; // Plus groups aka most of the time brackets // Plus Macros WITHOUT Arguments
 const implyStructuralSeparationInFront = [
     TokenType.Other,
@@ -461,6 +462,7 @@ const implyStructuralSeparationInFront = [
     TokenType.Constant,
     TokenType.Structural,
     TokenType.Macro,
+    TokenType.String,
 ]; // Plus groups aka most of the time brackets
 const implyMultiplicationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets // Plus Macros WITHOUT Arguments
 const implyMultiplicationInFront = [TokenType.Other, TokenType.Number, TokenType.Function, TokenType.Constant, TokenType.Macro]; // Plus groups aka most of the time brackets

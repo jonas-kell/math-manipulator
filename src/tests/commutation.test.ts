@@ -79,7 +79,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "fermionic_annihilation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "number",
@@ -92,7 +92,7 @@ describe("operator module - commute with subsequent", () => {
                     },
                     {
                         type: "fermionic_annihilation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "number",
@@ -105,7 +105,7 @@ describe("operator module - commute with subsequent", () => {
                     },
                     {
                         type: "fermionic_annihilation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "number",
@@ -139,7 +139,7 @@ describe("operator module - commute with subsequent", () => {
                     children: [
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -150,7 +150,7 @@ describe("operator module - commute with subsequent", () => {
                         },
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -161,7 +161,7 @@ describe("operator module - commute with subsequent", () => {
                         },
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -185,7 +185,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "fermionic_annihilation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "number",
@@ -198,7 +198,7 @@ describe("operator module - commute with subsequent", () => {
                     },
                     {
                         type: "fermionic_annihilation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "number",
@@ -232,7 +232,7 @@ describe("operator module - commute with subsequent", () => {
                     children: [
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -243,7 +243,7 @@ describe("operator module - commute with subsequent", () => {
                         },
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -267,7 +267,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "fermionic_annihilation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "number",
@@ -280,7 +280,7 @@ describe("operator module - commute with subsequent", () => {
                     },
                     {
                         type: "fermionic_creation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "variable",
@@ -318,7 +318,7 @@ describe("operator module - commute with subsequent", () => {
                             children: [
                                 {
                                     type: "fermionic_creation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "variable",
@@ -329,7 +329,7 @@ describe("operator module - commute with subsequent", () => {
                                 },
                                 {
                                     type: "fermionic_annihilation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "number",
@@ -371,7 +371,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "fermionic_annihilation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "number",
@@ -412,7 +412,7 @@ describe("operator module - commute with subsequent", () => {
                 },
                 {
                     type: "fermionic_annihilation",
-                    value: "",
+                    value: "c",
                     children: [
                         {
                             type: "number",
@@ -434,7 +434,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "fermionic_creation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "variable",
@@ -447,7 +447,7 @@ describe("operator module - commute with subsequent", () => {
                     },
                     {
                         type: "fermionic_creation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "number",
@@ -481,7 +481,7 @@ describe("operator module - commute with subsequent", () => {
                     children: [
                         {
                             type: "fermionic_creation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -492,7 +492,7 @@ describe("operator module - commute with subsequent", () => {
                         },
                         {
                             type: "fermionic_creation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "variable",
@@ -516,7 +516,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "fermionic_creation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "variable",
@@ -529,7 +529,7 @@ describe("operator module - commute with subsequent", () => {
                     },
                     {
                         type: "fermionic_annihilation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "number",
@@ -567,7 +567,7 @@ describe("operator module - commute with subsequent", () => {
                             children: [
                                 {
                                     type: "fermionic_annihilation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "number",
@@ -578,7 +578,7 @@ describe("operator module - commute with subsequent", () => {
                                 },
                                 {
                                     type: "fermionic_creation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "variable",
@@ -620,7 +620,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "fermionic_creation",
-                        value: "",
+                        value: "c",
                         children: [
                             {
                                 type: "variable",
@@ -661,7 +661,7 @@ describe("operator module - commute with subsequent", () => {
                 },
                 {
                     type: "fermionic_creation",
-                    value: "",
+                    value: "c",
                     children: [
                         {
                             type: "variable",
@@ -683,7 +683,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "bosonic_annihilation",
-                        value: "",
+                        value: "b",
                         children: [
                             {
                                 type: "number",
@@ -696,7 +696,7 @@ describe("operator module - commute with subsequent", () => {
                     },
                     {
                         type: "bosonic_annihilation",
-                        value: "",
+                        value: "b",
                         children: [
                             {
                                 type: "number",
@@ -726,7 +726,7 @@ describe("operator module - commute with subsequent", () => {
             children: [
                 {
                     type: "bosonic_annihilation",
-                    value: "",
+                    value: "b",
                     children: [
                         {
                             type: "number",
@@ -737,7 +737,7 @@ describe("operator module - commute with subsequent", () => {
                 },
                 {
                     type: "bosonic_annihilation",
-                    value: "",
+                    value: "b",
                     children: [
                         {
                             type: "number",
@@ -759,7 +759,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "bosonic_annihilation",
-                        value: "",
+                        value: "b",
                         children: [
                             {
                                 type: "number",
@@ -772,7 +772,7 @@ describe("operator module - commute with subsequent", () => {
                     },
                     {
                         type: "bosonic_creation",
-                        value: "",
+                        value: "b",
                         children: [
                             {
                                 type: "variable",
@@ -806,7 +806,7 @@ describe("operator module - commute with subsequent", () => {
                     children: [
                         {
                             type: "bosonic_creation",
-                            value: "",
+                            value: "b",
                             children: [
                                 {
                                     type: "variable",
@@ -817,7 +817,7 @@ describe("operator module - commute with subsequent", () => {
                         },
                         {
                             type: "bosonic_annihilation",
-                            value: "",
+                            value: "b",
                             children: [
                                 {
                                     type: "number",
@@ -857,7 +857,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "bosonic_annihilation",
-                        value: "",
+                        value: "b",
                         children: [
                             {
                                 type: "number",
@@ -898,7 +898,7 @@ describe("operator module - commute with subsequent", () => {
                 },
                 {
                     type: "bosonic_annihilation",
-                    value: "",
+                    value: "b",
                     children: [
                         {
                             type: "number",
@@ -920,7 +920,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "bosonic_creation",
-                        value: "",
+                        value: "b",
                         children: [
                             {
                                 type: "variable",
@@ -933,7 +933,7 @@ describe("operator module - commute with subsequent", () => {
                     },
                     {
                         type: "bosonic_creation",
-                        value: "",
+                        value: "b",
                         children: [
                             {
                                 type: "number",
@@ -963,7 +963,7 @@ describe("operator module - commute with subsequent", () => {
             children: [
                 {
                     type: "bosonic_creation",
-                    value: "",
+                    value: "b",
                     children: [
                         {
                             type: "number",
@@ -974,7 +974,7 @@ describe("operator module - commute with subsequent", () => {
                 },
                 {
                     type: "bosonic_creation",
-                    value: "",
+                    value: "b",
                     children: [
                         {
                             type: "variable",
@@ -996,7 +996,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "bosonic_creation",
-                        value: "",
+                        value: "b",
                         children: [
                             {
                                 type: "variable",
@@ -1009,7 +1009,7 @@ describe("operator module - commute with subsequent", () => {
                     },
                     {
                         type: "bosonic_annihilation",
-                        value: "",
+                        value: "b",
                         children: [
                             {
                                 type: "number",
@@ -1043,7 +1043,7 @@ describe("operator module - commute with subsequent", () => {
                     children: [
                         {
                             type: "bosonic_annihilation",
-                            value: "",
+                            value: "b",
                             children: [
                                 {
                                     type: "number",
@@ -1054,7 +1054,7 @@ describe("operator module - commute with subsequent", () => {
                         },
                         {
                             type: "bosonic_creation",
-                            value: "",
+                            value: "b",
                             children: [
                                 {
                                     type: "variable",
@@ -1094,7 +1094,7 @@ describe("operator module - commute with subsequent", () => {
                 children: [
                     {
                         type: "bosonic_creation",
-                        value: "",
+                        value: "b",
                         children: [
                             {
                                 type: "variable",
@@ -1135,7 +1135,7 @@ describe("operator module - commute with subsequent", () => {
                 },
                 {
                     type: "bosonic_creation",
-                    value: "",
+                    value: "b",
                     children: [
                         {
                             type: "variable",

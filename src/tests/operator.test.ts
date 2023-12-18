@@ -72,7 +72,7 @@ describe("operator module", () => {
     });
 
     test("Check QM Operators do not get implied multiplications rendered", () => {
-        const input = "a  2 bra(psi) ket(phi) braket(2 3) bracket(1 2 3) 2 3 c n c#(n-1) b 1 b# 3 2";
+        const input = 'a  2 bra(psi) ket(phi) braket(2 3) bracket(1 2 3) 2 3 fa("" n) f#("" (n-1)) ba("" 1) b#("" 3) 2';
         expect(() => operatorFromString(testConfig, input)).not.toThrow();
         expect(operatorFromString(testConfig, input).getExportFormulaString()).toBe(
             "\\left({a} \\cdot 2\\left\\lang\\Psi\\right\\vert\\left\\vert\\Phi\\right\\rang\\left\\lang2\\middle\\vert3\\right\\rang\\left\\lang1\\middle\\vert2\\middle\\vert3\\right\\rang2 \\cdot 3 \\cdot \\mathrm{c}_{{n}}\\mathrm{c}^\\dagger_{\\left({n}-1\\right)}\\mathrm{b}_{1}\\mathrm{b}^\\dagger_{3} \\cdot 2\\right)"

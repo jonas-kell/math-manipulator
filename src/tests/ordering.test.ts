@@ -75,7 +75,12 @@ describe("operator module - ordering of operators", () => {
     test("Correct detection of substrings and local ordering", () => {
         expect(
             JSON.parse(
-                (operatorFromString(testConfig, "c#(0)c#(2)c#(1)sum({} {} {})c(2)c(0)c(1)") as BracketedMultiplication)
+                (
+                    operatorFromString(
+                        testConfig,
+                        'fc("" 0)fc("" 2)fc("" 1)sum({} {} {})fa("" 2)fa("" 0)fa("" 1)'
+                    ) as BracketedMultiplication
+                )
                     .orderOperatorStrings()
                     .getCopyWithGottenRidOfUnnecessaryTerms()
                     .getSerializedStructure()
@@ -90,7 +95,7 @@ describe("operator module - ordering of operators", () => {
                     children: [
                         {
                             type: "fermionic_creation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -101,7 +106,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "fermionic_creation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -112,7 +117,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "fermionic_creation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -144,7 +149,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -155,7 +160,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -166,7 +171,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -184,7 +189,7 @@ describe("operator module - ordering of operators", () => {
     test("Complex ordering with different number of terms", () => {
         expect(
             JSON.parse(
-                (operatorFromString(testConfig, "c#(0)c#(2)c#(1)c(1)c(0)c(2)") as BracketedMultiplication)
+                (operatorFromString(testConfig, 'f#("" 0)f#("" 2)f#("" 1)fa("" 1)fa("" 0)fa("" 2)') as BracketedMultiplication)
                     .orderOperatorStrings()
                     .getCopyWithGottenRidOfUnnecessaryTerms()
                     .getSerializedStructure()
@@ -210,7 +215,7 @@ describe("operator module - ordering of operators", () => {
                     children: [
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -221,7 +226,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "fermionic_creation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -238,7 +243,7 @@ describe("operator module - ordering of operators", () => {
                     children: [
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -249,85 +254,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "fermionic_creation",
-                            value: "",
-                            children: [
-                                {
-                                    type: "number",
-                                    value: "1",
-                                    children: [],
-                                },
-                            ],
-                        },
-                    ],
-                },
-                {
-                    type: "bracketed_multiplication",
-                    value: "",
-                    children: [
-                        {
-                            type: "fermionic_annihilation",
-                            value: "",
-                            children: [
-                                {
-                                    type: "number",
-                                    value: "2",
-                                    children: [],
-                                },
-                            ],
-                        },
-                        {
-                            type: "fermionic_creation",
-                            value: "",
-                            children: [
-                                {
-                                    type: "number",
-                                    value: "2",
-                                    children: [],
-                                },
-                            ],
-                        },
-                    ],
-                },
-                {
-                    type: "bracketed_multiplication",
-                    value: "",
-                    children: [
-                        {
-                            type: "fermionic_annihilation",
-                            value: "",
-                            children: [
-                                {
-                                    type: "number",
-                                    value: "0",
-                                    children: [],
-                                },
-                            ],
-                        },
-                        {
-                            type: "fermionic_annihilation",
-                            value: "",
-                            children: [
-                                {
-                                    type: "number",
-                                    value: "1",
-                                    children: [],
-                                },
-                            ],
-                        },
-                        {
-                            type: "fermionic_creation",
-                            value: "",
-                            children: [
-                                {
-                                    type: "number",
-                                    value: "0",
-                                    children: [],
-                                },
-                            ],
-                        },
-                        {
-                            type: "fermionic_creation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -344,18 +271,7 @@ describe("operator module - ordering of operators", () => {
                     children: [
                         {
                             type: "fermionic_annihilation",
-                            value: "",
-                            children: [
-                                {
-                                    type: "number",
-                                    value: "0",
-                                    children: [],
-                                },
-                            ],
-                        },
-                        {
-                            type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -366,18 +282,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "fermionic_creation",
-                            value: "",
-                            children: [
-                                {
-                                    type: "number",
-                                    value: "0",
-                                    children: [],
-                                },
-                            ],
-                        },
-                        {
-                            type: "fermionic_creation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -394,7 +299,18 @@ describe("operator module - ordering of operators", () => {
                     children: [
                         {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_annihilation",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -404,8 +320,47 @@ describe("operator module - ordering of operators", () => {
                             ],
                         },
                         {
+                            type: "fermionic_creation",
+                            value: "c",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "c",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
                             type: "fermionic_annihilation",
-                            value: "",
+                            value: "c",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_annihilation",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -416,7 +371,57 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "fermionic_creation",
-                            value: "",
+                            value: "c",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "c",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "fermionic_annihilation",
+                            value: "c",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "1",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_annihilation",
+                            value: "c",
+                            children: [
+                                {
+                                    type: "number",
+                                    value: "2",
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: "fermionic_creation",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -427,7 +432,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "fermionic_creation",
-                            value: "",
+                            value: "c",
                             children: [
                                 {
                                     type: "number",
@@ -448,7 +453,7 @@ describe("operator module - ordering of operators", () => {
                             children: [
                                 {
                                     type: "fermionic_annihilation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "number",
@@ -459,7 +464,7 @@ describe("operator module - ordering of operators", () => {
                                 },
                                 {
                                     type: "fermionic_annihilation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "number",
@@ -470,7 +475,7 @@ describe("operator module - ordering of operators", () => {
                                 },
                                 {
                                     type: "fermionic_annihilation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "number",
@@ -481,7 +486,7 @@ describe("operator module - ordering of operators", () => {
                                 },
                                 {
                                     type: "fermionic_creation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "number",
@@ -492,7 +497,7 @@ describe("operator module - ordering of operators", () => {
                                 },
                                 {
                                     type: "fermionic_creation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "number",
@@ -503,7 +508,7 @@ describe("operator module - ordering of operators", () => {
                                 },
                                 {
                                     type: "fermionic_creation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "number",
@@ -523,7 +528,7 @@ describe("operator module - ordering of operators", () => {
     test("More orderable types and getting type ordering correct", () => {
         expect(
             JSON.parse(
-                (operatorFromString(testConfig, "pi pi 3 c#(1)c(n)b(2) 1") as BracketedMultiplication)
+                (operatorFromString(testConfig, 'pi pi 3 f#("" 1)fa("" n)ba("" 2) 1') as BracketedMultiplication)
                     .orderOperatorStrings()
                     .getCopyWithGottenRidOfUnnecessaryTerms()
                     .getSerializedStructure()
@@ -553,7 +558,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "bosonic_annihilation",
-                            value: "",
+                            value: "b",
                             children: [
                                 {
                                     type: "number",
@@ -605,7 +610,7 @@ describe("operator module - ordering of operators", () => {
                                 },
                                 {
                                     type: "fermionic_annihilation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "variable",
@@ -616,7 +621,7 @@ describe("operator module - ordering of operators", () => {
                                 },
                                 {
                                     type: "fermionic_creation",
-                                    value: "",
+                                    value: "c",
                                     children: [
                                         {
                                             type: "number",
@@ -627,7 +632,7 @@ describe("operator module - ordering of operators", () => {
                                 },
                                 {
                                     type: "bosonic_annihilation",
-                                    value: "",
+                                    value: "b",
                                     children: [
                                         {
                                             type: "number",
@@ -644,7 +649,7 @@ describe("operator module - ordering of operators", () => {
         });
         expect(
             JSON.parse(
-                (operatorFromString(testConfig, "x y b#(n)b(2)pi") as BracketedMultiplication)
+                (operatorFromString(testConfig, 'x y b#("" n)ba("" 2)pi') as BracketedMultiplication)
                     .orderOperatorStrings()
                     .getCopyWithGottenRidOfUnnecessaryTerms()
                     .getSerializedStructure()
@@ -711,7 +716,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "bosonic_annihilation",
-                            value: "",
+                            value: "b",
                             children: [
                                 {
                                     type: "number",
@@ -722,7 +727,7 @@ describe("operator module - ordering of operators", () => {
                         },
                         {
                             type: "bosonic_creation",
-                            value: "",
+                            value: "b",
                             children: [
                                 {
                                     type: "variable",
