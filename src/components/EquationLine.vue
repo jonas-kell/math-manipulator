@@ -375,6 +375,9 @@
                     iterator = iterator.getCopyWithReplaced(res.uuid, res.replacement, true);
                 });
 
+                // make sure it changes uuids for the next step
+                iterator = iterator.getCopyWithReplaced("", new EmptyArgument(props.config), false); // just get a copy. Nothing replaced
+
                 // only consider actions that change anything applicable
                 if (Operator.assertOperatorsEquivalent(props.operator, iterator, false)) {
                     res[name] = {

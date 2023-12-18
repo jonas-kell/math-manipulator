@@ -414,26 +414,38 @@ export abstract class Operator {
         }
     }
 
-    getCopyWithEquivalentOperatorsReplaced(find: Operator, replacement: Operator, skipUUID: string | null = null) {
-        // This operates on operator equivalence, so there is no reason to keep uuids ever
-        let copy = Operator.generateStructureRecursive(this.getOwnConfig(), this.getSerializedStructureRecursive(), true);
-        copy = copy.replaceEquivalentOperatorRecursive(find, replacement, skipUUID);
-        return Operator.generateStructureRecursive(this.getOwnConfig(), copy.getSerializedStructureRecursive(), false);
+    getCopyWithEquivalentOperatorsReplaced(
+        find: Operator,
+        replacement: Operator,
+        skipUUID: string | null = null,
+        keepUUIDs: boolean = false
+    ) {
+        let copy = Operator.generateStructureRecursive(this.getOwnConfig(), this.getSerializedStructureRecursive(), keepUUIDs);
+        copy = copy.replaceEquivalentOperatorRecursive(find, replacement, skipUUID, keepUUIDs);
+        return copy;
     }
 
     // ! modifies this._children !! Only call on sacrificial copies !!
-    private replaceEquivalentOperatorRecursive(find: Operator, replacement: Operator, skipUUID: string | null): Operator {
+    private replaceEquivalentOperatorRecursive(
+        find: Operator,
+        replacement: Operator,
+        skipUUID: string | null,
+        keepUUIDs: boolean = false
+    ): Operator {
         if (skipUUID != null && this.getUUID() == skipUUID) {
             return this;
         }
 
         if (Operator.assertOperatorsEquivalent(this, find)) {
-            // This operates on operator equivalence, so there is no reason to keep uuids ever
-            return Operator.generateStructureRecursive(this.getOwnConfig(), replacement.getSerializedStructureRecursive(), false);
+            return Operator.generateStructureRecursive(
+                this.getOwnConfig(),
+                replacement.getSerializedStructureRecursive(),
+                keepUUIDs
+            );
         } else {
             for (let i = 0; i < this._children.length; i++) {
                 const child = this._children[i];
-                const moddedChild = child.replaceEquivalentOperatorRecursive(find, replacement, skipUUID);
+                const moddedChild = child.replaceEquivalentOperatorRecursive(find, replacement, skipUUID, keepUUIDs);
 
                 this._children[i] = moddedChild;
             }
