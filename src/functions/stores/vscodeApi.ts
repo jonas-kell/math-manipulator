@@ -1,3 +1,5 @@
+import { PermanenceStorageModes, getPermanenceModeFromWindow } from "./../exporter";
+
 type ApiInstance = { postMessage: (obj: any) => {}; setState: (obj: any) => {}; getState(): any };
 
 let instance = null as ApiInstance | null;
@@ -7,7 +9,7 @@ export function vscodeApiInstance(): ApiInstance | null {
         return instance;
     }
     let vscode = undefined;
-    if ((process.env.VITE_PERMANENCE ?? "session") == "vscode") {
+    if (getPermanenceModeFromWindow() == PermanenceStorageModes.vscode) {
         vscode = (window as any).acquireVsCodeApi;
     }
     if (vscode != undefined) {
@@ -34,7 +36,7 @@ export function registerAtLeastOneUpdateReceivedHandler(handler: () => void) {
     atLeastOneUpdateReceivedHandler = handler;
 }
 
-if ((process.env.VITE_PERMANENCE ?? "session") == "vscode") {
+if (getPermanenceModeFromWindow() == PermanenceStorageModes.vscode) {
     window.addEventListener("message", (event) => {
         const message = event.data; // The json data that the extension sent
         switch (message.type) {

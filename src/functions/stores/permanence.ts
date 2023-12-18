@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { Operator, OperatorConfig } from "./../exporter";
+import { Operator, OperatorConfig, PermanenceStorageModes, getPermanenceModeFromWindow } from "./../exporter";
 import { v4 as uuidv4 } from "uuid";
 import { vscodeApiInstance, registerUpdateHandler, registerAtLeastOneUpdateReceivedHandler } from "./vscodeApi";
 import { ref } from "vue";
@@ -66,17 +66,12 @@ export interface ExportablePersistentMacrosStoreStorage {
     macros: ExportablePersistentMacros;
 }
 
-// source/target modes
-export enum PermanenceStorageModes {
-    session = "session",
-    vscode = "vscode",
-    memory = "memory",
-}
-
 export const usePermanenceStore = defineStore("permanence", () => {
     const permanenceHasUpdatedHandlers = ref([] as (() => void)[]);
-    const mode = ref(PermanenceStorageModes[(process.env.VITE_PERMANENCE ?? "session") as PermanenceStorageModes]);
     const memoryStorage = ref({} as { [key: string]: string });
+
+    // permanence mode
+    const mode = ref(getPermanenceModeFromWindow());
 
     // editor interface handlers
     const storageReady = ref(mode.value == PermanenceStorageModes.vscode ? false : true);

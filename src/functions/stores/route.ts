@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
-const Modes = ["main", "help", "empty", "stored"] as ["main", "help", "empty", "stored"];
+const Modes = ["main", "help", "empty", "stored", "router"] as ["main", "help", "empty", "stored", "router"];
 type ModesType = (typeof Modes)[number];
 
 export const useRouteStore = defineStore("route", () => {
