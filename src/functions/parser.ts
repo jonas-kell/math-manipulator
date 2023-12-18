@@ -545,6 +545,9 @@ function insertImpliedOperationsRecursive(
                 secondNeedsAddition = true;
             }
 
+            // TODO f#("" n-1) doesn't work, because this requires insertion of ; and + (do not know if it is worth fixing this) --- f#("" (n-1)) and f#("" n+-1) work ----
+            // Precedence must stay structural before multiplication and multiplication before addition. But in structural allowed mode, we may do addition before strucutral (I think it doesn't break stuff)
+
             // case: we are in a default mode. Here default assumption takes place
             if (
                 first &&
