@@ -43,6 +43,7 @@
     const childLineUUID = ref(uuidv4());
     const operatorParserUUID = ref(uuidv4());
     const variableNameInputUUID = ref(uuidv4());
+    const exportImportStringInputUUID = ref(uuidv4());
     const katexInput = computed(() => {
         return props.operator.getFormulaString();
     });
@@ -147,6 +148,7 @@
     enum MODES {
         NONE = "none",
         REPLACEMENT = "replacement",
+        EXPORT_REPLACEMENT = "replacement_export",
         VARIABLE_DEFINITION = "var_def",
         SHOW_LATEX = "show_latex",
         SHOW_STRUCTURE = "show_structure",
@@ -229,6 +231,57 @@
                 outputOperator.value = props.operator.getCopyWithReplaced(
                     selectionUUID.value,
                     replaceWithOperator.value as Operator
+                );
+            }
+        }
+    };
+    const replaceWithExportButtonAction = () => {
+        resetControlPanel();
+        mode.value = MODES.EXPORT_REPLACEMENT;
+        replaceWithExportCallback();
+    };
+    const replaceWithExportOperatorString = ref("");
+    watch(replaceWithExportOperatorString, () => {
+        replaceWithExportCallback();
+    });
+    const skipReplaceWithExportEffect = ref(false);
+    const replaceWithExportCallback = () => {
+        if (skipReplaceWithExportEffect.value) {
+            skipReplaceWithExportEffect.value = false;
+        } else {
+            // real implementation >>
+            let replaceWithExportOperator = null as Operator | null;
+
+            const stringInput = replaceWithExportOperatorString.value;
+            if (stringInput != null && stringInput != undefined && stringInput != "") {
+                let importedStuff: any = undefined;
+                try {
+                    importedStuff = JSON.parse(stringInput);
+                } catch (error) {
+                    console.warn("Could not parse json input", error);
+                }
+
+                if (importedStuff !== undefined) {
+                    let importedOperator = null as Operator | null;
+
+                    try {
+                        importedOperator = Operator.generateStructure(props.config, JSON.stringify(importedStuff), false);
+                    } catch (error) {
+                        console.warn("Could not import operator", error);
+                    }
+
+                    if (importedOperator !== null) {
+                        replaceWithExportOperator = importedOperator;
+                    }
+                }
+            }
+
+            if (replaceWithExportOperator == null) {
+                outputOperator.value = props.operator.getCopyWithReplaced(selectionUUID.value, new EmptyArgument(props.config));
+            } else {
+                outputOperator.value = props.operator.getCopyWithReplaced(
+                    selectionUUID.value,
+                    replaceWithExportOperator as Operator
                 );
             }
         }
@@ -426,6 +479,21 @@
         outputOperator.value = selectedOperator.value;
         mode.value = MODES.SHOW_STRUCTURE_WITH_UUIDS;
     };
+    const operatorExportToClipboardAction = () => {
+        const op = selectedOperator.value;
+        if (op != null) {
+            const text = op.getSerializedStructure(false);
+
+            navigator.clipboard
+                .writeText(text)
+                .then(() => {
+                    console.log("Operator export copied to clipboard");
+                })
+                .catch((err) => {
+                    console.error("Could not copy text: ", err);
+                });
+        }
+    };
 
     // STATE AND IMPORT/EXPORT
     const loadingComplete = ref(false);
@@ -438,6 +506,7 @@
             additionalSelectionUUIDs: additionalSelectionUUIDs.value,
             operatorParserUUID: operatorParserUUID.value,
             variableNameInputUUID: variableNameInputUUID.value,
+            exportImportStringInputUUID: exportImportStringInputUUID.value,
             mode: String(mode.value),
         };
     });
@@ -461,6 +530,7 @@
             childLineUUID.value = loaded.childUUID;
             operatorParserUUID.value = loaded.operatorParserUUID;
             variableNameInputUUID.value = loaded.variableNameInputUUID;
+            exportImportStringInputUUID.value = loaded.exportImportStringInputUUID;
             selectOperator(loaded.selectionUUID);
             selectAdditionalOperator(loaded.additionalSelectionUUIDs);
             outputOperator.value = loaded.operator;
@@ -530,6 +600,7 @@
             </button>
             <div style="margin-bottom: -0.5em; width: 100%">&nbsp;</div>
             <button @click="replaceButtonAction" style="margin-right: 0.2em">Replace</button>
+            <button @click="replaceWithExportButtonAction" style="margin-right: 0.2em">Replace (With Export)</button>
             <button @click="variableDefinitionButtonAction" style="margin-right: 0.2em">Define Variable</button>
             <button
                 v-for="(mod, name) in actionsHaveAnyEffectAndTheirResults"
@@ -546,6 +617,9 @@
             </button>
             <button @click="showExportStructureWithUUIDsButtonAction" style="margin-right: 0.2em; float: right">
                 Show Export Structure (UUIDs)
+            </button>
+            <button @click="operatorExportToClipboardAction" style="margin-right: 0.2em; float: right">
+                Selected Export to Clipboard
             </button>
             <div style="margin-bottom: 0.5em; width: 100%">&nbsp;</div>
             <InputToOperatorParser
@@ -567,6 +641,14 @@
                 :type="'input'"
                 :uuid="variableNameInputUUID"
                 @loading-value="() => (skipVariableNameEffect = true)"
+            />
+            <PermanenceInterfacingInput
+                v-show="mode == MODES.EXPORT_REPLACEMENT"
+                v-model="replaceWithExportOperatorString"
+                style="margin-top: 0.5em; width: 100%"
+                :type="'textarea'"
+                :uuid="exportImportStringInputUUID"
+                @loading-value="() => (skipReplaceWithExportEffect = true)"
             />
         </div>
     </template>

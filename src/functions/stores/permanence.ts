@@ -12,6 +12,7 @@ export interface PersistentLineStorage {
     additionalSelectionUUIDs: string[];
     operatorParserUUID: string;
     variableNameInputUUID: string;
+    exportImportStringInputUUID: string;
     mode: string;
 }
 interface ExportablePersistedLineStorage {
@@ -21,6 +22,7 @@ interface ExportablePersistedLineStorage {
     additionalSelectionUUIDs: string[];
     operatorParserUUID: string;
     variableNameInputUUID: string;
+    exportImportStringInputUUID: string;
     mode: string;
 }
 
@@ -101,6 +103,7 @@ export const usePermanenceStore = defineStore("permanence", () => {
             additionalSelectionUUIDs: values.additionalSelectionUUIDs,
             operatorParserUUID: values.operatorParserUUID,
             variableNameInputUUID: values.variableNameInputUUID,
+            exportImportStringInputUUID: values.exportImportStringInputUUID,
             mode: values.mode,
         };
         abstractStoreImplementationSet(uuid, JSON.stringify(toStore));
@@ -133,6 +136,10 @@ export const usePermanenceStore = defineStore("permanence", () => {
                 variableNameInputUUID:
                     loadedObject.variableNameInputUUID != null && loadedObject.variableNameInputUUID != undefined
                         ? loadedObject.variableNameInputUUID
+                        : uuidv4(),
+                exportImportStringInputUUID:
+                    loadedObject.exportImportStringInputUUID != null && loadedObject.exportImportStringInputUUID != undefined
+                        ? loadedObject.exportImportStringInputUUID
                         : uuidv4(),
                 mode: loadedObject.mode != null && loadedObject.mode != undefined ? loadedObject.mode : uuidv4(),
             } as PersistentLineStorage;
