@@ -2197,6 +2197,34 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
             return [...res, selfRes]; // delta replaces itself ONLY at the end
         }
     }
+
+    SplitIntoProductMODIFICATION(): Operator {
+        const firstArgument = this._children[0];
+        const secondArgument = this._children[1];
+
+        if (firstArgument instanceof StructuralContainer) {
+            if (secondArgument instanceof StructuralContainer) {
+                let firstChildren = firstArgument.getChildren();
+                let secondChildren = secondArgument.getChildren();
+
+                if (firstChildren.length == secondChildren.length) {
+                    // can now split
+                    let deltas: KroneckerDelta[] = [];
+
+                    for (let i = 0; i < firstChildren.length; i++) {
+                        const firstChild = firstChildren[i];
+                        const secondChild = secondChildren[i];
+
+                        deltas.push(new KroneckerDelta(this.getOwnConfig(), firstChild, secondChild));
+                    }
+
+                    return constructContainerOrFirstChild(this.getOwnConfig(), OperatorType.BracketedMultiplication, deltas);
+                }
+            }
+        }
+
+        return this;
+    }
 }
 
 function isBasicallyZero(num: number): boolean {
