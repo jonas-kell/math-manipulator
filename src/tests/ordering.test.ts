@@ -659,37 +659,43 @@ describe("operator module - ordering of operators", () => {
             value: "",
             children: [
                 {
-                    type: "bracketed_multiplication",
+                    type: "negation",
                     value: "",
                     children: [
                         {
-                            type: "constant_pi",
-                            value: "",
-                            children: [],
-                        },
-                        {
-                            type: "variable",
-                            value: "x",
-                            children: [],
-                        },
-                        {
-                            type: "variable",
-                            value: "y",
-                            children: [],
-                        },
-                        {
-                            type: "kronecker_delta",
+                            type: "bracketed_multiplication",
                             value: "",
                             children: [
                                 {
-                                    type: "variable",
-                                    value: "n",
+                                    type: "constant_pi",
+                                    value: "",
                                     children: [],
                                 },
                                 {
-                                    type: "number",
-                                    value: "2",
+                                    type: "variable",
+                                    value: "x",
                                     children: [],
+                                },
+                                {
+                                    type: "variable",
+                                    value: "y",
+                                    children: [],
+                                },
+                                {
+                                    type: "kronecker_delta",
+                                    value: "",
+                                    children: [
+                                        {
+                                            type: "variable",
+                                            value: "n",
+                                            children: [],
+                                        },
+                                        {
+                                            type: "number",
+                                            value: "2",
+                                            children: [],
+                                        },
+                                    ],
                                 },
                             ],
                         },

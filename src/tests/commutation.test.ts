@@ -1066,18 +1066,24 @@ describe("operator module - commute with subsequent", () => {
                     ],
                 },
                 {
-                    type: "kronecker_delta",
+                    type: "negation",
                     value: "",
                     children: [
                         {
-                            type: "variable",
-                            value: "n",
-                            children: [],
-                        },
-                        {
-                            type: "number",
-                            value: "0",
-                            children: [],
+                            type: "kronecker_delta",
+                            value: "",
+                            children: [
+                                {
+                                    type: "variable",
+                                    value: "n",
+                                    children: [],
+                                },
+                                {
+                                    type: "number",
+                                    value: "0",
+                                    children: [],
+                                },
+                            ],
                         },
                     ],
                 },
