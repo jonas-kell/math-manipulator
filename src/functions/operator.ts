@@ -14,6 +14,7 @@ import {
     Variable,
     ComplexOperatorConstruct,
     OperatorConfig,
+    PeerAlterationResult,
 } from "./exporter";
 
 export interface ExportOperatorContent {
@@ -627,5 +628,54 @@ export abstract class Operator {
         }
 
         return op;
+    }
+
+    /**
+     * General PEERALTERATION for all operators
+     *
+     * @param additionalSelectedOperators
+     */
+    renameSwapImplementation(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        if (additionalSelectedOperators.length != 2) {
+            return [];
+        }
+
+        const swapOne = additionalSelectedOperators[0];
+        const swapTwo = additionalSelectedOperators[1];
+
+        // getClone of Self to be able to modify _children
+        let workOp = Operator.generateStructureRecursive(this.getOwnConfig(), this.getSerializedStructureRecursive(), false);
+
+        workOp.renameSwapImplementationRecursive(swapOne, swapTwo);
+
+        if (Operator.assertOperatorsEquivalent(workOp, this, false)) {
+            return [];
+        } else {
+            return [
+                {
+                    replacement: workOp,
+                    uuid: this.getUUID(),
+                },
+            ];
+        }
+    }
+
+    /**
+     * MODIFIES _children!!! only call on sacrificial copies!!
+     */
+    private renameSwapImplementationRecursive(a: Operator, b: Operator) {
+        let children = this._children;
+
+        for (let i = 0; i < children.length; i++) {
+            const compareChild = children[i];
+
+            if (Operator.assertOperatorsEquivalent(compareChild, a, false)) {
+                children[i] = b;
+            } else if (Operator.assertOperatorsEquivalent(compareChild, b, false)) {
+                children[i] = a;
+            } else {
+                children[i].renameSwapImplementationRecursive(a, b);
+            }
+        }
     }
 }
