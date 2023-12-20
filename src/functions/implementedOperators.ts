@@ -2121,7 +2121,7 @@ export class BosonicCreationOperator extends QMOperatorWithOneArgument {
         if (commuteWith instanceof BosonicAnnihilationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
-                [false, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]],
+                [true, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]], // !! here delta has minus
             ];
         }
 
