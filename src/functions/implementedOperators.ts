@@ -815,6 +815,51 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             false
         );
     }
+
+    GroupEqualElementsMODIFICATION(): Operator {
+        const children = this._children;
+        let newChildrenGroups = [] as {
+            op: Operator;
+            count: number;
+        }[];
+
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+
+            let found = false;
+            for (let j = 0; j < newChildrenGroups.length; j++) {
+                const comparison = newChildrenGroups[j];
+
+                if (Operator.assertOperatorsEquivalent(child, comparison.op, false)) {
+                    newChildrenGroups[j].count += 1;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                newChildrenGroups.push({
+                    op: child,
+                    count: 1,
+                });
+            }
+        }
+
+        return constructContainerOrFirstChild(
+            this.getOwnConfig(),
+            OperatorType.BracketedSum,
+            newChildrenGroups.map((structureGroup): Operator => {
+                if (structureGroup.count == 1) {
+                    return structureGroup.op;
+                } else {
+                    return new BracketedMultiplication(this.getOwnConfig(), [
+                        new Numerical(this.getOwnConfig(), structureGroup.count),
+                        structureGroup.op,
+                    ]);
+                }
+            })
+        );
+    }
 }
 
 function sumSortFunction(a: ExportOperatorContent, b: ExportOperatorContent, topLevel: boolean): number {
