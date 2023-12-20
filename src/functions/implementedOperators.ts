@@ -1568,7 +1568,7 @@ export class Variable extends Operator implements OrderableOperator {
     }
 }
 
-export class DefinedMacro extends Operator {
+export class DefinedMacro extends Operator implements OrderableOperator {
     private _trigger: string;
     private static ARG_REGEX = /#(\d+)/g;
 
@@ -1635,6 +1635,22 @@ export class DefinedMacro extends Operator {
 
     getChildren(): Operator[] {
         return this._children;
+    }
+
+    orderPriorityString() {
+        return (
+            this._trigger +
+            this.getChildren()
+                .map((child): string => {
+                    return child.getSerializedStructure(false);
+                })
+                .join("")
+        );
+    }
+
+    // We need to assume, that a DefinedMacro if instantiated is basically just latex and has no special commutation properties
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
+        return [[false, [commuteWith, this]]];
     }
 }
 
