@@ -76,6 +76,7 @@ export enum OperatorType {
     Faculty = "faculty",
     Percent = "percent",
     DefinedMacro = "defined_macro",
+    DefinedMacroArgument = "defined_macro_argument", // should never be stored theoretically
 }
 
 const MAX_CHILDREN = 99999999;
@@ -129,6 +130,7 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Faculty]: 1,
     [OperatorType.Percent]: 1,
     [OperatorType.DefinedMacro]: MAX_CHILDREN,
+    [OperatorType.DefinedMacroArgument]: 1,
 };
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
@@ -181,4 +183,5 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Faculty]: 1,
     [OperatorType.Percent]: 1,
     [OperatorType.DefinedMacro]: 0,
+    [OperatorType.DefinedMacroArgument]: 1,
 };

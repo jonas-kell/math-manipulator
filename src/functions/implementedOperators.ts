@@ -108,7 +108,18 @@ export function operatorConstructorSwitch(
         case OperatorType.AntiCommutator:
             return new AntiCommutator(config, childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.DefinedMacro:
-            return new DefinedMacro(config, value, childrenReconstructed);
+            const [canBeParsed, operatorFromMacro] = DefinedMacro.canBeParsedToNonMacroOperator(
+                config,
+                value,
+                childrenReconstructed
+            );
+            if (canBeParsed) {
+                return operatorFromMacro;
+            } else {
+                return new DefinedMacro(config, value, childrenReconstructed);
+            }
+        case OperatorType.DefinedMacroArgument:
+            return new DefinedMacroArgument(config, childrenReconstructed[0]);
         default:
             throw Error(`type ${type} could not be parsed to an implemented Operator`);
     }
@@ -1629,6 +1640,50 @@ export class DefinedMacro extends Operator implements OrderableOperator {
         return useMacrosStore().getMacroByUUID(config, macroUUID).output;
     }
 
+    /**
+     * @returns [canBeParsed, OperatorIfParsed]
+     */
+    static canBeParsedToNonMacroOperator(config: OperatorConfig, trigger: string, children: Operator[]): [boolean, Operator] {
+        const res = DefinedMacro.parseToNonMacroOperator(config, trigger, children);
+
+        if (res === null) {
+            return [false, new EmptyArgument(config)];
+        } else {
+            return [true, res];
+        }
+    }
+
+    static parseToNonMacroOperator(config: OperatorConfig, trigger: string, children: Operator[]): Operator | null {
+        let res = null as Operator | null;
+
+        // TODO decide if should even be parsed (some macros make maybe more sense to be kept simply updatable)
+        // probably if contains latex
+
+        const nrArgs = DefinedMacro.getNumberOfIntendedChildren(config, trigger);
+        let preparedInput = DefinedMacro.getOutputString(config, trigger);
+        for (let i = 0; i < nrArgs; i++) {
+            const searchString = `#${String(i)}`;
+            const replString = `${DefinedMacroArgument.DEFINED_MACRO_ARGUMENT_SIGN_SYMBOL}(${String(i)})`;
+            preparedInput = preparedInput.replaceAll(searchString, replString);
+        }
+
+        res = useMacrosStore().tryParsingOperator(config, preparedInput);
+
+        // insert copies of children
+        if (children.length > 0 && res != null) {
+            for (let i = 0; i < nrArgs && i < children.length; i++) {
+                res = res.getCopyWithEquivalentOperatorsReplaced(
+                    new DefinedMacroArgument(config, new Numerical(config, i)),
+                    children[i],
+                    null,
+                    false
+                );
+            }
+        }
+
+        return res;
+    }
+
     getOwnOutputString(): string {
         return DefinedMacro.getOutputString(this.getOwnConfig(), this._trigger);
     }
@@ -1651,6 +1706,18 @@ export class DefinedMacro extends Operator implements OrderableOperator {
     // We need to assume, that a DefinedMacro if instantiated is basically just latex and has no special commutation properties
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
+    }
+}
+
+export class DefinedMacroArgument extends Operator {
+    public static DEFINED_MACRO_ARGUMENT_SIGN_SYMBOL = "$DMASS$";
+
+    constructor(config: OperatorConfig, argument: Operator) {
+        if (!(argument instanceof Numerical)) {
+            throw Error("Can only create DefinedMacroArgument with Numerical argument");
+        }
+
+        super(config, OperatorType.DefinedMacroArgument, "ARGUMENT", "", "", [argument], "");
     }
 }
 

@@ -7,6 +7,7 @@ import {
     OperatorConfig,
     useMacrosStore,
     DefinedMacro,
+    DefinedMacroArgument,
 } from "./exporter";
 
 /**
@@ -127,6 +128,7 @@ const AllowedFunctionKeywordMapping = {
     complex: OperatorType.ComplexOperatorConstruct,
     comm: OperatorType.Commutator,
     acomm: OperatorType.AntiCommutator,
+    [DefinedMacroArgument.DEFINED_MACRO_ARGUMENT_SIGN_SYMBOL]: OperatorType.DefinedMacroArgument,
 } as { [key: string]: OperatorType };
 const functionsWithArgumentsConsideredStructural = [
     // only makes a difference for functions that take more than exactly one argument

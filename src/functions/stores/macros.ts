@@ -7,6 +7,8 @@ import {
     wordsParserConsidersReservedIfWhitespaceSurrounded,
     ExportablePersistentMacrosStoreStorage,
     useVariablesStore,
+    operatorFromString,
+    Operator,
 } from "./../exporter";
 import { v4 as uuidv4 } from "uuid";
 import { ref } from "vue";
@@ -174,6 +176,25 @@ export const useMacrosStore = defineStore("macros", () => {
 
         return triggers;
     }
+    /**
+     * Access to the "operatorFromString" function, where a direct import is impossible, because Circular imports on compile time in typescript :shrug:
+     *
+     * But does try-catch for you
+     *
+     * @param config
+     * @param trialString
+     */
+    function tryParsingOperator(config: OperatorConfig, trialString: string): Operator | null {
+        let res = null as Operator | null;
+
+        try {
+            res = operatorFromString(config, trialString);
+        } catch (error) {
+            // is expected to fail often if not intended to be parsed because brackets and latex default stuff
+        }
+
+        return res;
+    }
 
     return {
         lastUpdate,
@@ -185,5 +206,6 @@ export const useMacrosStore = defineStore("macros", () => {
         setTriggerForMacro,
         availableMacroUUIDs,
         availableAllowedMacroTriggers,
+        tryParsingOperator,
     };
 });
