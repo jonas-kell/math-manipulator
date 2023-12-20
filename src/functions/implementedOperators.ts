@@ -231,6 +231,7 @@ function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOpera
         ComplexOperatorConstruct,
         Constant,
         Variable,
+        DefinedMacro,
         FermionicAnnihilationOperator,
         FermionicCreationOperator,
         BosonicAnnihilationOperator,
