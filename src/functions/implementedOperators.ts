@@ -1645,19 +1645,23 @@ export class DefinedMacro extends Operator implements OrderableOperator {
      */
     static canBeParsedToNonMacroOperator(config: OperatorConfig, trigger: string, children: Operator[]): [boolean, Operator] {
         const res = DefinedMacro.parseToNonMacroOperator(config, trigger, children);
+        const falseRes: [boolean, Operator] = [false, new EmptyArgument(config)];
 
         if (res === null) {
-            return [false, new EmptyArgument(config)];
+            return falseRes;
         } else {
-            return [true, res];
+            // The exact sense of macros is in the first place, to interleave custom raw latex with arguments
+            // Therefore if the parsed result contains ANY raw latex, there is no guarantee there is no argument between latex -> keep as macro
+            if (res.containsRawLatex()) {
+                return falseRes;
+            } else {
+                return [true, res];
+            }
         }
     }
 
     static parseToNonMacroOperator(config: OperatorConfig, trigger: string, children: Operator[]): Operator | null {
         let res = null as Operator | null;
-
-        // TODO decide if should even be parsed (some macros make maybe more sense to be kept simply updatable)
-        // probably if contains latex
 
         const nrArgs = DefinedMacro.getNumberOfIntendedChildren(config, trigger);
         let preparedInput = DefinedMacro.getOutputString(config, trigger);

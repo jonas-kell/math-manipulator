@@ -678,4 +678,19 @@ export abstract class Operator {
             }
         }
     }
+
+    public containsRawLatex(): boolean {
+        if (this._type == OperatorType.RawLatex) {
+            return true;
+        }
+
+        for (let i = 0; i < this._children.length; i++) {
+            const child = this._children[i];
+            if (child.containsRawLatex()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
