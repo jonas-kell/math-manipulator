@@ -415,9 +415,13 @@
             // multi-replace-modifications (takes additionalOperators)
             [
                 "renameSwapImplementation",
+                "variableAllEqualImplementation",
                 ...Object.getOwnPropertyNames(Object.getPrototypeOf(selOp)).filter((name) => name.includes("PEERALTERATION")),
             ].forEach((action) => {
-                const name = action.replace("PEERALTERATION", "").replace("renameSwapImplementation", "Rename with Swap");
+                const name = action
+                    .replace("PEERALTERATION", "")
+                    .replace("renameSwapImplementation", "Rename with Swap")
+                    .replace("variableAllEqualImplementation", "Pack same Variables");
 
                 startTimer();
 

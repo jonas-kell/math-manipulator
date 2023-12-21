@@ -679,6 +679,41 @@ export abstract class Operator {
         }
     }
 
+    /**
+     * General PEERALTERATION for all operators
+     *
+     * @param additionalSelectedOperators
+     */
+    variableAllEqualImplementation(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        if (additionalSelectedOperators.length != 1) {
+            return [];
+        }
+
+        const variable = additionalSelectedOperators[0];
+
+        if (!(variable instanceof Variable)) {
+            return [];
+        }
+
+        const variableContent = variable.getVariableContent();
+
+        // getClone of Self to be able to modify _children
+        let workOp = Operator.generateStructureRecursive(this.getOwnConfig(), this.getSerializedStructureRecursive(), false);
+
+        workOp = workOp.getCopyWithEquivalentOperatorsReplaced(variableContent, variable, null, false);
+
+        if (Operator.assertOperatorsEquivalent(workOp, this, false)) {
+            return [];
+        } else {
+            return [
+                {
+                    replacement: workOp,
+                    uuid: this.getUUID(),
+                },
+            ];
+        }
+    }
+
     public containsRawLatex(): boolean {
         if (this._type == OperatorType.RawLatex) {
             return true;

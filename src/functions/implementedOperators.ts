@@ -1578,6 +1578,16 @@ export class Variable extends Operator implements OrderableOperator {
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         return [[false, [commuteWith, this]]];
     }
+
+    getVariableContent() {
+        const stored = useVariablesStore().getVariableContent(this.getOwnConfig(), this._value);
+
+        if (stored && stored != null) {
+            return stored;
+        }
+
+        return new EmptyArgument(this.getOwnConfig());
+    }
 }
 
 export class DefinedMacro extends Operator implements OrderableOperator {
