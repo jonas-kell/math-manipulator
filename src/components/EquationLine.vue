@@ -398,10 +398,12 @@
                 "getCopyWithGottenRidOfUnnecessaryTerms", // Modification style Method available for all instances of Operator
                 ...Object.getOwnPropertyNames(Object.getPrototypeOf(selOp)).filter((name) => name.includes("MODIFICATION")),
             ].forEach((action) => {
-                const name = action
-                    .replace("MODIFICATION", "")
-                    .replace("getCopyWithNumbersFolded", "Fold Numbers")
-                    .replace("getCopyWithGottenRidOfUnnecessaryTerms", "Cleanup Terms");
+                const name = stringifyCamelCase(
+                    action
+                        .replace("MODIFICATION", "")
+                        .replace("getCopyWithNumbersFolded", "Fold Numbers")
+                        .replace("getCopyWithGottenRidOfUnnecessaryTerms", "Cleanup Terms")
+                );
 
                 startTimer();
 
@@ -432,11 +434,13 @@
                 "replaceAllEqualImplementation",
                 ...Object.getOwnPropertyNames(Object.getPrototypeOf(selOp)).filter((name) => name.includes("PEERALTERATION")),
             ].forEach((action) => {
-                const name = action
-                    .replace("PEERALTERATION", "")
-                    .replace("renameSwapImplementation", "Rename with Swap")
-                    .replace("variableAllEqualImplementation", "Pack same Variables")
-                    .replace("replaceAllEqualImplementation", "Replace all with");
+                const name = stringifyCamelCase(
+                    action
+                        .replace("PEERALTERATION", "")
+                        .replace("renameSwapImplementation", "Rename with Swap")
+                        .replace("variableAllEqualImplementation", "Pack same Variables")
+                        .replace("replaceAllEqualImplementation", "Replace all with")
+                );
 
                 startTimer();
 
@@ -474,6 +478,16 @@
 
         return res;
     });
+    function stringifyCamelCase(word: string): string {
+        const words = word.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+        const capitalizedWords = words
+            .split(" ")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+
+        return capitalizedWords;
+    }
     const modificationAction = (actionEffect: EffectMeasure) => {
         resetControlPanel();
 
