@@ -97,6 +97,10 @@ export abstract class Operator {
         return this._uuid;
     }
 
+    childrenAccessForPeerAlterationRecursion() {
+        return this._children;
+    }
+
     static UUIDFromUUIDRef(UUIDRef: string) {
         return UUIDRef.substring(4);
     }

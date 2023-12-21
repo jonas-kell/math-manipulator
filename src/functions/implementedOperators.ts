@@ -2370,6 +2370,33 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
         }
     }
 
+    SplitAllDeltasIntoProductsPEERALTERATION(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        let res = [] as PeerAlterationResult;
+
+        additionalSelectedOperators.forEach((operator) => {
+            res.push(...KroneckerDelta.splitAllDeltasIntoProductsRecursive(operator));
+        });
+
+        return res;
+    }
+
+    private static splitAllDeltasIntoProductsRecursive(op: Operator): PeerAlterationResult {
+        let res = [] as PeerAlterationResult;
+
+        if (op instanceof KroneckerDelta) {
+            res.push({
+                uuid: op.getUUID(),
+                replacement: op.SplitIntoProductMODIFICATION(),
+            });
+        } else {
+            op.childrenAccessForPeerAlterationRecursion().forEach((child) => {
+                res.push(...KroneckerDelta.splitAllDeltasIntoProductsRecursive(child));
+            });
+        }
+
+        return res;
+    }
+
     SplitIntoProductMODIFICATION(): Operator {
         const firstArgument = this._children[0];
         const secondArgument = this._children[1];
