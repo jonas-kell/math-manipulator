@@ -2397,6 +2397,91 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
         return res;
     }
 
+    ExecEquivDeltasOverParentFirstArgumentPEERALTERATION(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        return KroneckerDelta.execEquivalentDeltasImplementation(
+            this._children[0],
+            this._children[1],
+            additionalSelectedOperators
+        );
+    }
+
+    ExecEquivDeltasOverParentSecondArgumentPEERALTERATION(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        return KroneckerDelta.execEquivalentDeltasImplementation(
+            this._children[1],
+            this._children[0],
+            additionalSelectedOperators
+        );
+    }
+
+    private static execEquivalentDeltasImplementation(
+        argument: Operator,
+        replacement: Operator,
+        additionalSelectedOperators: Operator[]
+    ): PeerAlterationResult {
+        let res = [] as PeerAlterationResult;
+
+        additionalSelectedOperators.forEach((operator) => {
+            const firstDelta = new KroneckerDelta(operator.getOwnConfig(), argument, replacement);
+            const secondDelta = new KroneckerDelta(operator.getOwnConfig(), replacement, argument);
+
+            res.push(
+                ...KroneckerDelta.execEquivalentDeltasImplementationRecursive(
+                    operator,
+                    firstDelta,
+                    secondDelta,
+                    argument,
+                    replacement
+                )
+            );
+        });
+
+        return res;
+    }
+
+    private static execEquivalentDeltasImplementationRecursive(
+        operator: Operator,
+        optionOne: KroneckerDelta,
+        optionTwo: KroneckerDelta,
+        argument: Operator,
+        replacement: Operator
+    ): PeerAlterationResult {
+        let res = [] as PeerAlterationResult;
+
+        let deltaInChildren = null as KroneckerDelta | null;
+        let first: boolean = false;
+        operator.childrenAccessForPeerAlterationRecursion().forEach((child) => {
+            if (Operator.assertOperatorsEquivalent(optionOne, child)) {
+                deltaInChildren = child as KroneckerDelta;
+                first = true;
+            }
+            if (Operator.assertOperatorsEquivalent(optionTwo, child)) {
+                deltaInChildren = child as KroneckerDelta;
+                first = false;
+            }
+        });
+        if (deltaInChildren != null) {
+            if (first) {
+                res.push(...deltaInChildren.SumOverFirstArgumentPEERALTERATION([operator]));
+            } else {
+                res.push(...deltaInChildren.SumOverSecondArgumentPEERALTERATION([operator]));
+            }
+        } else {
+            operator.childrenAccessForPeerAlterationRecursion().forEach((child) => {
+                res.push(
+                    ...KroneckerDelta.execEquivalentDeltasImplementationRecursive(
+                        child,
+                        optionOne,
+                        optionTwo,
+                        argument,
+                        replacement
+                    )
+                );
+            });
+        }
+
+        return res;
+    }
+
     SplitIntoProductMODIFICATION(): Operator {
         const firstArgument = this._children[0];
         const secondArgument = this._children[1];
