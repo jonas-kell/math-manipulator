@@ -872,6 +872,26 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             })
         );
     }
+
+    OrderAllSummandsMODIFICATION(): Operator {
+        let newChildren = [] as Operator[];
+
+        for (let i = 0; i < this.getChildren().length; i++) {
+            const child = this.getChildren()[i];
+
+            if (child instanceof BracketedMultiplication) {
+                newChildren.push(child.orderOperatorStrings());
+            } else {
+                newChildren.push(child);
+            }
+        }
+
+        return constructContainerOrFirstChild(
+            this.getOwnConfig(),
+            OperatorType.BracketedSum,
+            newChildren
+        ).getCopyWithGottenRidOfUnnecessaryTerms();
+    }
 }
 
 function sumSortFunction(a: ExportOperatorContent, b: ExportOperatorContent, topLevel: boolean): number {
