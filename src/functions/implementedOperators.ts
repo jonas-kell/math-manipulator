@@ -873,7 +873,7 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
         );
     }
 
-    OrderAllSummandsMODIFICATION(): Operator {
+    AllSummandsOrderOperatorStringMODIFICATION(): Operator {
         let newChildren = [] as Operator[];
 
         for (let i = 0; i < this.getChildren().length; i++) {
@@ -881,9 +881,18 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
 
             if (child instanceof BracketedMultiplication) {
                 newChildren.push(child.orderOperatorStrings());
-            } else {
-                newChildren.push(child);
+                continue;
+            } else if (child instanceof Negation) {
+                const negationChild = child.getChild();
+
+                if (negationChild instanceof BracketedMultiplication) {
+                    newChildren.push(new Negation(this.getOwnConfig(), negationChild.orderOperatorStrings()));
+                    continue;
+                }
             }
+
+            // default
+            newChildren.push(child);
         }
 
         return constructContainerOrFirstChild(
