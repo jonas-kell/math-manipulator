@@ -39,28 +39,40 @@
 
     const selectUUIDProgrammatically = (UUIDRef: string, additional: boolean = false) => {
         const uuid = Operator.UUIDFromUUIDRef(UUIDRef);
+        let unselect = false;
+
         if (!additional) {
             additionalSelectionUUIDs.value = new Set();
             emit("selected", uuid);
         } else {
-            additionalSelectionUUIDs.value.add(uuid);
+            if (additionalSelectionUUIDs.value.has(uuid)) {
+                additionalSelectionUUIDs.value.delete(uuid);
+                unselect = true;
+            } else {
+                additionalSelectionUUIDs.value.add(uuid);
+                unselect = false;
+            }
             emit("selected-additional", Array.from(additionalSelectionUUIDs.value));
         }
 
         // do not double select
         if (!additional || UUIDRef != selectionRef.value) {
-            selectUUIDGraphically(UUIDRef, additional);
+            selectUUIDGraphically(UUIDRef, additional, unselect);
         }
     };
 
-    const selectUUIDGraphically = (UUIDRef: string, additional: boolean = false) => {
+    const selectUUIDGraphically = (UUIDRef: string, additional: boolean = false, unselect: boolean = false) => {
         if (!additional) {
             selectionRef.value = UUIDRef;
             additionalSelectionRefs.value = new Set(); // de-select additional selections
         } else {
-            additionalSelectionRefs.value.add(UUIDRef);
-            // this is not 100% name-reflective... If graphically selected, make sure the additionalSelectionUUIDs cache also contains the uuid or mismatches will happen
-            additionalSelectionUUIDs.value.add(Operator.UUIDFromUUIDRef(UUIDRef));
+            if (!unselect) {
+                additionalSelectionRefs.value.add(UUIDRef);
+                // this is not 100% name-reflective... If graphically selected, make sure the additionalSelectionUUIDs cache also contains the uuid or mismatches will happen
+                additionalSelectionUUIDs.value.add(Operator.UUIDFromUUIDRef(UUIDRef));
+            } else {
+                additionalSelectionRefs.value.delete(UUIDRef);
+            }
         }
         updateBorders();
     };

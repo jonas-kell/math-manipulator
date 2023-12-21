@@ -107,6 +107,7 @@
         }
     };
     const selectAdditionalOperator = (additionalUUIDs: string[]) => {
+        resetControlPanel();
         // select the operator
         additionalSelectionUUIDs.value = additionalUUIDs;
         additionalSelectionOperators.value = [];
