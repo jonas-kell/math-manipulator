@@ -27,6 +27,7 @@
         result: Operator | null;
     }
     const rendererUUID = ref(uuidv4());
+    const buttonsActive = ref(false);
     const selectFunctionStore = useSelectFunctionStore();
     const variablesStore = useVariablesStore();
     const permanenceStore = usePermanenceStore();
@@ -102,6 +103,7 @@
         // set keybindings to listen here
         if (loadingComplete.value) {
             keybindingsStore.setActiveUUID(keybindingsRegisterUUID.value);
+            buttonsActive.value = true;
         }
     };
     const selectAdditionalOperator = (additionalUUIDs: string[]) => {
@@ -119,6 +121,11 @@
         additionalSelectionUUIDs.value.forEach((uuid) => {
             selectFunctionStore.callGraphicalSelectionHandlerCallback(rendererUUID.value, Operator.UUIDRefFromUUID(uuid), true);
         });
+
+        // activate buttons
+        if (loadingComplete.value) {
+            buttonsActive.value = true;
+        }
     };
 
     // keybindings
@@ -324,6 +331,11 @@
         const logTimer = (name: string) => {
             timers[name] = Date.now() - timer;
         };
+
+        // very expensive computation, unnecessary unless buttons on
+        if (!buttonsActive.value) {
+            return res;
+        }
 
         if (selectedOperator.value != null) {
             const selOp = selectedOperator.value as Operator;
@@ -542,6 +554,7 @@
             selectAdditionalOperator(loaded.additionalSelectionUUIDs);
             outputOperator.value = loaded.operator;
             mode.value = loaded.mode as unknown as MODES;
+            // buttonsActive.value = false; // loaded doesn't need buttons.
         }
         loadingComplete.value = true;
     });
@@ -579,7 +592,7 @@
         :uuid="operatorParserUUID"
     />
 
-    <template v-if="selectionUUID != '' && selectedOperator != null && !isBase">
+    <template v-if="selectionUUID != '' && selectedOperator != null && !isBase && buttonsActive">
         <div class="offset-x" :id="buttonRowUUID">
             <button @click="selectParentAction" style="margin-right: 0.2em" :disabled="selectedOperatorsParentOperator == null">
                 Sel. Parent
@@ -634,9 +647,9 @@
                 :config="config"
                 v-show="mode == MODES.REPLACEMENT"
                 @parsed="(a: Operator | null) => { 
-                replaceWithOperator = a;
-                replaceWithCallback() 
-            }"
+                    replaceWithOperator = a;
+                    replaceWithCallback() 
+                }"
                 @loading-value="() => (skipReplaceWithEffect = true)"
                 style="margin-top: 0.5em; width: 100%; min-height: 2em"
                 :uuid="operatorParserUUID"
