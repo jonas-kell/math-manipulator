@@ -901,6 +901,111 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             newChildren
         ).getCopyWithGottenRidOfUnnecessaryTerms();
     }
+
+    elementsCancelPEERALTERATION(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        return elementsCancelImplementation(this, additionalSelectedOperators, false);
+    }
+
+    adjacentElementsCancelPEERALTERATION(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        return elementsCancelImplementation(this, additionalSelectedOperators, true);
+    }
+}
+
+function elementsCancelImplementation(
+    operator: Operator,
+    additionalSelectedOperators: Operator[],
+    onlyAdjacent: boolean = false
+): PeerAlterationResult {
+    if (additionalSelectedOperators.length != 2) {
+        return [];
+    }
+
+    const cancelOne = additionalSelectedOperators[0];
+    const cancelTwo = additionalSelectedOperators[1];
+
+    return elementsCancelImplementationRecursive(operator, cancelOne, cancelTwo, onlyAdjacent);
+}
+
+function elementsCancelImplementationRecursive(
+    op: Operator,
+    cancelOne: Operator,
+    cancelTwo: Operator,
+    onlyAdjacent: boolean
+): PeerAlterationResult {
+    let res = [] as PeerAlterationResult;
+
+    if (op instanceof BracketedSum || op instanceof BracketedMultiplication) {
+        const children = op.getChildren();
+
+        let newChildren = [] as { active: boolean; op: Operator; equivalentToFirst: boolean; equivalentToSecond: boolean }[];
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            let canceled = false;
+            let equivalentToFirst = false;
+            let equivalentToSecond = false;
+
+            if (Operator.assertOperatorsEquivalent(cancelOne, child, false)) {
+                equivalentToFirst = true;
+            }
+            if (Operator.assertOperatorsEquivalent(cancelTwo, child, false)) {
+                equivalentToSecond = true;
+            }
+
+            if (equivalentToFirst || equivalentToSecond) {
+                // only look one back or all peers
+                for (let j = Math.max(onlyAdjacent ? newChildren.length - 1 : 0, 0); j < newChildren.length; j++) {
+                    const comparisonChild = newChildren[j];
+
+                    if (equivalentToFirst && comparisonChild.equivalentToSecond && comparisonChild.active) {
+                        comparisonChild.active = false;
+                        canceled = true;
+                        break;
+                    }
+                    if (equivalentToSecond && comparisonChild.equivalentToFirst && comparisonChild.active) {
+                        comparisonChild.active = false;
+                        canceled = true;
+                        break;
+                    }
+                }
+            }
+
+            newChildren.push({
+                active: !canceled,
+                op: child,
+                equivalentToFirst: equivalentToFirst,
+                equivalentToSecond: equivalentToSecond,
+            });
+        }
+
+        // filter out eliminated elements
+        let newOp = constructContainerOrFirstChild(
+            op.getOwnConfig(),
+            op instanceof BracketedSum ? OperatorType.BracketedSum : OperatorType.BracketedMultiplication,
+            newChildren
+                .filter((a) => {
+                    return a.active;
+                })
+                .map((a) => {
+                    return a.op;
+                })
+        );
+
+        // send update if necessary
+        if (!Operator.assertOperatorsEquivalent(op, newOp, false)) {
+            res.push({
+                uuid: op.getUUID(),
+                replacement: newOp,
+            });
+        }
+    }
+
+    // recurse EVEN if eliminated stuff
+    // because of this, changes in lower elements may be overwritten. But this is kind-of constructed to even happen so I will not bother
+    op.childrenAccessForPeerAlterationRecursion().forEach((child) => {
+        res.push(...elementsCancelImplementationRecursive(child, cancelOne, cancelTwo, onlyAdjacent));
+    });
+
+    return res;
 }
 
 function sumSortFunction(a: ExportOperatorContent, b: ExportOperatorContent, topLevel: boolean): number {
@@ -1311,6 +1416,14 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         }
 
         return false;
+    }
+
+    elementsCancelPEERALTERATION(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        return elementsCancelImplementation(this, additionalSelectedOperators, false);
+    }
+
+    adjacentElementsCancelPEERALTERATION(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        return elementsCancelImplementation(this, additionalSelectedOperators, true);
     }
 }
 
