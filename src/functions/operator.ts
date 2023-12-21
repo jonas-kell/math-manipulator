@@ -697,10 +697,26 @@ export abstract class Operator {
 
         const variableContent = variable.getVariableContent();
 
+        return this.replaceAllEqualImplementation([variableContent, variable]);
+    }
+
+    /**
+     * General PEERALTERATION for all operators
+     *
+     * @param additionalSelectedOperators
+     */
+    replaceAllEqualImplementation(additionalSelectedOperators: Operator[]): PeerAlterationResult {
+        if (additionalSelectedOperators.length != 2) {
+            return [];
+        }
+
+        const search = additionalSelectedOperators[0];
+        const replace = additionalSelectedOperators[1];
+
         // getClone of Self to be able to modify _children
         let workOp = Operator.generateStructureRecursive(this.getOwnConfig(), this.getSerializedStructureRecursive(), false);
 
-        workOp = workOp.getCopyWithEquivalentOperatorsReplaced(variableContent, variable, null, false);
+        workOp = workOp.getCopyWithEquivalentOperatorsReplaced(search, replace, null, false);
 
         if (Operator.assertOperatorsEquivalent(workOp, this, false)) {
             return [];
