@@ -41,6 +41,11 @@
         const uuid = Operator.UUIDFromUUIDRef(UUIDRef);
         let unselect = false;
 
+        if (additional && UUIDRef == selectionRef.value) {
+            // do not select the main as additional
+            return;
+        }
+
         if (!additional) {
             additionalSelectionUUIDs.value = new Set();
             emit("selected", uuid);
