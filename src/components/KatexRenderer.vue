@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import katex from "katex";
     import { ref, watch, onBeforeMount, onMounted, computed, onBeforeUnmount } from "vue";
-    import { Operator, useSelectFunctionStore } from "../functions";
+    import { Operator, useRouteStore, useSelectFunctionStore } from "../functions";
     import { katexMacros } from "./katexMacros";
 
     const selectFunctionStore = useSelectFunctionStore();
@@ -115,11 +115,13 @@
                 selected.classList.add("border");
 
                 // scroll the screen so this can be seen
-                selected.scrollIntoView({
-                    inline: "center",
-                    behavior: "smooth",
-                    block: "nearest",
-                });
+                if (useRouteStore().mode != "help") {
+                    selected.scrollIntoView({
+                        inline: "center",
+                        behavior: "smooth",
+                        block: "nearest",
+                    });
+                }
             }
             additionalSelectionRefs.value.forEach((uuidRef) => {
                 // add the additional-class only to the current container
