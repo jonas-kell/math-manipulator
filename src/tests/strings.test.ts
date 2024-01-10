@@ -17,7 +17,7 @@ describe("parser module end-to-end", () => {
         expect(() => operatorFromString(testConfig, '""')).not.toThrow();
         expect(() => operatorFromString(testConfig, '"a" f "b" f "e"')).not.toThrow();
 
-        expect(() => operatorFromString(testConfig, '"asd"a b ""')).toThrow(); // a b implies multiplicate, but string doesn't (//TODO could be fixed)
+        expect(() => operatorFromString(testConfig, '"asd"a b ""')).not.toThrow(); // a b implies multiplicate, now string also does
         expect(() => operatorFromString(testConfig, '"asd"* a * b * ""')).not.toThrow();
 
         expect(() => operatorFromString(testConfig, '( "asd)"')).toThrow(); // closing bracket missing as it is in the string

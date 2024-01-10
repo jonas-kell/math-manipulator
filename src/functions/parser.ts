@@ -62,6 +62,7 @@ enum TokenType {
     Macro = "Macro",
     BeforeFunction = "BeforeFunction",
     String = "String",
+    RawLatex = "RawLatex",
 }
 
 // ! Reserved Symbols with own token
@@ -326,7 +327,7 @@ function tokenize(config: OperatorConfig, input: string): Token[] {
                     currentBufWord.includes("{") ||
                     currentBufWord.includes("}") ||
                     currentBufWord.includes("$");
-                tokens.push({ type: likelyLatex ? TokenType.Structural : TokenType.Other, content: currentBufWord });
+                tokens.push({ type: likelyLatex ? TokenType.RawLatex : TokenType.Other, content: currentBufWord });
                 wordFound = true;
             }
         }
@@ -460,6 +461,7 @@ const implyStructuralSeparationBehind = [
     TokenType.Structural,
     TokenType.BeforeFunction,
     TokenType.String,
+    TokenType.RawLatex,
 ]; // Plus groups aka most of the time brackets // Plus Macros WITHOUT Arguments
 const implyStructuralSeparationInFront = [
     TokenType.Other,
@@ -469,7 +471,9 @@ const implyStructuralSeparationInFront = [
     TokenType.Structural,
     TokenType.Macro,
     TokenType.String,
+    TokenType.RawLatex,
 ]; // Plus groups aka most of the time brackets
+const structuralSeparationCanBeInsertedOutsideOfFunctionArguments = [TokenType.String, TokenType.RawLatex, TokenType.Macro];
 const implyMultiplicationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets // Plus Macros WITHOUT Arguments
 const implyMultiplicationInFront = [TokenType.Other, TokenType.Number, TokenType.Function, TokenType.Constant, TokenType.Macro]; // Plus groups aka most of the time brackets
 const implyAdditionBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets // Plus Macros WITHOUT Arguments
@@ -488,6 +492,7 @@ function insertImpliedOperationsRecursive(
         for (let i = 0; i < children.length; i++) {
             let firstNeedsStructuralSeparation = false;
             let secondNeedsStructuralSeparation = false;
+            let oneAllowsStructuralOutsideArguments = false;
             let firstNeedsMultiplication = false;
             let secondNeedsMultiplication = false;
             let firstNeedsAddition = false;
@@ -512,6 +517,20 @@ function insertImpliedOperationsRecursive(
                 (second instanceof TokenGroupLeaf && implyStructuralSeparationInFront.includes(second.getToken().type))
             ) {
                 secondNeedsStructuralSeparation = true;
+            }
+            if (
+                first &&
+                first != undefined &&
+                first instanceof TokenGroupLeaf &&
+                structuralSeparationCanBeInsertedOutsideOfFunctionArguments.includes(first.getToken().type)
+            ) {
+                oneAllowsStructuralOutsideArguments = true;
+            }
+            if (
+                second instanceof TokenGroupLeaf &&
+                structuralSeparationCanBeInsertedOutsideOfFunctionArguments.includes(second.getToken().type)
+            ) {
+                oneAllowsStructuralOutsideArguments = true;
             }
             // update multiplication logic
             if (
@@ -583,9 +602,34 @@ function insertImpliedOperationsRecursive(
                     }
                 }
             } else {
-                if (insertStructuralSeparation) {
-                    // case: we are inside of a function arguments bracket. Here only possible insertion can be structural delimiters
-                    if (firstNeedsStructuralSeparation && secondNeedsStructuralSeparation) {
+                let inserted = false;
+                // case: if we are inside of a function arguments bracket, force insertion of structural delimiters
+                if (!insertStructuralSeparation) {
+                    // check if need insert multiplication
+                    if (!inserted && firstNeedsMultiplication && secondNeedsMultiplication) {
+                        inserted = true;
+                        newChildren.push(
+                            // insert implicit multiplication
+                            new TokenGroupLeaf({
+                                type: TokenType.Multiplicate,
+                                content: "",
+                            })
+                        );
+                    }
+                    // check if need insert addition
+                    if (!inserted && firstNeedsAddition && secondNeedsAddition) {
+                        newChildren.push(
+                            // insert implicit addition
+                            new TokenGroupLeaf({
+                                type: TokenType.Plus,
+                                content: "",
+                            })
+                        );
+                    }
+                }
+                // no multiplication or addition was chosen (or their influence was blocked)
+                if (insertStructuralSeparation || oneAllowsStructuralOutsideArguments) {
+                    if (!inserted && firstNeedsStructuralSeparation && secondNeedsStructuralSeparation) {
                         newChildren.push(
                             // insert implicit structural separation
                             new TokenGroupLeaf({
@@ -594,29 +638,8 @@ function insertImpliedOperationsRecursive(
                             })
                         );
                     }
-                } else {
-                    // check if need insert multiplication
-                    if (firstNeedsMultiplication && secondNeedsMultiplication) {
-                        newChildren.push(
-                            // insert implicit multiplication
-                            new TokenGroupLeaf({
-                                type: TokenType.Multiplicate,
-                                content: "",
-                            })
-                        );
-                    } else {
-                        // check if need insert addition
-                        if (firstNeedsAddition && secondNeedsAddition) {
-                            newChildren.push(
-                                // insert implicit addition
-                                new TokenGroupLeaf({
-                                    type: TokenType.Plus,
-                                    content: "",
-                                })
-                            );
-                        }
-                    }
                 }
+
                 // insert self
                 newChildren.push(insertImpliedOperationsRecursive(config, second));
             }
@@ -857,10 +880,15 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
                             AllowedStructuralKeywordMapping[elementToTakeFromAfter.getToken().content] ==
                                 OperatorType.EmptyArgument)
                     ) {
+                        /* c8 ignore next */ // !! I THINK this is impossible now. But no guarantee
                         if (stillNeeded == 0) {
+                            /* c8 ignore next */
                             throw Error(
+                                /* c8 ignore next */
                                 `Operator ${type}:${content} takes ${takesNrArgumentsAfter} afterwards but they have already been found and there are still some left`
+                                /* c8 ignore next */
                             );
+                            /* c8 ignore next */
                         }
 
                         skippedAfter += 1;
@@ -957,8 +985,14 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
                     children: [],
                     uuid: "",
                 } as ExportOperatorContent;
+            case TokenType.RawLatex:
+                return {
+                    type: OperatorType.RawLatex,
+                    value: token.content,
+                    children: [],
+                    uuid: "",
+                } as ExportOperatorContent;
             case TokenType.Structural:
-                // structural if not in predefined list, render as raw latex
                 for (let i = 0; i < AllowedStructuralKeywords.length; i++) {
                     if (token.content == AllowedStructuralKeywords[i]) {
                         return {
@@ -969,12 +1003,8 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
                         } as ExportOperatorContent;
                     }
                 }
-                return {
-                    type: OperatorType.RawLatex,
-                    value: token.content,
-                    children: [],
-                    uuid: "",
-                } as ExportOperatorContent;
+                /* c8 ignore next */
+                throw Error(`Unreachable, no structural target found for type ${token.content}`);
             case TokenType.Constant:
                 const operatorTokenConstant = tokenGroup.getToken();
                 return {

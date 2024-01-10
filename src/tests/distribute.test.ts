@@ -216,6 +216,8 @@ describe("DistributeMODIFICATION", () => {
     });
 
     test("Upper term limit for distribute", () => {
+        jest.spyOn(console, "warn").mockImplementation(() => {});
+
         expect(
             JSON.parse(
                 (
