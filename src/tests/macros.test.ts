@@ -204,4 +204,20 @@ describe("parser module Macros feature", () => {
             ],
         });
     });
+
+    test("Parsing error results in raw output", () => {
+        mockPinia(
+            {
+                test: "asd(",
+            },
+            testConfig
+        );
+
+        expect(operatorFromString(testConfig, "test").getExportFormulaString()).toBe("asd(");
+        expect(JSON.parse(operatorFromString(testConfig, "test").getSerializedStructure())).toMatchObject({
+            type: "defined_macro",
+            value: "test",
+            children: [],
+        });
+    });
 });

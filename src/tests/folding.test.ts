@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { operatorFromString, Numerical, StructuralContainer, Variable, BracketedSum, generateOperatorConfig } from "../functions";
+import {
+    operatorFromString,
+    Numerical,
+    StructuralContainer,
+    Variable,
+    BracketedSum,
+    generateOperatorConfig,
+    Braket,
+} from "../functions";
 
 describe("operator module - numerical folding feature", () => {
     beforeEach(() => {
@@ -339,5 +347,61 @@ describe("operator module - numerical folding feature", () => {
             value: "x",
             children: [],
         });
+    });
+
+    test("More constants folding", () => {
+        expect(
+            JSON.parse(operatorFromString(testConfig, "e *pi * sqrt2").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({ type: "number", value: "12.077", children: [] });
+        expect(
+            JSON.parse(operatorFromString(testConfig, "e + pi + sqrt2").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({ type: "number", value: "7.2741", children: [] });
+    });
+
+    test("Percent folding", () => {
+        expect(
+            JSON.parse(operatorFromString(testConfig, "12%").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({ type: "number", value: "0.12", children: [] });
+        expect(
+            JSON.parse(operatorFromString(testConfig, "x%").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({ type: "percent", value: "", children: [{ type: "variable", value: "x", children: [] }] });
+    });
+
+    test("Faculty folding", () => {
+        expect(
+            JSON.parse(operatorFromString(testConfig, "0!").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({ type: "number", value: "1", children: [] });
+        expect(
+            JSON.parse(operatorFromString(testConfig, "1!").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({ type: "number", value: "1", children: [] });
+        expect(
+            JSON.parse(operatorFromString(testConfig, "12!").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({ type: "number", value: "479001600", children: [] });
+        expect(
+            JSON.parse(operatorFromString(testConfig, "x!").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({ type: "faculty", value: "", children: [{ type: "variable", value: "x", children: [] }] });
+        expect(
+            JSON.parse(operatorFromString(testConfig, "200!").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({ type: "number", value: "Infinity", children: [] });
+    });
+
+    test("BraKet and arrows", () => {
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "braket((up;down;up)(up;down;down))") as Braket)
+                    .OrthoNormalEvalMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({ type: "number", value: "0", children: [] });
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "braket((up;down;up)(up;down;up))") as Braket)
+                    .OrthoNormalEvalMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({ type: "number", value: "1", children: [] });
+        expect(operatorFromString(testConfig, "up down").getCopyWithNumbersFolded(true).getExportFormulaString()).toBe(
+            "\\left(\\uparrow \\cdot \\downarrow\\right)"
+        );
     });
 });

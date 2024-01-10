@@ -1316,7 +1316,6 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
 
             return running;
         }
-
         /* c8 ignore next */ // can not even reach this. HOW would this fail.
         return this;
         /* c8 ignore next */

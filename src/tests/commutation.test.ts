@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { BracketedMultiplication, BracketedSum, Operator, generateOperatorConfig } from "../functions";
+import {
+    AntiCommutator,
+    BracketedMultiplication,
+    BracketedSum,
+    Commutator,
+    Operator,
+    generateOperatorConfig,
+    operatorFromString,
+} from "../functions";
 
 describe("operator module - commute with subsequent", () => {
     beforeEach(() => {
@@ -1234,6 +1242,76 @@ describe("operator module - commute with subsequent", () => {
                     type: "variable",
                     value: "x",
                     children: [],
+                },
+            ],
+        });
+    });
+
+    test("Commutation Brackets and write out", () => {
+        expect(operatorFromString(testConfig, "comm(a b)").getExportFormulaString()).toBe("\\left[{a},{b}\\right]");
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "comm(a b)") as Commutator)
+                    .WriteOutCommutatorMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "a", children: [] },
+                        { type: "variable", value: "b", children: [] },
+                    ],
+                },
+                {
+                    type: "negation",
+                    value: "",
+                    children: [
+                        {
+                            type: "bracketed_multiplication",
+                            value: "",
+                            children: [
+                                { type: "variable", value: "b", children: [] },
+                                { type: "variable", value: "a", children: [] },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+    });
+
+    test("Anti-Commutation Brackets and write out", () => {
+        expect(operatorFromString(testConfig, "acomm(a b)").getExportFormulaString()).toBe("\\left\\{{a},{b}\\right\\}");
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "acomm(a b)") as AntiCommutator)
+                    .WriteOutAntiCommutatorMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "a", children: [] },
+                        { type: "variable", value: "b", children: [] },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "b", children: [] },
+                        { type: "variable", value: "a", children: [] },
+                    ],
                 },
             ],
         });
