@@ -242,6 +242,25 @@ function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOpera
         KroneckerDelta,
         Operator,
     ];
+
+    // prefer sorting degree of freedom over index for nicer output
+    if (a instanceof FermionicAnnihilationOperator || a instanceof FermionicCreationOperator) {
+        if (b instanceof FermionicAnnihilationOperator || b instanceof FermionicCreationOperator) {
+            const diffFermionic = a.getDegreeOfFreedom().localeCompare(b.getDegreeOfFreedom());
+            if (diffFermionic != 0) {
+                return diffFermionic;
+            }
+        }
+    }
+    if (a instanceof BosonicAnnihilationOperator || a instanceof BosonicCreationOperator) {
+        if (b instanceof BosonicAnnihilationOperator || b instanceof BosonicCreationOperator) {
+            const diffBosonic = a.getDegreeOfFreedom().localeCompare(b.getDegreeOfFreedom());
+            if (diffBosonic != 0) {
+                return diffBosonic;
+            }
+        }
+    }
+
     let indexA = -1;
     let indexB = -1;
     for (let i = 0; i < orderClasses.length; i++) {
@@ -2222,8 +2241,12 @@ abstract class QMOperatorWithOneArgument extends Operator implements OrderableOp
         return this._children[0];
     }
 
+    getDegreeOfFreedom() {
+        return this._value;
+    }
+
     sameDegreeOfFreedom(as: QMOperatorWithOneArgument) {
-        return as._value == this._value;
+        return as.getDegreeOfFreedom() == this.getDegreeOfFreedom();
     }
 
     abstract commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate;
