@@ -450,17 +450,10 @@
 
                 // as the `action` was extracted from filtered `getOwnPropertyNames` or manually inserted, this is should always be a valid method
                 let actionResult = (selOp as any)[action](additionalSelectionOperators.value) as PeerAlterationResult;
-
-                let iterator: Operator = props.operator.getCopyWithReplaced("", new EmptyArgument(props.config), true); // just get a copy. Nothing replaced
-                actionResult.forEach((res) => {
-                    iterator = iterator.getCopyWithReplaced(res.uuid, res.replacement, true);
-                });
-
-                // make sure it changes uuids for the next step
-                iterator = iterator.getCopyWithReplaced("", new EmptyArgument(props.config), false); // just get a copy. Nothing replaced
+                const resOp = Operator.processPeerAlterationResult(props.operator, actionResult);
 
                 // only consider actions that change anything applicable
-                if (Operator.assertOperatorsEquivalent(props.operator, iterator, false)) {
+                if (Operator.assertOperatorsEquivalent(props.operator, resOp, false)) {
                     res[name] = {
                         hasEffect: false,
                         replacesUUID: "",
@@ -470,7 +463,7 @@
                     res[name] = {
                         hasEffect: true,
                         replacesUUID: props.operator.getUUID(),
-                        result: iterator.getCopyWithGottenRidOfUnnecessaryTerms(), // applies this globally, which may not be intended, but I cannot do anything about it
+                        result: resOp.getCopyWithGottenRidOfUnnecessaryTerms(), // applies this globally, which may not be intended, but I cannot do anything about it
                     };
                 }
                 logTimer(name);

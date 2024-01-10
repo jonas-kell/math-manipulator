@@ -12,6 +12,7 @@ import {
     ComplexOperatorConstruct,
     OperatorConfig,
     PeerAlterationResult,
+    EmptyArgument,
 } from "./exporter";
 
 export interface ExportOperatorContent {
@@ -746,5 +747,17 @@ export abstract class Operator {
         }
 
         return false;
+    }
+
+    static processPeerAlterationResult(mainOperator: Operator, peerAlteration: PeerAlterationResult): Operator {
+        let iterator: Operator = mainOperator.getCopyWithReplaced("", new EmptyArgument(mainOperator.getOwnConfig()), true); // just get a copy. Nothing replaced
+        peerAlteration.forEach((res) => {
+            iterator = iterator.getCopyWithReplaced(res.uuid, res.replacement, true);
+        });
+
+        // make sure it changes uuids for the next step
+        iterator = iterator.getCopyWithReplaced("", new EmptyArgument(mainOperator.getOwnConfig()), false); // just get a copy. Nothing replaced
+
+        return iterator;
     }
 }
