@@ -120,9 +120,12 @@ export function operatorConstructorSwitch(
             }
         case OperatorType.DefinedMacroArgument:
             return new DefinedMacroArgument(config, childrenReconstructed[0]);
+        /* c8 ignore next */ //!! Will probably fail every time a new operator is implemented, but not on working runtime
         default:
+            /* c8 ignore next */
             throw Error(`type ${type} could not be parsed to an implemented Operator`);
     }
+    /* c8 ignore next */ // !! The switch has a default, even if it is ignored now, so unreachable
 }
 
 export function constructContainerOrFirstChild(
@@ -1428,8 +1431,11 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
 }
 
 function orderOperatorString(config: OperatorConfig, inString: (Operator & OrderableOperator)[]): Operator {
+    /* c8 ignore next */ // !! sanity check. Is not called this way, because of checks for this further up
     if (inString.length == 0) {
+        /* c8 ignore next */
         throw Error("Cannot reorder empty String of arguments");
+        /* c8 ignore next */
     }
 
     if (inString.length == 1) {
@@ -1745,8 +1751,11 @@ export class DefinedMacro extends Operator implements OrderableOperator {
     protected innerFormulaString(renderChildrenHtmlIds: boolean, renderImpliedSymbols: boolean) {
         const outputString = this.getOwnOutputString();
 
+        /* c8 ignore next */ // !! sanity check. No longer possible, as "" is a valid pure-parsing and returns the numerical 0. Therefore we never need to render such a macro itself
         if (outputString.trim() == "") {
+            /* c8 ignore next */
             return `\\text{\\#Macro ${this._trigger} has no output set\\#}`;
+            /* c8 ignore next */
         }
 
         let res = outputString;
@@ -1754,8 +1763,11 @@ export class DefinedMacro extends Operator implements OrderableOperator {
         const neededChildren = DefinedMacro.getNumberOfIntendedChildren(this.getOwnConfig(), this._trigger);
         const hasChildren = this.getChildren().length;
 
+        /* c8 ignore next */ // !! sanity check. No longer possible, as the parser already catches this now
         if (neededChildren != hasChildren) {
+            /* c8 ignore next */
             return `\\text{\\#Macro ${this._trigger} needs ${neededChildren} argument(s), but was given ${hasChildren}\\#}`;
+            /* c8 ignore next */
         }
 
         this.getChildren().forEach((child, index) => {

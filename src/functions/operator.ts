@@ -55,15 +55,19 @@ export abstract class Operator {
         if (children.length < MIN_CHILDREN_SPECIFICATIONS[type]) {
             throw Error("Not enough children for Operator");
         }
-        if (children.length > MAX_CHILDREN_SPECIFICATIONS[type]) {
+        /* c8 ignore next */ if (children.length > MAX_CHILDREN_SPECIFICATIONS[type]) {
+            /* c8 ignore next */
             throw Error("Too many children for Operator");
+            /* c8 ignore next */
         }
         let hasMidDisplayOverwrite = false;
         if (midDisplayOverwrite.length != 0) {
             if (midDisplayOverwrite.length == children.length - 1) {
                 hasMidDisplayOverwrite = true;
-            } else {
+            } /* c8 ignore next */ else {
+                /* c8 ignore next */
                 throw Error("Mid display overwrite needs to contain exactly #children-1 elements");
+                /* c8 ignore next */
             }
         }
         const uuid = uuidv4();

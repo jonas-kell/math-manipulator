@@ -340,8 +340,10 @@ function tokenize(config: OperatorConfig, input: string): Token[] {
         // overflow check
         if (endIndex > length) {
             // additional checks on `currentBuf` avoid +1 errors, sorry :-)
-            if (!wordFound && currentBuf != "" && currentBuf != " ") {
+            if (!wordFound && currentBuf != "" && /* c8 ignore next */ currentBuf != " ") {
+                /* c8 ignore next */
                 throw Error(`Should not be possible, token #${currentBuf}# could not be tokenized.`);
+                /* c8 ignore next */
             }
             break;
         }
@@ -385,8 +387,10 @@ function groupTokenStream(config: OperatorConfig, tokens: Token[]): TokenGroup {
 
     let res = groupTokenStreamRecursive(tokens, 0);
 
-    if (res[1] < tokens.length) {
+    /* c8 ignore next */ if (res[1] < tokens.length) {
+        /* c8 ignore next */
         throw Error("Should not be possible, not all tokens have been processed in the grouping stage");
+        /* c8 ignore next */
     }
     const trimmed = trimTokenGroupRecursive(res[0]);
     const implicitOperationsInserted = insertImpliedOperationsRecursive(config, trimmed);
@@ -572,8 +576,10 @@ function insertImpliedOperationsRecursive(
                     if (second instanceof TokenGroupKnot) {
                         // recursive call that makes sure
                         newChildren.push(insertImpliedOperationsRecursive(config, second, true));
-                    } else {
+                    } /* c8 ignore next */ else {
+                        /* c8 ignore next */
                         throw Error("Unreachable. At this point there should only exist TokenGroupLeaves and TokenGroupKnots.");
+                        /* c8 ignore next */
                     }
                 }
             } else {
@@ -869,13 +875,19 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
                         elementToTakeFromAfter instanceof TokenGroupLeaf &&
                         elementToTakeFromAfter.getToken().type == type
                     ) {
-                        if (stillNeeded != 0) {
-                            // Currently impossible to trigger, because all repeatable operations only take one argument afterwards
+                        // !! Currently impossible to trigger, because all repeatable operations only take one argument afterwards
+                        /* c8 ignore next */ if (stillNeeded != 0) {
+                            /* c8 ignore next */
                             throw Error(
+                                /* c8 ignore next */
                                 `Repeat of Operator ${type}:${content} takes ${takesNrArgumentsAfter} afterwards but only ${
+                                    /* c8 ignore next */
                                     takesNrArgumentsAfter - stillNeeded
+                                    /* c8 ignore next */
                                 } have been processed until the end`
+                                /* c8 ignore next */
                             );
+                            /* c8 ignore next */
                         }
 
                         // only skip, do not want to push operator into infix-children
@@ -905,8 +917,10 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
                     newExtraGroup,
                     ...afterPortion.slice(skippedAfter),
                 ];
-            } else {
+            } /* c8 ignore next */ else {
+                /* c8 ignore next */
                 throw Error("Unreachable, or else the highest precedence search failed");
+                /* c8 ignore next */
             }
         }
 
@@ -984,7 +998,9 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
                     children: [],
                     uuid: "",
                 } as ExportOperatorContent;
+            /* c8 ignore next */ //!! Will probably fail every time a new operator is implemented, but not on working runtime
             default:
+                /* c8 ignore next */
                 throw Error(`Singular token without implemented Export target type ${token.type} `);
         }
     } else if (tokenGroup instanceof TokenGroupKnotInfixStructural) {
@@ -1130,19 +1146,29 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
                     uuid: "",
                 } as ExportOperatorContent;
 
+            /* c8 ignore next */ //!! Will probably fail every time a new operator is implemented, but not on working runtime
             default:
+                /* c8 ignore next */
                 throw Error(`Group translation not implemented for operator ${operatorToken.type}`);
         }
+        /* c8 ignore next */
     } else {
+        /* c8 ignore next */
         throw Error(
+            /* c8 ignore next */
             `Only the types TokenGroupKnotInfix, TokenGroupKnotInfixStructural and TokenGroupLeaf should exist... TokenGroupKnot should have been converted to TokenGroupKnotInfix`
+            /* c8 ignore next */
         );
+        /* c8 ignore next */
     }
 }
 
 function calculateNecessaryNumberOfArgumentsForMacro(config: OperatorConfig, token: Token): number {
+    /* c8 ignore next */
     if (token.type != TokenType.Macro) {
-        throw Error("This should not happen: Only TokenType.Macro may be used here");
+        /* c8 ignore next */
+        throw Error("Unreachable, this should not happen: Only TokenType.Macro may be used here");
+        /* c8 ignore next */
     }
 
     return DefinedMacro.getNumberOfIntendedChildren(config, token.content);

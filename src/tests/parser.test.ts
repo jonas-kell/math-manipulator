@@ -859,4 +859,31 @@ describe("parser module end-to-end", () => {
             ],
         });
     });
+    test("Before functions with appropriate precedence", () => {
+        expect(JSON.parse(operatorFromString(testConfig, "exp exp -2 !%").getSerializedStructure())).toMatchObject({
+            type: "exp_function",
+            value: "",
+            children: [
+                {
+                    type: "exp_function",
+                    value: "",
+                    children: [
+                        {
+                            type: "negation",
+                            value: "",
+                            children: [
+                                {
+                                    type: "percent",
+                                    value: "",
+                                    children: [
+                                        { type: "faculty", value: "", children: [{ type: "number", value: "2", children: [] }] },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+    });
 });

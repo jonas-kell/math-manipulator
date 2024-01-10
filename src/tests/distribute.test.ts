@@ -214,4 +214,72 @@ describe("DistributeMODIFICATION", () => {
             ],
         });
     });
+
+    test("Upper term limit for distribute", () => {
+        expect(
+            JSON.parse(
+                (
+                    operatorFromString(
+                        testConfig,
+                        "(asd+asd+asd+asd+asd+asd)*(asd+asd+asd+asd+asd+asd)*(asd+asd+asd+asd+asd+asd)*(asd+asd+asd+asd+asd+asd)"
+                    ) as BracketedMultiplication
+                )
+                    .DistributeMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_sum",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                    ],
+                },
+                {
+                    type: "bracketed_sum",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                    ],
+                },
+                {
+                    type: "bracketed_sum",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                    ],
+                },
+                {
+                    type: "bracketed_sum",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                        { type: "variable", value: "asd", children: [] },
+                    ],
+                },
+            ],
+        });
+    });
 });
