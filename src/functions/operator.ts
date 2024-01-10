@@ -5,9 +5,6 @@ import {
     MAX_CHILDREN_SPECIFICATIONS,
     Numerical,
     operatorConstructorSwitch,
-    Bra,
-    Ket,
-    Braket,
     implementsMinusPulloutManagement,
     Negation,
     BracketedSum,
@@ -101,6 +98,8 @@ export abstract class Operator {
         return this._uuid;
     }
 
+    // I would love if this were protected, so that only the intended operators expose their children.
+    // But this makes it impossible to get some children for recursive iterators that are needed for peer alteration functions
     childrenAccessForPeerAlterationRecursion() {
         return this._children;
     }
@@ -593,10 +592,6 @@ export abstract class Operator {
         }
 
         return null;
-    }
-
-    static MergeBraKet(config: OperatorConfig, bra: Bra, ket: Ket) {
-        return new Braket(config, bra._children[0], ket._children[0]);
     }
 
     getCopyWithGottenRidOfUnnecessaryTerms() {

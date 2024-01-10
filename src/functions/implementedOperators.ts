@@ -17,8 +17,6 @@ export function operatorConstructorSwitch(
             return new Fraction(config, childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.Numerical:
             return new Numerical(config, Number(value));
-        case OperatorType.ComplexOperatorConstruct:
-            return new ComplexOperatorConstruct(config, childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.Variable:
             return new Variable(config, value);
         case OperatorType.BigInt:
@@ -107,6 +105,16 @@ export function operatorConstructorSwitch(
             return new Commutator(config, childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.AntiCommutator:
             return new AntiCommutator(config, childrenReconstructed[0], childrenReconstructed[1]);
+        case OperatorType.ComplexOperatorConstruct:
+            const realArg = childrenReconstructed[0];
+            const complexArg = childrenReconstructed[1];
+
+            // upcast to i constant
+            if (operatorIsBasicallyZero(realArg) && operatorIsBasicallyOne(complexArg)) {
+                return new ComplexIConstant(config);
+            }
+
+            return new ComplexOperatorConstruct(config, realArg, complexArg);
         case OperatorType.DefinedMacro:
             const [canBeParsed, operatorFromMacro] = DefinedMacro.canBeParsedToNonMacroOperator(
                 config,
@@ -231,7 +239,7 @@ function implementsOrderableOperator(object: any): object is OrderableOperator &
 function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOperator & Operator): number {
     const orderClasses = [
         Numerical,
-        ComplexOperatorConstruct,
+        ComplexIConstant,
         Constant,
         Variable,
         DefinedMacro,
@@ -330,7 +338,7 @@ export class Numerical extends Operator implements MinusPulloutManagement, Order
     }
 }
 
-export class ComplexOperatorConstruct extends Operator implements MinusPulloutManagement, OrderableOperator {
+export class ComplexOperatorConstruct extends Operator implements MinusPulloutManagement {
     constructor(config: OperatorConfig, realPart: Operator, complexPart: Operator) {
         super(config, OperatorType.ComplexOperatorConstruct, "", "", "", [realPart, complexPart], "");
     }
@@ -372,12 +380,22 @@ export class ComplexOperatorConstruct extends Operator implements MinusPulloutMa
         return new Negation(this.getOwnConfig(), newOperatorAfterPullingOut);
     }
 
-    orderPriorityString() {
-        return this._children[0].getSerializedStructure(false) + this._children[1].getSerializedStructure(false);
-    }
+    SplitIntoSumMODIFICATION(): Operator {
+        let outSum = [] as Operator[];
 
-    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
-        return [[false, [commuteWith, this]]];
+        if (this.hasRealPart()) {
+            outSum.push(this.getRealChild());
+        }
+        if (this.hasImaginaryPart()) {
+            outSum.push(
+                constructContainerOrFirstChild(this.getOwnConfig(), OperatorType.BracketedMultiplication, [
+                    new ComplexIConstant(this.getOwnConfig()),
+                    this.getImaginaryChild(),
+                ]).getCopyWithGottenRidOfUnnecessaryTerms() // avoid * 1 that would otherwise often result from single i
+            );
+        }
+
+        return constructContainerOrFirstChild(this.getOwnConfig(), OperatorType.BracketedSum, outSum);
     }
 
     public hasRealPart(): boolean {
@@ -397,11 +415,7 @@ export class ComplexOperatorConstruct extends Operator implements MinusPulloutMa
     }
 
     public imaginaryPartIsOne(): boolean {
-        const res = this.childrenNumericalValues(false);
-        const complexChildValue = res[1][1];
-
-        const imaginaryChild = this.getImaginaryChild();
-        return imaginaryChild instanceof Numerical && complexChildValue != null && isBasicallyOne(complexChildValue);
+        return this.getImaginaryChild() instanceof Numerical && operatorIsBasicallyOne(this.getImaginaryChild());
     }
 
     protected innerFormulaString(renderChildrenHtmlIds: boolean, renderImpliedSymbols: boolean) {
@@ -544,10 +558,22 @@ function multiplyOperatorsHandleComplexOperatorConstruct(
     return new ComplexOperatorConstruct(config, realSum, imaginarySum).getCopyWithGottenRidOfUnnecessaryTerms();
 }
 
-export class ComplexIConstant extends ComplexOperatorConstruct {
+export class ComplexIConstant extends ComplexOperatorConstruct implements OrderableOperator {
     constructor(config: OperatorConfig) {
         // the constant directly generates to superclass. Only for convenient parsing and usage
         super(config, new Numerical(config, 0), new Numerical(config, 1));
+    }
+
+    // !! Complex i is guaranteed to be commutable with all OrderableOperators.
+    // Standard ComplexOperatorConstruct IS NOT (Split it into a sum if you want to order something instead)
+    // THEREFORE it is forbidden to modify the children of a ComplexOperatorConstruct in-place (I dearly hope no function does this...)
+
+    orderPriorityString() {
+        return "complexI";
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
+        return [[false, [commuteWith, this]]];
     }
 }
 
@@ -1291,7 +1317,9 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
             return running;
         }
 
+        /* c8 ignore next */ // can not even reach this. HOW would this fail.
         return this;
+        /* c8 ignore next */
     }
 
     getChildren(): Operator[] {
@@ -1338,7 +1366,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
                 if (child instanceof Bra) {
                     if (nextChild instanceof Ket) {
                         newChildren.push(
-                            Operator.MergeBraKet(this.getOwnConfig(), child, nextChild).OrthoNormalEvalMODIFICATION()
+                            new Braket(this.getOwnConfig(), child.getChild(), nextChild.getChild()).OrthoNormalEvalMODIFICATION()
                         );
                         i += 1; // skip next
                         continue; // do not push self
@@ -2153,11 +2181,19 @@ export class Bra extends Operator {
     constructor(config: OperatorConfig, content: Operator) {
         super(config, OperatorType.Bra, "\\left\\lang", "", "\\right\\vert", [content], "");
     }
+
+    getChild() {
+        return this._children[0];
+    }
 }
 
 export class Ket extends Operator {
     constructor(config: OperatorConfig, content: Operator) {
         super(config, OperatorType.Ket, "\\left\\vert", "", "\\right\\rang", [content], "");
+    }
+
+    getChild() {
+        return this._children[0];
     }
 }
 
@@ -2664,9 +2700,27 @@ function isBasicallyZero(num: number): boolean {
     return basicallyZero;
 }
 
+function operatorIsBasicallyZero(op: Operator): boolean {
+    const num = op.getNumericalValue(false);
+    if (num == null) {
+        return false;
+    } else {
+        return isBasicallyZero(num);
+    }
+}
+
 function isBasicallyOne(num: number): boolean {
     const basicallyOne = num - 1 < 1e-6 && num - 1 > -1e-6;
     return basicallyOne;
+}
+
+function operatorIsBasicallyOne(op: Operator): boolean {
+    const num = op.getNumericalValue(false);
+    if (num == null) {
+        return false;
+    } else {
+        return isBasicallyOne(num);
+    }
 }
 
 export class Commutator extends Operator {

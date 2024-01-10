@@ -556,6 +556,150 @@ describe("operator module - pull out minus feature", () => {
         });
     });
 
+    test("Pull out of complex: manually", () => {
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "complex(-1 -2)") as BracketedSum)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "negation",
+            value: "",
+            children: [
+                {
+                    type: "complex_operator_construct",
+                    value: "",
+                    children: [
+                        { type: "number", value: "1", children: [] },
+                        { type: "number", value: "2", children: [] },
+                    ],
+                },
+            ],
+        });
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "complex(1 -2)") as BracketedSum)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "negation",
+            value: "",
+            children: [
+                {
+                    type: "complex_operator_construct",
+                    value: "",
+                    children: [
+                        { type: "negation", value: "", children: [{ type: "number", value: "1", children: [] }] },
+                        { type: "number", value: "2", children: [] },
+                    ],
+                },
+            ],
+        });
+        // Pulls out no matter what
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "complex(1 2)") as BracketedSum)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "negation",
+            value: "",
+            children: [
+                {
+                    type: "complex_operator_construct",
+                    value: "",
+                    children: [
+                        { type: "negation", value: "", children: [{ type: "number", value: "1", children: [] }] },
+                        { type: "negation", value: "", children: [{ type: "number", value: "2", children: [] }] },
+                    ],
+                },
+            ],
+        });
+    });
+
+    test("Pull out of complex: automatically", () => {
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "-1*complex(1 2)") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "negation",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "number", value: "1", children: [] },
+                        {
+                            type: "complex_operator_construct",
+                            value: "",
+                            children: [
+                                { type: "number", value: "1", children: [] },
+                                { type: "number", value: "2", children: [] },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+        // ALL minus in sum -> gets pulled out automatically
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "-1*complex(-1 -2)") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                { type: "number", value: "1", children: [] },
+                {
+                    type: "complex_operator_construct",
+                    value: "",
+                    children: [
+                        { type: "number", value: "1", children: [] },
+                        { type: "number", value: "2", children: [] },
+                    ],
+                },
+            ],
+        });
+        // NOT all minus in sum -> gets NOT pulled out automatically
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "-1*complex(1 -2)") as BracketedMultiplication)
+                    .PullOutMinusMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "negation",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "number", value: "1", children: [] },
+                        {
+                            type: "complex_operator_construct",
+                            value: "",
+                            children: [
+                                { type: "number", value: "1", children: [] },
+                                { type: "negation", value: "", children: [{ type: "number", value: "2", children: [] }] },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+    });
+
     test("Still works if children cannot pull out stuff", () => {
         expect(
             JSON.parse(
