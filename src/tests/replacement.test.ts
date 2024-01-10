@@ -215,4 +215,40 @@ describe("operator module - replace operator feature", () => {
         });
         expect(testOp().findParentOperator("f7f98f57-4211-4cc4-9182-dfb0fd5aaaaa")).toBeNull();
     });
+
+    test("Find first Child Functionality", () => {
+        expect(
+            JSON.parse(testOp().findFirstChildOperator("be603e6b-8dda-4eaf-84bd-3ac74b107940")!.getSerializedStructure())
+        ).toMatchObject({
+            type: "number",
+            value: "1",
+            children: [],
+            uuid: "c0dc69c0-f5af-48ea-b8a5-b96870d595da",
+        });
+        expect(testOp().findFirstChildOperator("521f0012-1366-41e1-a322-d5d893817930")).toBeNull();
+    });
+
+    test("Find next Sibling Functionality", () => {
+        expect(
+            JSON.parse(testOp().findNextSiblingOperator("f7f98f57-4211-4cc4-9182-dfb0fd5ed470")!.getSerializedStructure())
+        ).toMatchObject({
+            type: "variable",
+            value: "A",
+            children: [],
+            uuid: "521f0012-1366-41e1-a322-d5d893817930",
+        });
+        expect(testOp().findNextSiblingOperator("521f0012-1366-41e1-a322-d5d893817930")).toBeNull();
+    });
+
+    test("Find prev Sibling Functionality", () => {
+        expect(
+            JSON.parse(testOp().findPrevSiblingOperator("f7f98f57-4211-4cc4-9182-dfb0fd5ed470")!.getSerializedStructure())
+        ).toMatchObject({
+            type: "number",
+            value: "1",
+            children: [],
+            uuid: "c0dc69c0-f5af-48ea-b8a5-b96870d595da",
+        });
+        expect(testOp().findPrevSiblingOperator("c0dc69c0-f5af-48ea-b8a5-b96870d595da")).toBeNull();
+    });
 });

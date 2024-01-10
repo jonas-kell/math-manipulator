@@ -3,7 +3,7 @@ jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
 import { operatorFromString, generateOperatorConfig } from "../functions";
 
-describe("parser module end-to-end", () => {
+describe("parser module Macros feature", () => {
     const testConfig = generateOperatorConfig();
 
     test("Setup helper", () => {
