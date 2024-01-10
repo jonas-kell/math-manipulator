@@ -7,6 +7,7 @@
         BracketedMultiplication,
         OperatorConfig,
         PeerAlterationResult,
+        useRouteStore,
     } from "../functions";
     import KatexRenderer from "./KatexRenderer.vue";
     import InputToOperatorParser from "./InputToOperatorParser.vue";
@@ -28,6 +29,9 @@
     }
     const rendererUUID = ref(uuidv4());
     const buttonsActive = ref(false);
+    if (useRouteStore().mode == "help") {
+        buttonsActive.value = true;
+    }
     const selectFunctionStore = useSelectFunctionStore();
     const variablesStore = useVariablesStore();
     const permanenceStore = usePermanenceStore();
