@@ -1,7 +1,7 @@
 import { describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { operatorFromString, generateOperatorConfig } from "../functions";
+import { operatorFromString, generateOperatorConfig, BracketedMultiplication } from "../functions";
 
 describe("parser module Macros feature", () => {
     const testConfig = generateOperatorConfig();
@@ -176,5 +176,32 @@ describe("parser module Macros feature", () => {
         mockPinia();
 
         expect(() => operatorFromString(testConfig, "$DMASS$(a)")).toThrow();
+    });
+
+    test("Bosonic ordering with multiple degrees of freedom", () => {
+        mockPinia(
+            {
+                test: "\\mathrm{#0}",
+                lulz: "\\mathrm{#0}",
+            },
+            testConfig
+        );
+
+        expect(
+            JSON.parse(
+                (operatorFromString(testConfig, "test(b) lulz(a) test(c)") as BracketedMultiplication)
+                    .orderOperatorStrings()
+                    .getCopyWithGottenRidOfUnnecessaryTerms()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                { type: "defined_macro", value: "lulz", children: [{ type: "variable", value: "a", children: [] }] },
+                { type: "defined_macro", value: "test", children: [{ type: "variable", value: "b", children: [] }] },
+                { type: "defined_macro", value: "test", children: [{ type: "variable", value: "c", children: [] }] },
+            ],
+        });
     });
 });
