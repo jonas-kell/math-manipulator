@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { generateOperatorConfig, Operator } from "../functions";
+import { generateOperatorConfig, Operator, OperatorConfig, useVariablesStore, operatorFromString } from "../functions";
 
 const testConfig = generateOperatorConfig();
 
-function opFromObj(obj: any): Operator {
-    return Operator.generateStructure(testConfig, JSON.stringify(obj), true);
+function opFromObj(config: OperatorConfig, obj: any): Operator {
+    return Operator.generateStructure(config, JSON.stringify(obj), true);
 }
 
 describe("operator module - general Peeralterations for renaming and replacing", () => {
@@ -14,8 +14,8 @@ describe("operator module - general Peeralterations for renaming and replacing",
         mockPinia();
     });
 
-    const mainOp = () =>
-        opFromObj({
+    const mainOp = (config: OperatorConfig) =>
+        opFromObj(config, {
             type: "bracketed_sum",
             value: "",
             children: [
@@ -106,8 +106,8 @@ describe("operator module - general Peeralterations for renaming and replacing",
             ],
             uuid: "5da8b002-142a-47b1-859d-19851cfa19c8",
         });
-    const selOp = () =>
-        opFromObj({
+    const selOp = (config: OperatorConfig) =>
+        opFromObj(config, {
             type: "bracketed_multiplication",
             value: "",
             children: [
@@ -187,21 +187,21 @@ describe("operator module - general Peeralterations for renaming and replacing",
         });
 
     test("Peeralteration: rename-swap", () => {
-        const mainOpInst = mainOp();
-        const selOpInst = selOp();
+        const mainOpInst = mainOp(testConfig);
+        const selOpInst = selOp(testConfig);
 
         expect(
             JSON.parse(
                 Operator.processPeerAlterationResult(
                     mainOpInst,
                     selOpInst.renameSwapImplementation([
-                        opFromObj({
+                        opFromObj(testConfig, {
                             type: "variable",
                             value: "l",
                             children: [],
                             uuid: "8419c171-9079-4351-9dac-cb969c4d869a",
                         }),
-                        opFromObj({
+                        opFromObj(testConfig, {
                             type: "variable",
                             value: "m",
                             children: [],
@@ -250,7 +250,7 @@ describe("operator module - general Peeralterations for renaming and replacing",
         // not right input configuration
         expect(
             selOpInst.renameSwapImplementation([
-                opFromObj({
+                opFromObj(testConfig, {
                     type: "variable",
                     value: "l",
                     children: [],
@@ -261,18 +261,259 @@ describe("operator module - general Peeralterations for renaming and replacing",
         // nothing to replace
         expect(
             selOpInst.renameSwapImplementation([
-                opFromObj({
+                opFromObj(testConfig, {
                     type: "variable",
                     value: "x",
                     children: [],
                     uuid: "asdasdasd",
                 }),
-                opFromObj({
+                opFromObj(testConfig, {
                     type: "variable",
                     value: "y",
                     children: [],
                     uuid: "lkjasdfhjklasdf",
                 }),
+            ]).length
+        ).toBe(0);
+    });
+
+    test("Peeralteration: replace-with", () => {
+        const mainOpInst = mainOp(testConfig);
+        const selOpInst = selOp(testConfig);
+
+        expect(
+            JSON.parse(
+                Operator.processPeerAlterationResult(
+                    mainOpInst,
+                    selOpInst.replaceAllEqualImplementation([
+                        opFromObj(testConfig, {
+                            type: "variable",
+                            value: "l",
+                            children: [],
+                            uuid: "8419c171-9079-4351-9dac-cb969c4d869a",
+                        }),
+                        opFromObj(testConfig, {
+                            type: "variable",
+                            value: "m",
+                            children: [],
+                            uuid: "776d74c3-6f50-46bd-bf1d-03a15d09d06c",
+                        }),
+                    ])
+                ).getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "m", children: [] },
+                        { type: "variable", value: "m", children: [] },
+                        {
+                            type: "exp_function",
+                            value: "",
+                            children: [
+                                {
+                                    type: "bracketed_multiplication",
+                                    value: "",
+                                    children: [
+                                        { type: "variable", value: "m", children: [] },
+                                        { type: "variable", value: "m", children: [] },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            type: "exp_function",
+                            value: "",
+                            children: [
+                                { type: "exp_function", value: "", children: [{ type: "variable", value: "m", children: [] }] },
+                            ],
+                        },
+                        { type: "exp_function", value: "", children: [{ type: "variable", value: "m", children: [] }] },
+                    ],
+                },
+                { type: "variable", value: "m", children: [] },
+            ],
+        });
+        expect(
+            JSON.parse(
+                Operator.processPeerAlterationResult(
+                    mainOpInst,
+                    selOpInst.replaceAllEqualImplementation([
+                        opFromObj(testConfig, {
+                            type: "variable",
+                            value: "m",
+                            children: [],
+                            uuid: "776d74c3-6f50-46bd-bf1d-03a15d09d06c",
+                        }),
+                        opFromObj(testConfig, {
+                            type: "variable",
+                            value: "l",
+                            children: [],
+                            uuid: "8419c171-9079-4351-9dac-cb969c4d869a",
+                        }),
+                    ])
+                ).getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "l", children: [] },
+                        { type: "variable", value: "l", children: [] },
+                        {
+                            type: "exp_function",
+                            value: "",
+                            children: [
+                                {
+                                    type: "bracketed_multiplication",
+                                    value: "",
+                                    children: [
+                                        { type: "variable", value: "l", children: [] },
+                                        { type: "variable", value: "l", children: [] },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            type: "exp_function",
+                            value: "",
+                            children: [
+                                { type: "exp_function", value: "", children: [{ type: "variable", value: "l", children: [] }] },
+                            ],
+                        },
+                        { type: "exp_function", value: "", children: [{ type: "variable", value: "l", children: [] }] },
+                    ],
+                },
+                { type: "variable", value: "m", children: [] },
+            ],
+        });
+        // not right input configuration
+        expect(
+            selOpInst.replaceAllEqualImplementation([
+                opFromObj(testConfig, {
+                    type: "variable",
+                    value: "l",
+                    children: [],
+                    uuid: "8419c171-9079-4351-9dac-cb969c4d869a",
+                }),
+            ]).length
+        ).toBe(0);
+        // nothing to replace
+        expect(
+            selOpInst.replaceAllEqualImplementation([
+                opFromObj(testConfig, {
+                    type: "variable",
+                    value: "x",
+                    children: [],
+                    uuid: "asdasdasd",
+                }),
+                opFromObj(testConfig, {
+                    type: "variable",
+                    value: "y",
+                    children: [],
+                    uuid: "lkjasdfhjklasdf",
+                }),
+            ]).length
+        ).toBe(0);
+    });
+
+    test("Peeralteration: pack-same-into-variable", () => {
+        const variableTestConfig = generateOperatorConfig("aldskjakaskldjsakj", "vnztsavtbsdzgs", "maszubatsfdad");
+
+        const mainOpInst = mainOp(variableTestConfig);
+        const selOpInst = selOp(variableTestConfig);
+
+        // variable x is currently empty, so nothing to replace
+        expect(
+            selOpInst.variableAllEqualImplementation([
+                opFromObj(variableTestConfig, {
+                    type: "variable",
+                    value: "x",
+                    children: [],
+                    uuid: "777774c3-6f50-46bd-bf1d-03a15d09d06c",
+                }),
+            ]).length
+        ).toBe(0);
+
+        // set variable x
+        useVariablesStore().setOperatorForVariable(variableTestConfig, "x", operatorFromString(variableTestConfig, "exp(m)"));
+
+        // variable x now set, so should replace something
+        expect(
+            JSON.parse(
+                Operator.processPeerAlterationResult(
+                    mainOpInst,
+                    selOpInst.variableAllEqualImplementation([
+                        opFromObj(variableTestConfig, {
+                            type: "variable",
+                            value: "x",
+                            children: [],
+                            uuid: "777774c3-6f50-46bd-bf1d-03a15d09d06c",
+                        }),
+                    ])
+                ).getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "l", children: [] },
+                        { type: "variable", value: "m", children: [] },
+                        {
+                            type: "exp_function",
+                            value: "",
+                            children: [
+                                {
+                                    type: "bracketed_multiplication",
+                                    value: "",
+                                    children: [
+                                        { type: "variable", value: "l", children: [] },
+                                        { type: "variable", value: "m", children: [] },
+                                    ],
+                                },
+                            ],
+                        },
+                        { type: "exp_function", value: "", children: [{ type: "variable", value: "x", children: [] }] },
+                        { type: "variable", value: "x", children: [] },
+                    ],
+                },
+                { type: "variable", value: "m", children: [] },
+            ],
+        });
+
+        // not right input configuration
+        expect(selOpInst.variableAllEqualImplementation([]).length).toBe(0);
+
+        // nothing to replace
+        useVariablesStore().setOperatorForVariable(variableTestConfig, "x", operatorFromString(variableTestConfig, "{}"));
+        expect(
+            selOpInst.variableAllEqualImplementation([
+                opFromObj(variableTestConfig, {
+                    type: "variable",
+                    value: "x",
+                    children: [],
+                    uuid: "777774c3-6f50-46bd-bf1d-03a15d09d06c",
+                }),
+            ]).length
+        ).toBe(0);
+
+        // not a variable input
+        useVariablesStore().setOperatorForVariable(variableTestConfig, "x", operatorFromString(variableTestConfig, "{}"));
+        expect(
+            selOpInst.variableAllEqualImplementation([
+                opFromObj(variableTestConfig, { type: "number", value: "1", children: [] }),
             ]).length
         ).toBe(0);
     });
