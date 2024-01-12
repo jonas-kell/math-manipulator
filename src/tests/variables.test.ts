@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { generateOperatorConfig, useVariablesStore, operatorFromString } from "../functions";
+import { generateOperatorConfig, useVariablesStore, operatorFromString, Variable } from "../functions";
 import { v4 as uuidv4 } from "uuid";
 
 describe("operator module - general some variable functions", () => {
@@ -9,12 +9,19 @@ describe("operator module - general some variable functions", () => {
         mockPinia();
     });
 
-    test("Peeralteration: pack-same-into-variable", () => {
+    test("store and get values from content or default", () => {
         const variableTestConfig = generateOperatorConfig(uuidv4(), uuidv4(), uuidv4());
 
         // variable test is currently empty
         expect(
             JSON.parse(operatorFromString(variableTestConfig, "test").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({
+            type: "variable",
+            value: "test",
+            children: [],
+        });
+        expect(
+            JSON.parse((operatorFromString(variableTestConfig, "test") as Variable).UnpackMODIFICATION().getSerializedStructure())
         ).toMatchObject({
             type: "variable",
             value: "test",
