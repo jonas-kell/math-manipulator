@@ -44,6 +44,10 @@
 
         return outMacros.join("\n");
     });
+
+    function kebabCase(inputString: string) {
+        return inputString.toLowerCase().replace(/[ _]/g, "-");
+    }
 </script>
 
 <template>
@@ -56,7 +60,7 @@
     <p>Help can be reset with refreshing the page</p>
 
     <template v-for="elem in elements">
-        <h2>{{ elem.element.title }}</h2>
+        <h2 :id="kebabCase(elem.element.title)">{{ elem.element.title }}</h2>
         <div class="help-indented">
             <p style="white-space: pre-line">{{ elem.element.description }}</p>
             <EquationUtility
