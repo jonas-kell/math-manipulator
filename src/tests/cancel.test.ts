@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, jest } from "@jest/globals";
 jest.useFakeTimers();
 import mockPinia from "./setupPiniaForTesting";
-import { operatorFromString, BracketedSum, generateOperatorConfig } from "../functions";
+import { operatorFromString, BracketedSum, generateOperatorConfig, Operator, BracketedMultiplication } from "../functions";
 
 describe("operator module - cancel from sums feature", () => {
     beforeEach(() => {
@@ -96,6 +96,107 @@ describe("operator module - cancel from sums feature", () => {
             type: "variable",
             value: "zxa",
             children: [],
+        });
+    });
+
+    test("Advanced Cancel adjacent sum", () => {
+        const operator = operatorFromString(testConfig, "b+a+b+c+c+b+a+c+c");
+
+        expect(
+            JSON.parse(
+                Operator.processPeerAlterationResult(
+                    operator,
+                    (operator as BracketedSum).adjacentElementsCancelPEERALTERATION([
+                        operatorFromString(testConfig, "c"),
+                        operatorFromString(testConfig, "b"),
+                    ])
+                ).getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                { type: "variable", value: "b", children: [] },
+                { type: "variable", value: "a", children: [] },
+                { type: "variable", value: "a", children: [] },
+                { type: "variable", value: "c", children: [] },
+                { type: "variable", value: "c", children: [] },
+            ],
+        });
+    });
+    test("Advanced Cancel non-adjacent sum", () => {
+        const operator = operatorFromString(testConfig, "b+a+b+c+c+b+a+c+c");
+
+        expect(
+            JSON.parse(
+                Operator.processPeerAlterationResult(
+                    operator,
+                    (operator as BracketedSum).elementsCancelPEERALTERATION([
+                        operatorFromString(testConfig, "c"),
+                        operatorFromString(testConfig, "b"),
+                    ])
+                ).getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                { type: "variable", value: "a", children: [] },
+                { type: "variable", value: "a", children: [] },
+                { type: "variable", value: "c", children: [] },
+            ],
+        });
+
+        // wrong input
+        expect((operator as BracketedSum).elementsCancelPEERALTERATION([operatorFromString(testConfig, "c")]).length).toBe(0);
+    });
+
+    test("Advanced Cancel adjacent product", () => {
+        const operator = operatorFromString(testConfig, "b a b c c b a c c");
+
+        expect(
+            JSON.parse(
+                Operator.processPeerAlterationResult(
+                    operator,
+                    (operator as BracketedMultiplication).adjacentElementsCancelPEERALTERATION([
+                        operatorFromString(testConfig, "c"),
+                        operatorFromString(testConfig, "b"),
+                    ])
+                ).getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                { type: "variable", value: "b", children: [] },
+                { type: "variable", value: "a", children: [] },
+                { type: "variable", value: "a", children: [] },
+                { type: "variable", value: "c", children: [] },
+                { type: "variable", value: "c", children: [] },
+            ],
+        });
+    });
+    test("Advanced Cancel non-adjacent product", () => {
+        const operator = operatorFromString(testConfig, "b a b c c b a c c");
+
+        expect(
+            JSON.parse(
+                Operator.processPeerAlterationResult(
+                    operator,
+                    (operator as BracketedMultiplication).elementsCancelPEERALTERATION([
+                        operatorFromString(testConfig, "c"),
+                        operatorFromString(testConfig, "b"),
+                    ])
+                ).getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                { type: "variable", value: "a", children: [] },
+                { type: "variable", value: "a", children: [] },
+                { type: "variable", value: "c", children: [] },
+            ],
         });
     });
 });

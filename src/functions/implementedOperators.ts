@@ -1836,7 +1836,7 @@ export class DefinedMacro extends Operator implements OrderableOperator {
     }
 
     static getNumberOfIntendedChildren(config: OperatorConfig, trigger: string) {
-        let matches = DefinedMacro.getOutputString(config, trigger).matchAll(DefinedMacro.ARG_REGEX) || [];
+        let matches = DefinedMacro.getOutputString(config, trigger).matchAll(DefinedMacro.ARG_REGEX) /* c8 ignore next */ || [];
 
         const numbers = [];
         for (const match of matches) {
