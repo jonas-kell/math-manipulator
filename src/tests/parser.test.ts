@@ -886,4 +886,71 @@ describe("parser module end-to-end", () => {
             ],
         });
     });
+
+    test("Repeating operator wrong argument counts", () => {
+        const expected = {
+            type: "structural_container",
+            value: "",
+            children: [
+                {
+                    type: "exp_function",
+                    value: "",
+                    children: [
+                        {
+                            type: "structural_container",
+                            value: "",
+                            children: [
+                                { type: "less", value: "", children: [] },
+                                { type: "variable", value: "l", children: [] },
+                                { type: "variable", value: "m", children: [] },
+                                { type: "greater", value: "", children: [] },
+                            ],
+                        },
+                    ],
+                },
+                { type: "less", value: "", children: [] },
+                { type: "variable", value: "l", children: [] },
+                { type: "variable", value: "m", children: [] },
+                { type: "greater", value: "", children: [] },
+            ],
+        };
+
+        expect(JSON.parse(operatorFromString(testConfig, "exp(< l ; m >) ; < l ; m >").getSerializedStructure())).toMatchObject(
+            expected
+        );
+        expect(JSON.parse(operatorFromString(testConfig, "exp(<; l ; m >) ; < l ; m >").getSerializedStructure())).toMatchObject(
+            expected
+        );
+        expect(JSON.parse(operatorFromString(testConfig, "exp(< l ; m; >) ; < l ; m >").getSerializedStructure())).toMatchObject(
+            expected
+        );
+        expect(JSON.parse(operatorFromString(testConfig, "exp(< ;l ; m; >) ; < l ; m >").getSerializedStructure())).toMatchObject(
+            expected
+        );
+        expect(JSON.parse(operatorFromString(testConfig, "exp(< l ; m >) ; <; l ; m >").getSerializedStructure())).toMatchObject(
+            expected
+        );
+        expect(JSON.parse(operatorFromString(testConfig, "exp(< l ; m >) ; < l ; m; >").getSerializedStructure())).toMatchObject(
+            expected
+        );
+        expect(JSON.parse(operatorFromString(testConfig, "exp(< l ; m >) ; < ;l ; m; >").getSerializedStructure())).toMatchObject(
+            expected
+        );
+        expect(JSON.parse(operatorFromString(testConfig, "< l  m >").getSerializedStructure())).toMatchObject({
+            type: "structural_container",
+            value: "",
+            children: [
+                { type: "less", value: "", children: [] },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "l", children: [] },
+                        { type: "variable", value: "m", children: [] },
+                    ],
+                },
+                { type: "greater", value: "", children: [] },
+            ],
+        });
+    });
 });

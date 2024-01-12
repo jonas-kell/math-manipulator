@@ -473,7 +473,12 @@ const implyStructuralSeparationInFront = [
     TokenType.String,
     TokenType.RawLatex,
 ]; // Plus groups aka most of the time brackets
-const structuralSeparationCanBeInsertedOutsideOfFunctionArguments = [TokenType.String, TokenType.RawLatex, TokenType.Macro];
+const structuralSeparationCanBeInsertedOutsideOfFunctionArguments = [
+    TokenType.String,
+    TokenType.RawLatex,
+    TokenType.Macro,
+    TokenType.Structural,
+];
 const implyMultiplicationBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets // Plus Macros WITHOUT Arguments
 const implyMultiplicationInFront = [TokenType.Other, TokenType.Number, TokenType.Function, TokenType.Constant, TokenType.Macro]; // Plus groups aka most of the time brackets
 const implyAdditionBehind = [TokenType.Other, TokenType.Number, TokenType.Constant, TokenType.BeforeFunction]; // Plus groups aka most of the time brackets // Plus Macros WITHOUT Arguments
@@ -873,12 +878,7 @@ function fixOperatorPrecedenceGroupingRecursive(config: OperatorConfig, tokenGro
                         elementToTakeFromAfter instanceof TokenGroupKnot ||
                         elementToTakeFromAfter instanceof TokenGroupKnotInfix ||
                         (elementToTakeFromAfter instanceof TokenGroupLeaf &&
-                            !tokenTypesWithOperatorCharacter.includes(elementToTakeFromAfter.getToken().type) &&
-                            elementToTakeFromAfter.getToken().type != TokenType.Structural) ||
-                        (elementToTakeFromAfter instanceof TokenGroupLeaf &&
-                            elementToTakeFromAfter.getToken().type == TokenType.Structural &&
-                            AllowedStructuralKeywordMapping[elementToTakeFromAfter.getToken().content] ==
-                                OperatorType.EmptyArgument)
+                            !tokenTypesWithOperatorCharacter.includes(elementToTakeFromAfter.getToken().type))
                     ) {
                         /* c8 ignore next */ // !! I THINK this is impossible now. But no guarantee
                         if (stillNeeded == 0) {
