@@ -72,9 +72,10 @@
 
     const vHighlight = {
         mounted: (el: any) => {
-            const regex = new RegExp(`(${helpFilter.value})`, "gi");
-
-            el.innerHTML = el.innerHTML.replace(regex, '<span class="highlighted">$1</span>');
+            if (helpFilter.value != "") {
+                const regex = new RegExp(`(${helpFilter.value})`, "gi");
+                el.innerHTML = el.innerHTML.replace(regex, '<span class="highlighted">$1</span>');
+            }
         },
     };
     const render = ref(true);
