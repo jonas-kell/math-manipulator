@@ -1032,7 +1032,9 @@ function infixTokenGroupTreeToExportOperatorTreeRecursive(config: OperatorConfig
             default:
                 /* c8 ignore next */
                 throw Error(`Singular token without implemented Export target type ${token.type} `);
+            /* c8 ignore next */
         }
+        /* c8 ignore next */
     } else if (tokenGroup instanceof TokenGroupKnotInfixStructural) {
         // catch this before the next switch, because all TokenGroupKnotInfixStructural are also TokenGroupKnotInfix
         const children = tokenGroup.getChildren().map((child) => infixTokenGroupTreeToExportOperatorTreeRecursive(config, child));
