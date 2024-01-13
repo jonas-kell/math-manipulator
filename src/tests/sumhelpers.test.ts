@@ -398,21 +398,4 @@ describe("operator module - Advanced operations on sums", () => {
             ],
         });
     });
-
-    // test("Group equal elements in sum", () => {
-    //     mockPinia();
-
-    //     expect(
-    //         JSON.parse(
-    //             (
-    //                 operatorFromString(
-    //                     testConfig,
-    //                     "x+y+x+z+z+2"
-    //                 ) as BracketedSum
-    //             )
-    //                 .GroupEqualElementsMODIFICATION()
-    //                 .getSerializedStructure()
-    //         )
-    //     ).toMatchObject();
-    // });
 });
