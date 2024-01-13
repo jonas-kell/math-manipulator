@@ -72,9 +72,9 @@ export function operatorConstructorSwitch(
         case OperatorType.BosonicAnnihilationOperator:
             return new BosonicAnnihilationOperator(config, value, childrenReconstructed[0]);
         case OperatorType.FunctionMathMode:
-            return new FunctionMathMode(config, childrenReconstructed[0], childrenReconstructed[1]);
+            return new FunctionMathMode(config, value, childrenReconstructed[0]);
         case OperatorType.FunctionMathRm:
-            return new FunctionMathRm(config, childrenReconstructed[0], childrenReconstructed[1]);
+            return new FunctionMathRm(config, value, childrenReconstructed[0]);
         case OperatorType.Sin:
             return new Sin(config, childrenReconstructed[0]);
         case OperatorType.Cos:
@@ -2372,14 +2372,36 @@ export class BosonicAnnihilationOperator extends QMOperatorWithOneArgument {
 }
 
 export class FunctionMathMode extends Operator {
-    constructor(config: OperatorConfig, name: Operator, content: Operator) {
-        super(config, OperatorType.FunctionMathMode, "{", "}\\left(", "\\right)", [name, content], "");
+    constructor(config: OperatorConfig, name: string, content: Operator) {
+        super(
+            config,
+            OperatorType.FunctionMathMode,
+            "{" + name + "}\\left(",
+            "",
+            "\\right)",
+            [content],
+            name,
+            undefined,
+            undefined,
+            false
+        );
     }
 }
 
 export class FunctionMathRm extends Operator {
-    constructor(config: OperatorConfig, name: Operator, content: Operator) {
-        super(config, OperatorType.FunctionMathRm, "\\mathrm{", "}\\left(", "\\right)", [name, content], "");
+    constructor(config: OperatorConfig, name: string, content: Operator) {
+        super(
+            config,
+            OperatorType.FunctionMathRm,
+            "\\mathrm{" + name + "}\\left(",
+            "",
+            "\\right)",
+            [content],
+            name,
+            undefined,
+            undefined,
+            false
+        );
     }
 }
 

@@ -500,10 +500,10 @@ describe("parser module end-to-end", () => {
     });
 
     test("Functions all parse", () => {
-        const input = "func(f x) = funcrm(g x) = sin(x) = cos x";
+        const input = 'func("f" x) = funcrm("g" x) = sin(x) = cos x';
         expect(() => operatorFromString(testConfig, input)).not.toThrow();
         expect(operatorFromString(testConfig, input).getExportFormulaString()).toBe(
-            "{{f}}\\left({x}\\right)\\,\\,\\eq\\,\\,\\mathrm{{g}}\\left({x}\\right)\\,\\,\\eq\\,\\,\\mathrm{sin}\\left({x}\\right)\\,\\,\\eq\\,\\,\\mathrm{cos}\\left({x}\\right)"
+            "{f}\\left({x}\\right)\\,\\,\\eq\\,\\,\\mathrm{g}\\left({x}\\right)\\,\\,\\eq\\,\\,\\mathrm{sin}\\left({x}\\right)\\,\\,\\eq\\,\\,\\mathrm{cos}\\left({x}\\right)"
         );
         expect(JSON.parse(operatorFromString(testConfig, input).getSerializedStructure())).toMatchObject({
             type: "structural_container",
@@ -511,13 +511,8 @@ describe("parser module end-to-end", () => {
             children: [
                 {
                     type: "general_function_math_mode",
-                    value: "",
+                    value: "f",
                     children: [
-                        {
-                            type: "variable",
-                            value: "f",
-                            children: [],
-                        },
                         {
                             type: "variable",
                             value: "x",
@@ -532,13 +527,8 @@ describe("parser module end-to-end", () => {
                 },
                 {
                     type: "general_function_math_rm",
-                    value: "",
+                    value: "g",
                     children: [
-                        {
-                            type: "variable",
-                            value: "g",
-                            children: [],
-                        },
                         {
                             type: "variable",
                             value: "x",

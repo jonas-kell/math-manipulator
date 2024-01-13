@@ -1210,6 +1210,8 @@ function takesAdditionalStringFirstArgument(type: OperatorType): boolean {
         OperatorType.FermionicAnnihilationOperator,
         OperatorType.BosonicAnnihilationOperator,
         OperatorType.BosonicCreationOperator,
+        OperatorType.FunctionMathMode,
+        OperatorType.FunctionMathRm,
     ];
 
     return functionConvertsFirstStringArgumentToValue.includes(type);
