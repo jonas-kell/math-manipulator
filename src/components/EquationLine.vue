@@ -160,6 +160,7 @@
     enum MODES {
         NONE = "none",
         REPLACEMENT = "replacement",
+        REPLACEMENT_ALL = "replacement_all",
         EXPORT_REPLACEMENT = "replacement_export",
         VARIABLE_DEFINITION = "var_def",
         SHOW_LATEX = "show_latex",
@@ -244,6 +245,33 @@
                     selectionUUID.value,
                     replaceWithOperator.value as Operator
                 );
+            }
+        }
+    };
+    const replaceAllButtonAction = () => {
+        resetControlPanel();
+        mode.value = MODES.REPLACEMENT_ALL;
+        replaceAllWithCallback();
+    };
+    const replaceAllWithOperator = ref(null as Operator | null);
+    const skipReplaceAllWithEffect = ref(false);
+    const replaceAllWithCallback = () => {
+        if (skipReplaceAllWithEffect.value) {
+            skipReplaceAllWithEffect.value = false;
+        } else {
+            // real implementation >>
+            let replacement = new EmptyArgument(props.config);
+            if (replaceAllWithOperator.value != null) {
+                replacement = replaceAllWithOperator.value as Operator;
+            }
+
+            if (selectedOperator.value != null) {
+                let actionResult = props.operator.replaceAllEqualImplementation([
+                    selectedOperator.value as Operator,
+                    replacement,
+                ]);
+                const resOp = Operator.processPeerAlterationResult(props.operator, actionResult);
+                outputOperator.value = resOp;
             }
         }
     };
@@ -632,6 +660,7 @@
             </button>
             <div style="margin-bottom: -0.5em; width: 100%">&nbsp;</div>
             <button @click="replaceButtonAction" style="margin-right: 0.2em">Replace</button>
+            <button @click="replaceAllButtonAction" style="margin-right: 0.2em">Replace All Equal</button>
             <button @click="replaceWithExportButtonAction" style="margin-right: 0.2em">Replace (With Export)</button>
             <button @click="variableDefinitionButtonAction" style="margin-right: 0.2em">Define Variable</button>
             <button
@@ -657,12 +686,27 @@
             <InputToOperatorParser
                 :textarea="true"
                 :config="config"
-                v-show="mode == MODES.REPLACEMENT"
+                v-show="mode == MODES.REPLACEMENT || mode == MODES.REPLACEMENT_ALL"
                 @parsed="(a: Operator | null) => { 
                     replaceWithOperator = a;
-                    replaceWithCallback() 
+                    replaceAllWithOperator = a;
+                    if (mode == MODES.REPLACEMENT) {
+                        replaceWithCallback() 
+                    }
+                    if (mode == MODES.REPLACEMENT_ALL) {
+                        replaceAllWithCallback() 
+                    }
                 }"
-                @loading-value="() => (skipReplaceWithEffect = true)"
+                @loading-value="
+                    () => {
+                        if (mode == MODES.REPLACEMENT) {
+                            skipReplaceWithEffect = true;
+                        }
+                        if (mode == MODES.REPLACEMENT_ALL) {
+                            skipReplaceAllWithEffect = true;
+                        }
+                    }
+                "
                 style="margin-top: 0.5em; width: 100%; min-height: 2em"
                 :uuid="operatorParserUUID"
             />
