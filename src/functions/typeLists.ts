@@ -61,6 +61,7 @@ export enum OperatorType {
     FunctionMathRm = "general_function_math_rm",
     Sin = "sin",
     Cos = "cos",
+    Sqrt = "sqrt",
     StructuralContainer = "structural_container",
     EmptyArgument = "empty_argument",
     Equals = "equals",
@@ -131,6 +132,7 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Percent]: 1,
     [OperatorType.DefinedMacro]: MAX_CHILDREN,
     [OperatorType.DefinedMacroArgument]: 1,
+    [OperatorType.Sqrt]: 1,
 };
 
 export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
@@ -184,4 +186,5 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Percent]: 1,
     [OperatorType.DefinedMacro]: 0,
     [OperatorType.DefinedMacroArgument]: 1,
+    [OperatorType.Sqrt]: 1,
 };

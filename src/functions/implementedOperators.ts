@@ -77,6 +77,8 @@ export function operatorConstructorSwitch(
             return new FunctionMathRm(config, value, childrenReconstructed[0]);
         case OperatorType.Sin:
             return new Sin(config, childrenReconstructed[0]);
+        case OperatorType.Sqrt:
+            return new Sqrt(config, childrenReconstructed[0]);
         case OperatorType.Cos:
             return new Cos(config, childrenReconstructed[0]);
         case OperatorType.EmptyArgument:
@@ -2435,6 +2437,24 @@ export class Cos extends Operator {
 
         if (allNotNull) {
             return Math.cos(childrenValues[0] as number);
+        } else {
+            return null;
+        }
+    }
+}
+
+export class Sqrt extends Operator {
+    constructor(config: OperatorConfig, content: Operator) {
+        super(config, OperatorType.Sqrt, "\\sqrt{", "", "}", [content], "");
+    }
+
+    public getNumericalValue(onlyReturnNumberIfMakesTermSimpler: boolean): number | null {
+        const res = this.childrenNumericalValues(onlyReturnNumberIfMakesTermSimpler);
+        const allNotNull = res[0];
+        const childrenValues = res[1];
+
+        if (allNotNull) {
+            return Math.sqrt(childrenValues[0] as number);
         } else {
             return null;
         }

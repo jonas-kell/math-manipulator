@@ -125,6 +125,7 @@ const AllowedFunctionKeywordMapping = {
     funcrm: OperatorType.FunctionMathRm,
     sin: OperatorType.Sin,
     cos: OperatorType.Cos,
+    sqrt: OperatorType.Sqrt,
     delta: OperatorType.KroneckerDelta,
     complex: OperatorType.ComplexOperatorConstruct,
     comm: OperatorType.Commutator,
