@@ -36,6 +36,8 @@
     const macros = computed((): string => {
         let outMacros = [] as string[];
 
+        outMacros.push("\\usepackage{amsfonts,amssymb,amstext,amsmath,amsthm}");
+
         Object.keys(katexMacros).forEach((macroKey) => {
             const macroContent = (katexMacros as { [key: string]: string })[macroKey];
 

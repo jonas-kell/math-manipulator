@@ -1,3 +1,6 @@
+// check with https://katex.org/docs/supported
+// and make sure to export required packages for seamles function in "./../pages/Help.vue"
+
 export const katexMacros = {
     "\\semicolon": ";",
     "\\plus": "+",
@@ -13,5 +16,7 @@ export const katexMacros = {
     "\\eq": "=",
     "\\less": "<",
     "\\greater": ">",
-    "\\quotation": '"',
+    "\\quotationmarks": '"',
+    "\\lang": "\\langle",
+    "\\rang": "\\rangle",
 };
