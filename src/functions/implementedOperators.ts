@@ -890,12 +890,27 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
 
+            let multiplicityStrippedChild = child;
+            let multiplicityStripped = 1;
+            if (child instanceof BracketedMultiplication) {
+                const childrenOfMult = child.getChildren();
+
+                if (childrenOfMult[0] instanceof Numerical) {
+                    multiplicityStripped = childrenOfMult[0].getNumericalValue(false) as number;
+                    multiplicityStrippedChild = constructContainerOrFirstChild(
+                        this.getOwnConfig(),
+                        OperatorType.BracketedMultiplication,
+                        childrenOfMult.slice(1)
+                    );
+                }
+            }
+
             let found = false;
             for (let j = 0; j < newChildrenGroups.length; j++) {
                 const comparison = newChildrenGroups[j];
 
-                if (Operator.assertOperatorsEquivalent(child, comparison.op, false)) {
-                    newChildrenGroups[j].count += 1;
+                if (Operator.assertOperatorsEquivalent(multiplicityStrippedChild, comparison.op, false)) {
+                    newChildrenGroups[j].count += multiplicityStripped;
                     found = true;
                     break;
                 }
@@ -903,8 +918,8 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
 
             if (!found) {
                 newChildrenGroups.push({
-                    op: child,
-                    count: 1,
+                    op: multiplicityStrippedChild,
+                    count: multiplicityStripped,
                 });
             }
         }
