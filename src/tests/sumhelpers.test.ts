@@ -166,7 +166,7 @@ describe("operator module - Advanced operations on sums", () => {
 
         expect(
             JSON.parse(
-                (operatorFromString(testConfig, "x+y+x+z+z+2+y*y+3*x") as BracketedSum)
+                (operatorFromString(testConfig, "x+y+x+z-z+2+y*y+3*x+h-(4 h)-h") as BracketedSum)
                     .GroupEqualElementsMODIFICATION()
                     .getSerializedStructure()
             )
@@ -183,14 +183,6 @@ describe("operator module - Advanced operations on sums", () => {
                     ],
                 },
                 { type: "variable", value: "y", children: [] },
-                {
-                    type: "bracketed_multiplication",
-                    value: "",
-                    children: [
-                        { type: "number", value: "2", children: [] },
-                        { type: "variable", value: "z", children: [] },
-                    ],
-                },
                 { type: "number", value: "2", children: [] },
                 {
                     type: "bracketed_multiplication",
@@ -198,6 +190,20 @@ describe("operator module - Advanced operations on sums", () => {
                     children: [
                         { type: "variable", value: "y", children: [] },
                         { type: "variable", value: "y", children: [] },
+                    ],
+                },
+                {
+                    type: "negation",
+                    value: "",
+                    children: [
+                        {
+                            type: "bracketed_multiplication",
+                            value: "",
+                            children: [
+                                { type: "number", value: "4", children: [] },
+                                { type: "variable", value: "h", children: [] },
+                            ],
+                        },
                     ],
                 },
             ],

@@ -891,9 +891,18 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             const child = children[i];
 
             let multiplicityStrippedChild = child;
+            let signStripped = 1;
             let multiplicityStripped = 1;
-            if (child instanceof BracketedMultiplication) {
-                const childrenOfMult = child.getChildren();
+
+            if (multiplicityStrippedChild instanceof Negation) {
+                const childOfNegation = multiplicityStrippedChild.getChild();
+
+                multiplicityStrippedChild = childOfNegation;
+                signStripped = -1;
+            }
+
+            if (multiplicityStrippedChild instanceof BracketedMultiplication) {
+                const childrenOfMult = multiplicityStrippedChild.getChildren();
 
                 if (childrenOfMult[0] instanceof Numerical) {
                     multiplicityStripped = childrenOfMult[0].getNumericalValue(false) as number;
@@ -910,7 +919,7 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
                 const comparison = newChildrenGroups[j];
 
                 if (Operator.assertOperatorsEquivalent(multiplicityStrippedChild, comparison.op, false)) {
-                    newChildrenGroups[j].count += multiplicityStripped;
+                    newChildrenGroups[j].count += signStripped * multiplicityStripped;
                     found = true;
                     break;
                 }
@@ -919,22 +928,41 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             if (!found) {
                 newChildrenGroups.push({
                     op: multiplicityStrippedChild,
-                    count: multiplicityStripped,
+                    count: signStripped * multiplicityStripped,
                 });
             }
         }
+
+        newChildrenGroups = newChildrenGroups.filter((term) => {
+            return !isBasicallyZero(term.count);
+        });
 
         return constructContainerOrFirstChild(
             this.getOwnConfig(),
             OperatorType.BracketedSum,
             newChildrenGroups.map((structureGroup): Operator => {
-                if (structureGroup.count == 1) {
-                    return structureGroup.op;
+                let multiplicity = structureGroup.count;
+
+                let resOp: Operator | null = null;
+                let negated = false;
+                if (multiplicity < 0) {
+                    negated = true;
+                    multiplicity = -multiplicity;
+                }
+
+                if (isBasicallyOne(multiplicity)) {
+                    resOp = structureGroup.op;
                 } else {
-                    return new BracketedMultiplication(this.getOwnConfig(), [
-                        new Numerical(this.getOwnConfig(), structureGroup.count),
+                    resOp = new BracketedMultiplication(this.getOwnConfig(), [
+                        new Numerical(this.getOwnConfig(), multiplicity),
                         structureGroup.op,
                     ]);
+                }
+
+                if (negated) {
+                    return new Negation(this.getOwnConfig(), resOp);
+                } else {
+                    return resOp;
                 }
             })
         );
