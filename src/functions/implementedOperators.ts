@@ -107,6 +107,8 @@ export function operatorConstructorSwitch(
             return new Commutator(config, childrenReconstructed[0], childrenReconstructed[1]);
         case OperatorType.AntiCommutator:
             return new AntiCommutator(config, childrenReconstructed[0], childrenReconstructed[1]);
+        case OperatorType.Distinct:
+            return new Distinct(config, childrenReconstructed[0]);
         case OperatorType.ComplexOperatorConstruct:
             const realArg = childrenReconstructed[0];
             const complexArg = childrenReconstructed[1];
@@ -2519,6 +2521,12 @@ export class GreaterEquals extends Operator {
     }
 }
 
+export class Distinct extends Operator {
+    constructor(config: OperatorConfig, display: Operator) {
+        super(config, OperatorType.Distinct, "", "", "", [display], "");
+    }
+}
+
 export class KroneckerDelta extends Operator implements OrderableOperator {
     constructor(config: OperatorConfig, firstArg: Operator, secondArg: Operator) {
         super(config, OperatorType.KroneckerDelta, "\\delta_{", ",", "}", [firstArg, secondArg], "");
@@ -2537,6 +2545,28 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
                 // If everything could be parsed into a number, we are sure the arguments are different and we return 0 as the value for the delta
                 return 0;
             } else {
+                // if at least one argument is marked to be distinct, this indicates that the arguments are intebded to differ in the kronecker delta
+                let containsDistinct = false;
+                let childA = this._children[0];
+                let childB = this._children[1];
+
+                if (childA instanceof Distinct) {
+                    childA = childA.childrenAccessForPeerAlterationRecursion()[0];
+                    containsDistinct = true;
+                }
+                if (childB instanceof Distinct) {
+                    childB = childB.childrenAccessForPeerAlterationRecursion()[0];
+                    containsDistinct = true;
+                }
+
+                if (containsDistinct) {
+                    if (Operator.assertOperatorsEquivalent(childA, childB)) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+
                 // some structure could not be parsed, but still the values may be equivalent after modification that is too complex for the program to handle on its own
                 // keep the delta as a formula
                 return null;

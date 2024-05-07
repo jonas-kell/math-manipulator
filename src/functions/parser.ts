@@ -131,6 +131,7 @@ const AllowedFunctionKeywordMapping = {
     comm: OperatorType.Commutator,
     acomm: OperatorType.AntiCommutator,
     [DefinedMacroArgument.DEFINED_MACRO_ARGUMENT_SIGN_SYMBOL]: OperatorType.DefinedMacroArgument,
+    dist: OperatorType.Distinct,
 } as { [key: string]: OperatorType };
 const functionsWithArgumentsConsideredStructural = [
     // only makes a difference for functions that take more than exactly one argument

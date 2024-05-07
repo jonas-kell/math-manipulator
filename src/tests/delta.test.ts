@@ -76,6 +76,19 @@ describe("operator implementation delta", () => {
                 },
             ],
         });
+        expect(
+            JSON.parse(
+                operatorFromString(testConfig, "delta(dist(l) dist(l))").getCopyWithNumbersFolded().getSerializedStructure()
+            )
+        ).toMatchObject({ type: "number", value: "1", children: [] });
+        expect(
+            JSON.parse(operatorFromString(testConfig, "delta(dist(l) l)").getCopyWithNumbersFolded().getSerializedStructure())
+        ).toMatchObject({ type: "number", value: "1", children: [] });
+        expect(
+            JSON.parse(
+                operatorFromString(testConfig, "delta(dist(l) dist(m))").getCopyWithNumbersFolded().getSerializedStructure()
+            )
+        ).toMatchObject({ type: "number", value: "0", children: [] });
     });
 
     test("Split one delta into product", () => {
