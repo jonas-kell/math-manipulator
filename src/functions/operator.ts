@@ -463,7 +463,12 @@ export abstract class Operator {
         }
     }
 
-    static assertOperatorsEquivalent(a: Operator, b: Operator, treatSameNumericalValueAsEquivalent: boolean = true): boolean {
+    static assertOperatorsEquivalent(
+        a: Operator,
+        b: Operator,
+        treatSameNumericalValueAsEquivalent: boolean = true,
+        allowSymmetricalSwapping: boolean = true
+    ): boolean {
         if (treatSameNumericalValueAsEquivalent) {
             const valA = a.getNumericalValue(false);
             const valB = b.getNumericalValue(false);
@@ -477,10 +482,18 @@ export abstract class Operator {
             }
         }
 
-        return Operator.assertEquivalenceRecursive(a.getSerializedStructureRecursive(), b.getSerializedStructureRecursive());
+        return Operator.assertEquivalenceRecursive(
+            a.getSerializedStructureRecursive(),
+            b.getSerializedStructureRecursive(),
+            allowSymmetricalSwapping
+        );
     }
 
-    private static assertEquivalenceRecursive(a: ExportOperatorContent, b: ExportOperatorContent): boolean {
+    private static assertEquivalenceRecursive(
+        a: ExportOperatorContent,
+        b: ExportOperatorContent,
+        allowSymmetricalSwapping: boolean = true
+    ): boolean {
         if (a.type != b.type) {
             return false;
         }
@@ -489,6 +502,26 @@ export abstract class Operator {
         }
         if (a.children.length != b.children.length) {
             return false;
+        }
+        if (allowSymmetricalSwapping) {
+            if (a.type == OperatorType.KroneckerDelta) {
+                // type is already equal for b
+                if (a.children.length == 2) {
+                    // length is already equal for b
+                    const childAA = a.children[0];
+                    const childAB = a.children[1];
+                    const childBA = b.children[0];
+                    const childBB = b.children[1];
+                    if (
+                        Operator.assertEquivalenceRecursive(childAA, childBB) &&
+                        Operator.assertEquivalenceRecursive(childBA, childAB)
+                    ) {
+                        // special case, deltas aer also equivalent if their children match cross-wise
+                        console.log("cross");
+                        return true;
+                    }
+                }
+            }
         }
         for (let i = 0; i < a.children.length; i++) {
             const childA = a.children[i];

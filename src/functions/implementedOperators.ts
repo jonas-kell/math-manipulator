@@ -2748,11 +2748,11 @@ export class KroneckerDelta extends Operator implements OrderableOperator {
         let deltaInChildren = null as KroneckerDelta | null;
         let first: boolean = false;
         operator.childrenAccessForPeerAlterationRecursion().forEach((child) => {
-            if (Operator.assertOperatorsEquivalent(optionOne, child)) {
+            if (Operator.assertOperatorsEquivalent(optionOne, child, true, false)) {
                 deltaInChildren = child as KroneckerDelta;
                 first = true;
             }
-            if (Operator.assertOperatorsEquivalent(optionTwo, child)) {
+            if (Operator.assertOperatorsEquivalent(optionTwo, child, true, false)) {
                 deltaInChildren = child as KroneckerDelta;
                 first = false;
             }
