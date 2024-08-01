@@ -71,6 +71,10 @@ export function operatorConstructorSwitch(
             return new BosonicCreationOperator(config, value, childrenReconstructed[0]);
         case OperatorType.BosonicAnnihilationOperator:
             return new BosonicAnnihilationOperator(config, value, childrenReconstructed[0]);
+        case OperatorType.HardCoreBosonicCreationOperator:
+            return new HardCoreBosonicCreationOperator(config, value, childrenReconstructed[0]);
+        case OperatorType.HardCoreBosonicAnnihilationOperator:
+            return new HardCoreBosonicAnnihilationOperator(config, value, childrenReconstructed[0]);
         case OperatorType.FunctionMathMode:
             return new FunctionMathMode(config, value, childrenReconstructed[0]);
         case OperatorType.FunctionMathRm:
@@ -251,6 +255,8 @@ function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOpera
         FermionicCreationOperator,
         BosonicAnnihilationOperator,
         BosonicCreationOperator,
+        HardCoreBosonicAnnihilationOperator, // TODO maybe swap for hard core otherwise sorting may become impossible
+        HardCoreBosonicCreationOperator,
         KroneckerDelta,
         Operator,
     ];
@@ -269,6 +275,14 @@ function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOpera
             const diffBosonic = a.getDegreeOfFreedom().localeCompare(b.getDegreeOfFreedom());
             if (diffBosonic != 0) {
                 return diffBosonic;
+            }
+        }
+    }
+    if (a instanceof HardCoreBosonicAnnihilationOperator || a instanceof HardCoreBosonicCreationOperator) {
+        if (b instanceof HardCoreBosonicAnnihilationOperator || b instanceof HardCoreBosonicCreationOperator) {
+            const diffHCBosonic = a.getDegreeOfFreedom().localeCompare(b.getDegreeOfFreedom());
+            if (diffHCBosonic != 0) {
+                return diffHCBosonic;
             }
         }
     }
@@ -1485,12 +1499,16 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         if (
             firstChild instanceof BosonicCreationOperator ||
             firstChild instanceof BosonicAnnihilationOperator ||
+            firstChild instanceof HardCoreBosonicCreationOperator ||
+            firstChild instanceof HardCoreBosonicAnnihilationOperator ||
             firstChild instanceof FermionicCreationOperator ||
             firstChild instanceof FermionicAnnihilationOperator
         ) {
             if (
                 secondChild instanceof BosonicCreationOperator ||
                 secondChild instanceof BosonicAnnihilationOperator ||
+                secondChild instanceof HardCoreBosonicCreationOperator ||
+                secondChild instanceof HardCoreBosonicAnnihilationOperator ||
                 secondChild instanceof FermionicCreationOperator ||
                 secondChild instanceof FermionicAnnihilationOperator
             ) {
@@ -2411,6 +2429,69 @@ export class BosonicAnnihilationOperator extends QMOperatorWithOneArgument {
             return [
                 [false, [commuteWith, this]],
                 [false, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]],
+            ];
+        }
+
+        return [[false, [commuteWith, this]]];
+    }
+}
+export class HardCoreBosonicCreationOperator extends QMOperatorWithOneArgument {
+    private _name: string;
+
+    constructor(config: OperatorConfig, name: string, index: Operator) {
+        const nameOrDefault = name == null || name == "" || name == undefined ? "h" : name;
+        const latex = `\\mathrm{${nameOrDefault}}^\\dagger`;
+        super(config, OperatorType.HardCoreBosonicCreationOperator, latex, index, nameOrDefault);
+
+        this._name = name;
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
+        if (commuteWith instanceof HardCoreBosonicAnnihilationOperator && this.sameDegreeOfFreedom(commuteWith)) {
+            return [
+                [false, [commuteWith, this]],
+                [true, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]],
+                [
+                    false,
+                    [
+                        new Numerical(this.getOwnConfig(), 2),
+                        new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild()),
+                        new BosonicCreationOperator(this.getOwnConfig(), this._name, this.getChild()), // TODO make hardcore
+                        new BosonicAnnihilationOperator(this.getOwnConfig(), this._name, this.getChild()), // TODO make hardcore
+                    ],
+                ],
+            ];
+        }
+
+        return [[false, [commuteWith, this]]];
+    }
+}
+
+export class HardCoreBosonicAnnihilationOperator extends QMOperatorWithOneArgument {
+    private _name: string;
+
+    constructor(config: OperatorConfig, name: string, index: Operator) {
+        const nameOrDefault = name == null || name == "" || name == undefined ? "h" : name;
+        const latex = `\\mathrm{${nameOrDefault}}`;
+        super(config, OperatorType.HardCoreBosonicAnnihilationOperator, latex, index, nameOrDefault);
+
+        this._name = name;
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
+        if (commuteWith instanceof HardCoreBosonicCreationOperator && this.sameDegreeOfFreedom(commuteWith)) {
+            return [
+                [false, [commuteWith, this]],
+                [false, [new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild())]],
+                [
+                    true,
+                    [
+                        new Numerical(this.getOwnConfig(), 2),
+                        new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild()),
+                        new BosonicCreationOperator(this.getOwnConfig(), this._name, this.getChild()), // TODO make hardcore
+                        new BosonicAnnihilationOperator(this.getOwnConfig(), this._name, this.getChild()), // TODO make hardcore
+                    ],
+                ],
             ];
         }
 
