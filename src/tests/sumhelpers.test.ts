@@ -412,4 +412,108 @@ describe("operator module - Advanced operations on sums", () => {
             ],
         });
     });
+
+    test("Factor out right from sum", () => {
+        mockPinia();
+
+        expect(
+            JSON.parse(
+                (
+                    operatorFromString(
+                        testConfig,
+                        "(2*x*y)+(2*x*z)-(2*z*exp(t))-(y z)-(y 2)+(y f)+(y a)+exp(z)-exp(1)"
+                    ) as BracketedSum
+                )
+                    .FactorOutRightMODIFICATION()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({
+            type: "bracketed_sum",
+            value: "",
+            children: [
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "bracketed_sum",
+                            value: "",
+                            children: [
+                                {
+                                    type: "bracketed_multiplication",
+                                    value: "",
+                                    children: [
+                                        { type: "number", value: "2", children: [] },
+                                        { type: "variable", value: "x", children: [] },
+                                    ],
+                                },
+                                { type: "negation", value: "", children: [{ type: "variable", value: "y", children: [] }] },
+                            ],
+                        },
+                        { type: "variable", value: "z", children: [] },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "number", value: "2", children: [] },
+                        { type: "variable", value: "x", children: [] },
+                        { type: "variable", value: "y", children: [] },
+                    ],
+                },
+                {
+                    type: "negation",
+                    value: "",
+                    children: [
+                        {
+                            type: "bracketed_multiplication",
+                            value: "",
+                            children: [
+                                { type: "number", value: "2", children: [] },
+                                { type: "variable", value: "z", children: [] },
+                                { type: "exp_function", value: "", children: [{ type: "variable", value: "t", children: [] }] },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "negation",
+                    value: "",
+                    children: [
+                        {
+                            type: "bracketed_multiplication",
+                            value: "",
+                            children: [
+                                { type: "variable", value: "y", children: [] },
+                                { type: "number", value: "2", children: [] },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "y", children: [] },
+                        { type: "variable", value: "f", children: [] },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "variable", value: "y", children: [] },
+                        { type: "variable", value: "a", children: [] },
+                    ],
+                },
+                { type: "exp_function", value: "", children: [{ type: "variable", value: "z", children: [] }] },
+                {
+                    type: "negation",
+                    value: "",
+                    children: [{ type: "exp_function", value: "", children: [{ type: "number", value: "1", children: [] }] }],
+                },
+            ],
+        });
+    });
 });

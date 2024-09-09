@@ -771,7 +771,7 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
         return constructContainerOrFirstChild(this.getOwnConfig(), OperatorType.BracketedSum, sortedChildren, false);
     }
 
-    FactorOutLeftMODIFICATION(): Operator {
+    FactorOutLeftMODIFICATION(rightToLeft: boolean = false): Operator {
         let children = this.getChildren();
         let products = [] as { minus: boolean; multiplicationChildren: Operator[] }[];
 
@@ -780,9 +780,15 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             if (child instanceof Negation) {
                 const childOfNegation = child.getChild();
                 if (childOfNegation instanceof BracketedMultiplication) {
+                    let children = childOfNegation.getChildren();
+
+                    if (rightToLeft) {
+                        children = children.slice().reverse();
+                    }
+
                     products.push({
                         minus: true,
-                        multiplicationChildren: childOfNegation.getChildren(),
+                        multiplicationChildren: children,
                     });
                 } else {
                     products.push({
@@ -792,9 +798,15 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
                 }
             } else {
                 if (child instanceof BracketedMultiplication) {
+                    let children = child.getChildren();
+
+                    if (rightToLeft) {
+                        children = children.slice().reverse();
+                    }
+
                     products.push({
                         minus: false,
-                        multiplicationChildren: child.getChildren(),
+                        multiplicationChildren: children,
                     });
                 } else {
                     products.push({
@@ -849,6 +861,11 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             if (omitFirst) {
                 innerChildren = innerChildren.slice(1); // omit the commonPrefactor
             }
+
+            if (rightToLeft) {
+                innerChildren = innerChildren.slice().reverse();
+            }
+
             const assembledMultiplication = constructContainerOrFirstChild(
                 this.getOwnConfig(),
                 OperatorType.BracketedMultiplication,
@@ -874,18 +891,22 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
                 return !Operator.assertOperatorsEquivalent(commonPrefactor, productObject.multiplicationChildren[0]);
             })
             .map((a) => mapIntoOperatorConsiderNegation(a, false));
+        let reassembleArray = [
+            largestCountPrefactor, // first prefactor, then sum of the products
+            constructContainerOrFirstChild(
+                this.getOwnConfig(),
+                OperatorType.BracketedSum,
+                multiplicationsThatContainPrefactorWithPrefactorStripped,
+                false
+            ),
+        ];
+        if (rightToLeft) {
+            reassembleArray = reassembleArray.slice().reverse();
+        }
         const withFactoredOut = constructContainerOrFirstChild(
             this.getOwnConfig(),
             OperatorType.BracketedMultiplication,
-            [
-                largestCountPrefactor, // first prefactor, then sum of the products
-                constructContainerOrFirstChild(
-                    this.getOwnConfig(),
-                    OperatorType.BracketedSum,
-                    multiplicationsThatContainPrefactorWithPrefactorStripped,
-                    false
-                ),
-            ],
+            reassembleArray,
             false
         );
 
@@ -895,6 +916,10 @@ export class BracketedSum extends Operator implements MinusPulloutManagement {
             [withFactoredOut, ...multiplicationsThatDoNotContainPrefactor],
             false
         );
+    }
+
+    FactorOutRightMODIFICATION(): Operator {
+        return this.FactorOutLeftMODIFICATION(true);
     }
 
     GroupEqualElementsMODIFICATION(): Operator {
