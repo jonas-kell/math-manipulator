@@ -1497,6 +1497,70 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         return constructContainerOrFirstChild(this.getOwnConfig(), OperatorType.BracketedMultiplication, newChildren);
     }
 
+    combineChildAndSubsequent(childUUID: string): Operator {
+        const children = this.getChildren();
+        let newChildren = [] as Operator[];
+
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.getUUID() == childUUID) {
+                const nextChild = children[i + 1];
+                if (nextChild && nextChild != null && nextChild != undefined) {
+                    if (
+                        child instanceof HardCoreBosonicNumberOperator &&
+                        nextChild instanceof HardCoreBosonicNumberOperator &&
+                        child.sameDegreeOfFreedom(nextChild) &&
+                        Operator.assertOperatorsEquivalent(child.getChild(), nextChild.getChild())
+                    ) {
+                        newChildren.push(child);
+
+                        i += 1; // skip next;
+                        continue;
+                    }
+                    if (
+                        child instanceof HardCoreBosonicAnnihilationOperator &&
+                        nextChild instanceof HardCoreBosonicAnnihilationOperator &&
+                        child.sameDegreeOfFreedom(nextChild) &&
+                        Operator.assertOperatorsEquivalent(child.getChild(), nextChild.getChild())
+                    ) {
+                        newChildren.push(new Numerical(this.getOwnConfig(), 0));
+
+                        i += 1; // skip next;
+                        continue;
+                    }
+                    if (
+                        child instanceof HardCoreBosonicCreationOperator &&
+                        nextChild instanceof HardCoreBosonicCreationOperator &&
+                        child.sameDegreeOfFreedom(nextChild) &&
+                        Operator.assertOperatorsEquivalent(child.getChild(), nextChild.getChild())
+                    ) {
+                        newChildren.push(new Numerical(this.getOwnConfig(), 0));
+
+                        i += 1; // skip next;
+                        continue;
+                    }
+                    if (
+                        child instanceof HardCoreBosonicCreationOperator &&
+                        nextChild instanceof HardCoreBosonicAnnihilationOperator &&
+                        child.sameDegreeOfFreedom(nextChild) &&
+                        Operator.assertOperatorsEquivalent(child.getChild(), nextChild.getChild())
+                    ) {
+                        newChildren.push(
+                            new HardCoreBosonicNumberOperator(this.getOwnConfig(), child.getName(), child.getChild())
+                        );
+
+                        i += 1; // skip next;
+                        continue;
+                    }
+                }
+            }
+            // push self
+            newChildren.push(child);
+        }
+
+        return constructContainerOrFirstChild(this.getOwnConfig(), OperatorType.BracketedMultiplication, newChildren);
+    }
+
     protected midDisplayFormulaIsImplied(firstChild: Operator, secondChild: Operator): boolean {
         // between fermionic/bosonic operators
         if (
@@ -2450,6 +2514,10 @@ export class HardCoreBosonicCreationOperator extends QMOperatorWithOneArgument {
         this._name = name;
     }
 
+    getName() {
+        return hardCoreBosonicName(this._name);
+    }
+
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof HardCoreBosonicAnnihilationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
@@ -2460,7 +2528,7 @@ export class HardCoreBosonicCreationOperator extends QMOperatorWithOneArgument {
                     [
                         new Numerical(this.getOwnConfig(), 2),
                         new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild()),
-                        new HardCoreBosonicNumberOperator(this.getOwnConfig(), hardCoreBosonicName(this._name), this.getChild()),
+                        new HardCoreBosonicNumberOperator(this.getOwnConfig(), this.getName(), this.getChild()),
                     ],
                 ],
             ];
@@ -2468,10 +2536,7 @@ export class HardCoreBosonicCreationOperator extends QMOperatorWithOneArgument {
         if (commuteWith instanceof HardCoreBosonicNumberOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
-                [
-                    true,
-                    [new HardCoreBosonicCreationOperator(this.getOwnConfig(), hardCoreBosonicName(this._name), this.getChild())],
-                ],
+                [true, [new HardCoreBosonicCreationOperator(this.getOwnConfig(), this.getName(), this.getChild())]],
             ];
         }
 
@@ -2490,6 +2555,10 @@ export class HardCoreBosonicAnnihilationOperator extends QMOperatorWithOneArgume
         this._name = name;
     }
 
+    getName() {
+        return hardCoreBosonicName(this._name);
+    }
+
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof HardCoreBosonicCreationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
@@ -2500,7 +2569,7 @@ export class HardCoreBosonicAnnihilationOperator extends QMOperatorWithOneArgume
                     [
                         new Numerical(this.getOwnConfig(), 2),
                         new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild()),
-                        new HardCoreBosonicNumberOperator(this.getOwnConfig(), hardCoreBosonicName(this._name), this.getChild()),
+                        new HardCoreBosonicNumberOperator(this.getOwnConfig(), this.getName(), this.getChild()),
                     ],
                 ],
             ];
@@ -2508,16 +2577,7 @@ export class HardCoreBosonicAnnihilationOperator extends QMOperatorWithOneArgume
         if (commuteWith instanceof HardCoreBosonicNumberOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
-                [
-                    false,
-                    [
-                        new HardCoreBosonicAnnihilationOperator(
-                            this.getOwnConfig(),
-                            hardCoreBosonicName(this._name),
-                            this.getChild()
-                        ),
-                    ],
-                ],
+                [false, [new HardCoreBosonicAnnihilationOperator(this.getOwnConfig(), this.getName(), this.getChild())]],
             ];
         }
 
@@ -2536,29 +2596,21 @@ export class HardCoreBosonicNumberOperator extends QMOperatorWithOneArgument {
         this._name = name;
     }
 
+    getName() {
+        return hardCoreBosonicName(this._name);
+    }
+
     commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
         if (commuteWith instanceof HardCoreBosonicAnnihilationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
-                [
-                    true,
-                    [
-                        new HardCoreBosonicAnnihilationOperator(
-                            this.getOwnConfig(),
-                            hardCoreBosonicName(this._name),
-                            this.getChild()
-                        ),
-                    ],
-                ],
+                [true, [new HardCoreBosonicAnnihilationOperator(this.getOwnConfig(), this.getName(), this.getChild())]],
             ];
         }
         if (commuteWith instanceof HardCoreBosonicCreationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
-                [
-                    false,
-                    [new HardCoreBosonicCreationOperator(this.getOwnConfig(), hardCoreBosonicName(this._name), this.getChild())],
-                ],
+                [false, [new HardCoreBosonicCreationOperator(this.getOwnConfig(), this.getName(), this.getChild())]],
             ];
         }
 

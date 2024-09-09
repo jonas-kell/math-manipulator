@@ -398,6 +398,29 @@
                     }
                     logTimer("Commute with subsequent");
                 }
+
+                // combine with subsequent
+                if (selParent instanceof BracketedMultiplication) {
+                    startTimer();
+                    const actionResult = selParent
+                        .combineChildAndSubsequent(selectedOperator.value.getUUID())
+                        .getCopyWithGottenRidOfUnnecessaryTerms();
+
+                    if (Operator.assertOperatorsEquivalent(actionResult, selParent, false)) {
+                        res["Combine with subsequent"] = {
+                            hasEffect: false,
+                            replacesUUID: "",
+                            result: null,
+                        };
+                    } else {
+                        res["Combine with subsequent"] = {
+                            hasEffect: true,
+                            replacesUUID: selParent.getUUID(),
+                            result: actionResult,
+                        };
+                    }
+                    logTimer("Combine with subsequent");
+                }
             }
 
             // order operator Strings
