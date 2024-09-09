@@ -516,7 +516,7 @@ export abstract class Operator {
                         Operator.assertEquivalenceRecursive(childAA, childBB) &&
                         Operator.assertEquivalenceRecursive(childBA, childAB)
                     ) {
-                        // special case, deltas aer also equivalent if their children match cross-wise
+                        // special case, deltas are also equivalent if their children match cross-wise
                         return true;
                     }
                 }
