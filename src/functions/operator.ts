@@ -517,7 +517,6 @@ export abstract class Operator {
                         Operator.assertEquivalenceRecursive(childBA, childAB)
                     ) {
                         // special case, deltas aer also equivalent if their children match cross-wise
-                        console.log("cross");
                         return true;
                     }
                 }

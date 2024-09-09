@@ -75,6 +75,8 @@ export function operatorConstructorSwitch(
             return new HardCoreBosonicCreationOperator(config, value, childrenReconstructed[0]);
         case OperatorType.HardCoreBosonicAnnihilationOperator:
             return new HardCoreBosonicAnnihilationOperator(config, value, childrenReconstructed[0]);
+        case OperatorType.HardCoreBosonicNumberOperator:
+            return new HardCoreBosonicNumberOperator(config, value, childrenReconstructed[0]);
         case OperatorType.FunctionMathMode:
             return new FunctionMathMode(config, value, childrenReconstructed[0]);
         case OperatorType.FunctionMathRm:
@@ -255,8 +257,9 @@ function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOpera
         FermionicCreationOperator,
         BosonicAnnihilationOperator,
         BosonicCreationOperator,
-        HardCoreBosonicAnnihilationOperator, // TODO maybe swap for hard core otherwise sorting may become impossible
+        HardCoreBosonicAnnihilationOperator,
         HardCoreBosonicCreationOperator,
+        HardCoreBosonicNumberOperator,
         KroneckerDelta,
         Operator,
     ];
@@ -2435,11 +2438,12 @@ export class BosonicAnnihilationOperator extends QMOperatorWithOneArgument {
         return [[false, [commuteWith, this]]];
     }
 }
+
 export class HardCoreBosonicCreationOperator extends QMOperatorWithOneArgument {
     private _name: string;
 
     constructor(config: OperatorConfig, name: string, index: Operator) {
-        const nameOrDefault = name == null || name == "" || name == undefined ? "h" : name;
+        const nameOrDefault = hardCoreBosonicName(name);
         const latex = `\\mathrm{${nameOrDefault}}^\\dagger`;
         super(config, OperatorType.HardCoreBosonicCreationOperator, latex, index, nameOrDefault);
 
@@ -2456,9 +2460,17 @@ export class HardCoreBosonicCreationOperator extends QMOperatorWithOneArgument {
                     [
                         new Numerical(this.getOwnConfig(), 2),
                         new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild()),
-                        new BosonicCreationOperator(this.getOwnConfig(), this._name, this.getChild()), // TODO make hardcore
-                        new BosonicAnnihilationOperator(this.getOwnConfig(), this._name, this.getChild()), // TODO make hardcore
+                        new HardCoreBosonicNumberOperator(this.getOwnConfig(), hardCoreBosonicName(this._name), this.getChild()),
                     ],
+                ],
+            ];
+        }
+        if (commuteWith instanceof HardCoreBosonicNumberOperator && this.sameDegreeOfFreedom(commuteWith)) {
+            return [
+                [false, [commuteWith, this]],
+                [
+                    true,
+                    [new HardCoreBosonicCreationOperator(this.getOwnConfig(), hardCoreBosonicName(this._name), this.getChild())],
                 ],
             ];
         }
@@ -2471,7 +2483,7 @@ export class HardCoreBosonicAnnihilationOperator extends QMOperatorWithOneArgume
     private _name: string;
 
     constructor(config: OperatorConfig, name: string, index: Operator) {
-        const nameOrDefault = name == null || name == "" || name == undefined ? "h" : name;
+        const nameOrDefault = hardCoreBosonicName(name);
         const latex = `\\mathrm{${nameOrDefault}}`;
         super(config, OperatorType.HardCoreBosonicAnnihilationOperator, latex, index, nameOrDefault);
 
@@ -2488,8 +2500,22 @@ export class HardCoreBosonicAnnihilationOperator extends QMOperatorWithOneArgume
                     [
                         new Numerical(this.getOwnConfig(), 2),
                         new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild()),
-                        new BosonicCreationOperator(this.getOwnConfig(), this._name, this.getChild()), // TODO make hardcore
-                        new BosonicAnnihilationOperator(this.getOwnConfig(), this._name, this.getChild()), // TODO make hardcore
+                        new HardCoreBosonicNumberOperator(this.getOwnConfig(), hardCoreBosonicName(this._name), this.getChild()),
+                    ],
+                ],
+            ];
+        }
+        if (commuteWith instanceof HardCoreBosonicNumberOperator && this.sameDegreeOfFreedom(commuteWith)) {
+            return [
+                [false, [commuteWith, this]],
+                [
+                    false,
+                    [
+                        new HardCoreBosonicAnnihilationOperator(
+                            this.getOwnConfig(),
+                            hardCoreBosonicName(this._name),
+                            this.getChild()
+                        ),
                     ],
                 ],
             ];
@@ -2497,6 +2523,52 @@ export class HardCoreBosonicAnnihilationOperator extends QMOperatorWithOneArgume
 
         return [[false, [commuteWith, this]]];
     }
+}
+
+export class HardCoreBosonicNumberOperator extends QMOperatorWithOneArgument {
+    private _name: string;
+
+    constructor(config: OperatorConfig, name: string, index: Operator) {
+        const nameOrDefault = hardCoreBosonicName(name);
+        const latex = `\\hat{\\mathrm{n}}^\\mathrm{${nameOrDefault}}`;
+        super(config, OperatorType.HardCoreBosonicNumberOperator, latex, index, nameOrDefault);
+
+        this._name = name;
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
+        if (commuteWith instanceof HardCoreBosonicAnnihilationOperator && this.sameDegreeOfFreedom(commuteWith)) {
+            return [
+                [false, [commuteWith, this]],
+                [
+                    true,
+                    [
+                        new HardCoreBosonicAnnihilationOperator(
+                            this.getOwnConfig(),
+                            hardCoreBosonicName(this._name),
+                            this.getChild()
+                        ),
+                    ],
+                ],
+            ];
+        }
+        if (commuteWith instanceof HardCoreBosonicCreationOperator && this.sameDegreeOfFreedom(commuteWith)) {
+            return [
+                [false, [commuteWith, this]],
+                [
+                    false,
+                    [new HardCoreBosonicCreationOperator(this.getOwnConfig(), hardCoreBosonicName(this._name), this.getChild())],
+                ],
+            ];
+        }
+
+        return [[false, [commuteWith, this]]];
+    }
+}
+
+function hardCoreBosonicName(name: null | undefined | string) {
+    const nameOrDefault = name == null || name == "" || name == undefined ? "h" : name;
+    return nameOrDefault;
 }
 
 export class FunctionMathMode extends Operator {
