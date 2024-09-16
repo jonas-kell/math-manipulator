@@ -6,6 +6,7 @@ import {
     BracketedMultiplication,
     BracketedSum,
     Commutator,
+    HardCoreBosonicNumberOperator,
     Operator,
     generateOperatorConfig,
     operatorFromString,
@@ -2096,6 +2097,19 @@ describe("operator module - commute with subsequent", () => {
                         ],
                         uuid: "811e63aa-5666-4650-a578-75182c3deabb",
                     },
+                    {
+                        type: "hard_core_bosonic_annihilation",
+                        value: "h",
+                        children: [
+                            {
+                                type: "variable",
+                                value: "l",
+                                children: [],
+                                uuid: "8f3e0229-df29-4a8e-897b-d559f2d11b11",
+                            },
+                        ],
+                        uuid: "8fa5a614-8b7b-4c10-9bf1-93243b57400f",
+                    },
                 ],
                 uuid: "1b0395d4-7b69-481e-969a-814268a1df8f",
             }),
@@ -2128,6 +2142,11 @@ describe("operator module - commute with subsequent", () => {
                 { type: "hard_core_bosonic_number", value: "h", children: [{ type: "variable", value: "l", children: [] }] },
                 { type: "hard_core_bosonic_creation", value: "h", children: [{ type: "variable", value: "l", children: [] }] },
                 { type: "hard_core_bosonic_number", value: "h", children: [{ type: "variable", value: "l", children: [] }] },
+                {
+                    type: "hard_core_bosonic_annihilation",
+                    value: "h",
+                    children: [{ type: "variable", value: "l", children: [] }],
+                },
             ],
         });
 
@@ -2171,6 +2190,11 @@ describe("operator module - commute with subsequent", () => {
                 { type: "hard_core_bosonic_number", value: "h", children: [{ type: "variable", value: "l", children: [] }] },
                 { type: "hard_core_bosonic_creation", value: "h", children: [{ type: "variable", value: "l", children: [] }] },
                 { type: "hard_core_bosonic_number", value: "h", children: [{ type: "variable", value: "l", children: [] }] },
+                {
+                    type: "hard_core_bosonic_annihilation",
+                    value: "h",
+                    children: [{ type: "variable", value: "l", children: [] }],
+                },
             ],
         });
 
@@ -2232,6 +2256,11 @@ describe("operator module - commute with subsequent", () => {
                         },
                     ],
                 },
+                {
+                    type: "hard_core_bosonic_annihilation",
+                    value: "h",
+                    children: [{ type: "variable", value: "l", children: [] }],
+                },
             ],
         });
 
@@ -2283,6 +2312,62 @@ describe("operator module - commute with subsequent", () => {
                 { type: "hard_core_bosonic_number", value: "h", children: [{ type: "variable", value: "l", children: [] }] },
                 { type: "hard_core_bosonic_creation", value: "h", children: [{ type: "variable", value: "l", children: [] }] },
                 { type: "hard_core_bosonic_number", value: "h", children: [{ type: "variable", value: "l", children: [] }] },
+                {
+                    type: "hard_core_bosonic_annihilation",
+                    value: "h",
+                    children: [{ type: "variable", value: "l", children: [] }],
+                },
+            ],
+        });
+
+        expect(
+            JSON.parse(
+                target
+                    .combineChildAndSubsequent("fb337cc8-6f53-4b8a-94f8-8dd89f26ab01")
+                    .getCopyWithGottenRidOfUnnecessaryTerms()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({ type: "number", value: "0", children: [] });
+
+        expect(
+            JSON.parse(
+                target
+                    .combineChildAndSubsequent("811e63aa-5666-4650-a578-75182c3deabb")
+                    .getCopyWithGottenRidOfUnnecessaryTerms()
+                    .getSerializedStructure()
+            )
+        ).toMatchObject({ type: "number", value: "0", children: [] });
+    });
+
+    test("Split Number operator", () => {
+        const target = Operator.generateStructure(
+            testConfig,
+            JSON.stringify({
+                type: "hard_core_bosonic_number",
+                value: "h",
+                children: [
+                    {
+                        type: "variable",
+                        value: "l",
+                        children: [],
+                        uuid: "278baa8f-161c-46c0-8574-b0b7781cf28c",
+                    },
+                ],
+                uuid: "811e63aa-5666-4650-a578-75182c3deabb",
+            }),
+            true
+        ) as HardCoreBosonicNumberOperator;
+
+        expect(JSON.parse(target.SplitIntoLadderOperatorsMODIFICATION().getSerializedStructure())).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                { type: "hard_core_bosonic_creation", value: "h", children: [{ type: "variable", value: "l", children: [] }] },
+                {
+                    type: "hard_core_bosonic_annihilation",
+                    value: "h",
+                    children: [{ type: "variable", value: "l", children: [] }],
+                },
             ],
         });
     });

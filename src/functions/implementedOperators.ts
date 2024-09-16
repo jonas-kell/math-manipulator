@@ -1522,6 +1522,7 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
         return constructContainerOrFirstChild(this.getOwnConfig(), OperatorType.BracketedMultiplication, newChildren);
     }
 
+    // TODO this is not nicely abstracted, like some other operations on the wrappers sum/product... Sad, but it is how it is ;-P
     combineChildAndSubsequent(childUUID: string): Operator {
         const children = this.getChildren();
         let newChildren = [] as Operator[];
@@ -1573,6 +1574,28 @@ export class BracketedMultiplication extends Operator implements MinusPulloutMan
                         newChildren.push(
                             new HardCoreBosonicNumberOperator(this.getOwnConfig(), child.getName(), child.getChild())
                         );
+
+                        i += 1; // skip next;
+                        continue;
+                    }
+                    if (
+                        child instanceof HardCoreBosonicCreationOperator &&
+                        nextChild instanceof HardCoreBosonicNumberOperator &&
+                        child.sameDegreeOfFreedom(nextChild) &&
+                        Operator.assertOperatorsEquivalent(child.getChild(), nextChild.getChild())
+                    ) {
+                        newChildren.push(new Numerical(this.getOwnConfig(), 0));
+
+                        i += 1; // skip next;
+                        continue;
+                    }
+                    if (
+                        child instanceof HardCoreBosonicNumberOperator &&
+                        nextChild instanceof HardCoreBosonicAnnihilationOperator &&
+                        child.sameDegreeOfFreedom(nextChild) &&
+                        Operator.assertOperatorsEquivalent(child.getChild(), nextChild.getChild())
+                    ) {
+                        newChildren.push(new Numerical(this.getOwnConfig(), 0));
 
                         i += 1; // skip next;
                         continue;
@@ -2640,6 +2663,13 @@ export class HardCoreBosonicNumberOperator extends QMOperatorWithOneArgument {
         }
 
         return [[false, [commuteWith, this]]];
+    }
+
+    SplitIntoLadderOperatorsMODIFICATION(): Operator {
+        return new BracketedMultiplication(this.getOwnConfig(), [
+            new HardCoreBosonicCreationOperator(this.getOwnConfig(), this.getName(), this.getChild()),
+            new HardCoreBosonicAnnihilationOperator(this.getOwnConfig(), this.getName(), this.getChild()),
+        ]);
     }
 }
 
