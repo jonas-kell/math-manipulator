@@ -281,8 +281,16 @@ function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOpera
             }
         }
     }
-    if (a instanceof HardCoreBosonicAnnihilationOperator || a instanceof HardCoreBosonicCreationOperator) {
-        if (b instanceof HardCoreBosonicAnnihilationOperator || b instanceof HardCoreBosonicCreationOperator) {
+    if (
+        a instanceof HardCoreBosonicAnnihilationOperator ||
+        a instanceof HardCoreBosonicCreationOperator ||
+        a instanceof HardCoreBosonicNumberOperator
+    ) {
+        if (
+            b instanceof HardCoreBosonicAnnihilationOperator ||
+            b instanceof HardCoreBosonicCreationOperator ||
+            b instanceof HardCoreBosonicNumberOperator
+        ) {
             const diffHCBosonic = a.getDegreeOfFreedom().localeCompare(b.getDegreeOfFreedom());
             if (diffHCBosonic != 0) {
                 return diffHCBosonic;

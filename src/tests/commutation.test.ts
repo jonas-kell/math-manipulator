@@ -2371,4 +2371,61 @@ describe("operator module - commute with subsequent", () => {
             ],
         });
     });
+
+    test("Ordering with DOF", () => {
+        const target = Operator.generateStructure(
+            testConfig,
+            JSON.stringify({
+                type: "bracketed_multiplication",
+                value: "",
+                children: [
+                    {
+                        type: "hard_core_bosonic_creation",
+                        value: "n",
+                        children: [{ type: "variable", value: "l", children: [] }],
+                    },
+                    {
+                        type: "hard_core_bosonic_annihilation",
+                        value: "n",
+                        children: [{ type: "variable", value: "l", children: [] }],
+                    },
+                    { type: "hard_core_bosonic_number", value: "n", children: [{ type: "variable", value: "l", children: [] }] },
+                    {
+                        type: "hard_core_bosonic_creation",
+                        value: "m",
+                        children: [{ type: "variable", value: "l", children: [] }],
+                    },
+                    {
+                        type: "hard_core_bosonic_annihilation",
+                        value: "m",
+                        children: [{ type: "variable", value: "l", children: [] }],
+                    },
+                    { type: "hard_core_bosonic_number", value: "m", children: [{ type: "variable", value: "l", children: [] }] },
+                ],
+            })
+        ) as BracketedMultiplication;
+
+        expect(
+            JSON.parse(target.orderOperatorStrings().getCopyWithGottenRidOfUnnecessaryTerms().getSerializedStructure())
+        ).toMatchObject({
+            type: "bracketed_multiplication",
+            value: "",
+            children: [
+                { type: "hard_core_bosonic_creation", value: "m", children: [{ type: "variable", value: "l", children: [] }] },
+                {
+                    type: "hard_core_bosonic_annihilation",
+                    value: "m",
+                    children: [{ type: "variable", value: "l", children: [] }],
+                },
+                { type: "hard_core_bosonic_number", value: "m", children: [{ type: "variable", value: "l", children: [] }] },
+                { type: "hard_core_bosonic_creation", value: "n", children: [{ type: "variable", value: "l", children: [] }] },
+                {
+                    type: "hard_core_bosonic_annihilation",
+                    value: "n",
+                    children: [{ type: "variable", value: "l", children: [] }],
+                },
+                { type: "hard_core_bosonic_number", value: "n", children: [{ type: "variable", value: "l", children: [] }] },
+            ],
+        });
+    });
 });
