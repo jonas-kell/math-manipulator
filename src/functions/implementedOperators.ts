@@ -2592,7 +2592,13 @@ export class HardCoreBosonicCreationOperator extends QMOperatorWithOneArgument {
         if (commuteWith instanceof HardCoreBosonicNumberOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
-                [true, [new HardCoreBosonicCreationOperator(this.getOwnConfig(), this.getName(), this.getChild())]],
+                [
+                    true,
+                    [
+                        new HardCoreBosonicCreationOperator(this.getOwnConfig(), this.getName(), this.getChild()),
+                        new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild()),
+                    ],
+                ],
             ];
         }
 
@@ -2633,7 +2639,13 @@ export class HardCoreBosonicAnnihilationOperator extends QMOperatorWithOneArgume
         if (commuteWith instanceof HardCoreBosonicNumberOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
-                [false, [new HardCoreBosonicAnnihilationOperator(this.getOwnConfig(), this.getName(), this.getChild())]],
+                [
+                    false,
+                    [
+                        new HardCoreBosonicAnnihilationOperator(this.getOwnConfig(), this.getName(), this.getChild()),
+                        new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild()),
+                    ],
+                ],
             ];
         }
 
@@ -2660,13 +2672,25 @@ export class HardCoreBosonicNumberOperator extends QMOperatorWithOneArgument {
         if (commuteWith instanceof HardCoreBosonicAnnihilationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
-                [true, [new HardCoreBosonicAnnihilationOperator(this.getOwnConfig(), this.getName(), this.getChild())]],
+                [
+                    true,
+                    [
+                        new HardCoreBosonicAnnihilationOperator(this.getOwnConfig(), this.getName(), this.getChild()),
+                        new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild()),
+                    ],
+                ],
             ];
         }
         if (commuteWith instanceof HardCoreBosonicCreationOperator && this.sameDegreeOfFreedom(commuteWith)) {
             return [
                 [false, [commuteWith, this]],
-                [false, [new HardCoreBosonicCreationOperator(this.getOwnConfig(), this.getName(), this.getChild())]],
+                [
+                    false,
+                    [
+                        new HardCoreBosonicCreationOperator(this.getOwnConfig(), this.getName(), this.getChild()),
+                        new KroneckerDelta(this.getOwnConfig(), this.getChild(), commuteWith.getChild()),
+                    ],
+                ],
             ];
         }
 

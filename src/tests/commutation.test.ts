@@ -1598,12 +1598,50 @@ describe("operator module - commute with subsequent", () => {
                         {
                             type: "hard_core_bosonic_creation",
                             value: "h",
+                            children: [{ type: "variable", value: "l", children: [] }],
+                        },
+                        {
+                            type: "hard_core_bosonic_annihilation",
+                            value: "h",
+                            children: [{ type: "variable", value: "l", children: [] }],
+                        },
+                        {
+                            type: "hard_core_bosonic_number",
+                            value: "h",
+                            children: [{ type: "variable", value: "m", children: [] }],
+                        },
+                        {
+                            type: "kronecker_delta",
+                            value: "",
+                            children: [
+                                { type: "variable", value: "m", children: [] },
+                                { type: "variable", value: "l", children: [] },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        { type: "number", value: "2", children: [] },
+                        {
+                            type: "hard_core_bosonic_creation",
+                            value: "h",
                             children: [{ type: "variable", value: "m", children: [] }],
                         },
                         {
                             type: "hard_core_bosonic_annihilation",
                             value: "h",
                             children: [{ type: "variable", value: "l", children: [] }],
+                        },
+                        {
+                            type: "kronecker_delta",
+                            value: "",
+                            children: [
+                                { type: "variable", value: "m", children: [] },
+                                { type: "variable", value: "l", children: [] },
+                            ],
                         },
                         {
                             type: "kronecker_delta",
@@ -1642,36 +1680,14 @@ describe("operator module - commute with subsequent", () => {
                                         { type: "variable", value: "l", children: [] },
                                     ],
                                 },
-                            ],
-                        },
-                    ],
-                },
-                {
-                    type: "bracketed_multiplication",
-                    value: "",
-                    children: [
-                        { type: "number", value: "2", children: [] },
-                        {
-                            type: "hard_core_bosonic_creation",
-                            value: "h",
-                            children: [{ type: "variable", value: "l", children: [] }],
-                        },
-                        {
-                            type: "hard_core_bosonic_annihilation",
-                            value: "h",
-                            children: [{ type: "variable", value: "l", children: [] }],
-                        },
-                        {
-                            type: "hard_core_bosonic_number",
-                            value: "h",
-                            children: [{ type: "variable", value: "m", children: [] }],
-                        },
-                        {
-                            type: "kronecker_delta",
-                            value: "",
-                            children: [
-                                { type: "variable", value: "m", children: [] },
-                                { type: "variable", value: "l", children: [] },
+                                {
+                                    type: "kronecker_delta",
+                                    value: "",
+                                    children: [
+                                        { type: "variable", value: "m", children: [] },
+                                        { type: "variable", value: "l", children: [] },
+                                    ],
+                                },
                             ],
                         },
                     ],
@@ -1819,6 +1835,27 @@ describe("operator module - commute with subsequent", () => {
             children: [
                 { type: "number", value: "1", children: [] },
                 {
+                    type: "bracketed_multiplication",
+                    value: "",
+                    children: [
+                        {
+                            type: "hard_core_bosonic_annihilation",
+                            value: "h",
+                            children: [{ type: "variable", value: "l", children: [] }],
+                        },
+                        {
+                            type: "hard_core_bosonic_annihilation",
+                            value: "h",
+                            children: [{ type: "variable", value: "l", children: [] }],
+                        },
+                        {
+                            type: "hard_core_bosonic_number",
+                            value: "h",
+                            children: [{ type: "variable", value: "l", children: [] }],
+                        },
+                    ],
+                },
+                {
                     type: "negation",
                     value: "",
                     children: [
@@ -1837,27 +1874,6 @@ describe("operator module - commute with subsequent", () => {
                                     children: [{ type: "variable", value: "l", children: [] }],
                                 },
                             ],
-                        },
-                    ],
-                },
-                {
-                    type: "bracketed_multiplication",
-                    value: "",
-                    children: [
-                        {
-                            type: "hard_core_bosonic_annihilation",
-                            value: "h",
-                            children: [{ type: "variable", value: "l", children: [] }],
-                        },
-                        {
-                            type: "hard_core_bosonic_annihilation",
-                            value: "h",
-                            children: [{ type: "variable", value: "l", children: [] }],
-                        },
-                        {
-                            type: "hard_core_bosonic_number",
-                            value: "h",
-                            children: [{ type: "variable", value: "l", children: [] }],
                         },
                     ],
                 },
@@ -1897,6 +1913,11 @@ describe("operator module - commute with subsequent", () => {
                                     value: "h",
                                     children: [{ type: "variable", value: "l", children: [] }],
                                 },
+                                {
+                                    type: "hard_core_bosonic_number",
+                                    value: "h",
+                                    children: [{ type: "variable", value: "l", children: [] }],
+                                },
                             ],
                         },
                     ],
@@ -1910,11 +1931,6 @@ describe("operator module - commute with subsequent", () => {
                             value: "",
                             children: [
                                 { type: "number", value: "2", children: [] },
-                                {
-                                    type: "hard_core_bosonic_number",
-                                    value: "h",
-                                    children: [{ type: "variable", value: "l", children: [] }],
-                                },
                                 {
                                     type: "hard_core_bosonic_number",
                                     value: "h",
@@ -1959,6 +1975,11 @@ describe("operator module - commute with subsequent", () => {
                             value: "h",
                             children: [{ type: "variable", value: "l", children: [] }],
                         },
+                        {
+                            type: "hard_core_bosonic_number",
+                            value: "h",
+                            children: [{ type: "variable", value: "l", children: [] }],
+                        },
                     ],
                 },
                 {
@@ -1972,11 +1993,6 @@ describe("operator module - commute with subsequent", () => {
                         },
                         {
                             type: "hard_core_bosonic_creation",
-                            value: "h",
-                            children: [{ type: "variable", value: "l", children: [] }],
-                        },
-                        {
-                            type: "hard_core_bosonic_number",
                             value: "h",
                             children: [{ type: "variable", value: "l", children: [] }],
                         },
