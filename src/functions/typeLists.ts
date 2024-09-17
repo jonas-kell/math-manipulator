@@ -60,6 +60,7 @@ export enum OperatorType {
     HardCoreBosonicCreationOperator = "hard_core_bosonic_creation",
     HardCoreBosonicAnnihilationOperator = "hard_core_bosonic_annihilation",
     HardCoreBosonicNumberOperator = "hard_core_bosonic_number",
+    CommutableVariableContainer = "commutable_variable_container",
     FunctionMathMode = "general_function_math_mode",
     FunctionMathRm = "general_function_math_rm",
     Sin = "sin",
@@ -119,6 +120,7 @@ export const MAX_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.HardCoreBosonicCreationOperator]: 1,
     [OperatorType.HardCoreBosonicAnnihilationOperator]: 1,
     [OperatorType.HardCoreBosonicNumberOperator]: 1,
+    [OperatorType.CommutableVariableContainer]: 1,
     [OperatorType.FunctionMathMode]: 1,
     [OperatorType.FunctionMathRm]: 1,
     [OperatorType.Sin]: 1,
@@ -177,6 +179,7 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.HardCoreBosonicCreationOperator]: 1,
     [OperatorType.HardCoreBosonicAnnihilationOperator]: 1,
     [OperatorType.HardCoreBosonicNumberOperator]: 1,
+    [OperatorType.CommutableVariableContainer]: 1,
     [OperatorType.FunctionMathMode]: 1,
     [OperatorType.FunctionMathRm]: 1,
     [OperatorType.Sin]: 1,
@@ -200,3 +203,16 @@ export const MIN_CHILDREN_SPECIFICATIONS: { [key in OperatorType]: number } = {
     [OperatorType.Sqrt]: 1,
     [OperatorType.Distinct]: 1,
 };
+
+export const PARSER_CONVERTS_FIRST_STRING_ARG_TO_VALUE = [
+    OperatorType.FermionicCreationOperator,
+    OperatorType.FermionicAnnihilationOperator,
+    OperatorType.BosonicAnnihilationOperator,
+    OperatorType.BosonicCreationOperator,
+    OperatorType.HardCoreBosonicAnnihilationOperator,
+    OperatorType.HardCoreBosonicCreationOperator,
+    // hcb number operator currently has no way to be entered
+    OperatorType.CommutableVariableContainer,
+    OperatorType.FunctionMathMode,
+    OperatorType.FunctionMathRm,
+];

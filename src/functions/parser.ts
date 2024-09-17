@@ -8,6 +8,7 @@ import {
     useMacrosStore,
     DefinedMacro,
     DefinedMacroArgument,
+    PARSER_CONVERTS_FIRST_STRING_ARG_TO_VALUE,
 } from "./exporter";
 
 /**
@@ -122,6 +123,7 @@ const AllowedFunctionKeywordMapping = {
     "b#": OperatorType.BosonicCreationOperator,
     hcc: OperatorType.HardCoreBosonicCreationOperator,
     "hc#": OperatorType.HardCoreBosonicCreationOperator,
+    cvc: OperatorType.CommutableVariableContainer,
     ba: OperatorType.BosonicAnnihilationOperator,
     hca: OperatorType.HardCoreBosonicAnnihilationOperator,
     func: OperatorType.FunctionMathMode,
@@ -1212,18 +1214,7 @@ function calculateNecessaryNumberOfArgumentsForMacro(config: OperatorConfig, tok
 }
 
 function takesAdditionalStringFirstArgument(type: OperatorType): boolean {
-    const functionConvertsFirstStringArgumentToValue = [
-        OperatorType.FermionicCreationOperator,
-        OperatorType.FermionicAnnihilationOperator,
-        OperatorType.BosonicAnnihilationOperator,
-        OperatorType.BosonicCreationOperator,
-        OperatorType.HardCoreBosonicAnnihilationOperator,
-        OperatorType.HardCoreBosonicCreationOperator,
-        OperatorType.FunctionMathMode,
-        OperatorType.FunctionMathRm,
-    ];
-
-    return functionConvertsFirstStringArgumentToValue.includes(type);
+    return PARSER_CONVERTS_FIRST_STRING_ARG_TO_VALUE.includes(type);
 }
 
 function minNumChildrenParser(type: OperatorType): number {

@@ -77,6 +77,8 @@ export function operatorConstructorSwitch(
             return new HardCoreBosonicAnnihilationOperator(config, value, childrenReconstructed[0]);
         case OperatorType.HardCoreBosonicNumberOperator:
             return new HardCoreBosonicNumberOperator(config, value, childrenReconstructed[0]);
+        case OperatorType.CommutableVariableContainer:
+            return new CommutableVariableContainer(config, value, childrenReconstructed[0]);
         case OperatorType.FunctionMathMode:
             return new FunctionMathMode(config, value, childrenReconstructed[0]);
         case OperatorType.FunctionMathRm:
@@ -251,6 +253,7 @@ function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOpera
         Numerical,
         ComplexIConstant,
         Constant,
+        CommutableVariableContainer,
         Variable,
         DefinedMacro,
         FermionicAnnihilationOperator,
@@ -294,6 +297,14 @@ function compareOperatorOrder(a: OrderableOperator & Operator, b: OrderableOpera
             const diffHCBosonic = a.getDegreeOfFreedom().localeCompare(b.getDegreeOfFreedom());
             if (diffHCBosonic != 0) {
                 return diffHCBosonic;
+            }
+        }
+    }
+    if (a instanceof CommutableVariableContainer) {
+        if (b instanceof CommutableVariableContainer) {
+            const diffVar = a.getName().localeCompare(b.getName());
+            if (diffVar != 0) {
+                return diffVar;
             }
         }
     }
@@ -2708,6 +2719,26 @@ export class HardCoreBosonicNumberOperator extends QMOperatorWithOneArgument {
 function hardCoreBosonicName(name: null | undefined | string) {
     const nameOrDefault = name == null || name == "" || name == undefined ? "h" : name;
     return nameOrDefault;
+}
+
+export class CommutableVariableContainer extends QMOperatorWithOneArgument {
+    private _name: string;
+
+    constructor(config: OperatorConfig, name: string, index: Operator) {
+        const nameOrDefault = name == null || name == undefined || name == "" ? "v" : name;
+        const latex = `\\mathrm{${nameOrDefault}}`;
+        super(config, OperatorType.CommutableVariableContainer, latex, index, nameOrDefault);
+
+        this._name = name;
+    }
+
+    getName() {
+        return this._name == null || this._name == undefined || this._name == "" ? "v" : this._name;
+    }
+
+    commute(commuteWith: Operator & OrderableOperator): ReorderResultIntermediate {
+        return [[false, [commuteWith, this]]];
+    }
 }
 
 export class FunctionMathMode extends Operator {
